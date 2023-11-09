@@ -130,8 +130,7 @@ extension PCNetwork {
         
         return subject
     }
-    
-    
+
         //MARK: Async
     internal func cloudRequest<T: Decodable>(_ resource: CloudResource, type: T.Type) async throws-> T {
         
@@ -147,6 +146,32 @@ extension PCNetwork {
                 
             case .failure(let error):
                 throw error
+        }
+    }
+    
+    
+    //MARK: Futures
+    internal func cloudRequest<T: Decodable>(_ resource: CloudResource, type: T.Type) -> Future<T, PCError> {
+                
+        return Future { promise in
+            let request = CloudResource.requestForResource(resource)
+            
+            self.session.dataTask(with: request) { [weak self] data, response, error in
+                
+                guard let self = self else {
+                    promise(.failure(
+                        PCError(
+                            code: .deinitializedObject,
+                            description: "Deinitialized object for request: \(request)\n")
+                        )
+                    )
+                    return
+                }
+                
+                let result = self.decodeParticleResponse(resource: resource, request: request,type: type, data: data, response: response, error: error)
+                
+                promise(result)
+            }.resume()
         }
     }
     

@@ -467,7 +467,7 @@ public extension PCFirmware {
     ///
     ///
     /// - Requires: Scope of devices:update
-    /// - THrows: PCError
+    /// - Throws: PCError
     /// - Parameter device:The id of the device to be flashed
     /// - Parameter in: Product ID or slug. Product endpoint only.
     /// - Parameter development: Set to true to mark as development device
