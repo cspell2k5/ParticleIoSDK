@@ -3177,7 +3177,7 @@ internal enum CloudResource {
         /// - Parameter PCProductFirmware.UploadArguments: The arguments to be supplied to the server.
         /// - Parameter token: A currently active access token.
         /// - Returns: PCProductFirmware.ProductFirmwareList
-    case uploadProductFirmware(arguments: PCProductFirmware.UploadArguments, token: PCAccessToken)
+    case uploadProductFirmware(productID: ProductID, path: String, arguments: PCProductFirmware.UploadArguments, token: PCAccessToken)
        
         ///Edit product firmware
         ///
@@ -3222,7 +3222,7 @@ internal enum CloudResource {
         /// - Parameter Arguments: The arguments to be supplied to the server.
         /// - Parameter token: A currently active access token.
         /// - Returns: PCProductFirmware.ProductFirmwareList
-    case editProductFirmware(arguments: PCProductFirmware.EditArguments, token: PCAccessToken)
+    case editProductFirmware(productID: ProductID, arguments: PCProductFirmware.EditArguments, token: PCAccessToken)
     
         ///Download firmware binary
         ///
@@ -3289,10 +3289,11 @@ internal enum CloudResource {
         ///````
         ///
         /// - Requires: Scope of firmware:release
+    /// - Parameter product: The productID to apply the firmware to .
         /// - Parameter arguments: PCProductFirmware.ReleaseArguments
         /// - Parameter token: A currently active access token.
         /// - Returns: PCProductFirmware.ProductFirmwareList
-    case releaseProductFirmware(arguments: PCProductFirmware.ReleaseArguments, token: PCAccessToken)
+    case releaseProductFirmware(productID: ProductID, arguments: PCProductFirmware.ReleaseArguments, token: PCAccessToken)
     
         ///Delete unreleased firmware binary
         ///

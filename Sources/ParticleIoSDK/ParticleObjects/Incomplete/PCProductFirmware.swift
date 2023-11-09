@@ -149,7 +149,6 @@ PCProductFirmware: {
 EditArguments: {
     title: \(title),
     version: \(version),
-    productIdOrSlug: \(productIdOrSlug),
     description: \(String(describing: description)),
     mandatory: \(String(describing: mandatory))
 }
@@ -160,9 +159,6 @@ EditArguments: {
         
             ///The version number of the firmware binary you are uploading
         public let version: String
-
-            ///Product ID or slug
-        public let productIdOrSlug: String
         
             ///Optionally provide a description for the new firmware version
         public let description: String?
@@ -170,10 +166,9 @@ EditArguments: {
             ///[Enterprise only] Flag this firmware release as a mandatory release so that product upgrades and downgrades apply this version of firmware before flashing the targeted version.
         public let mandatory: Bool?
         
-        public init(title: String, version: String, productIdOrSlug: ProductID, description: String?, mandatory: Bool? = false) {
+        public init(title: String, version: String, description: String?, mandatory: Bool? = false) {
             self.title = title
             self.version = String(version)
-            self.productIdOrSlug = String(productIdOrSlug.rawValue)
             self.description = description
             self.mandatory = mandatory
         }
@@ -375,7 +370,7 @@ public extension PCProduct {
     static func upload(_ firmware: FilePath, to product: ProductID, with args: PCProductFirmware.UploadArguments, token: PCAccessToken)
     -> Future<PCProductFirmware.ProductFirmwareList, PCError> {
         
-        PCNetwork.shared.cloudRequest(.uploadProductFirmware(arguments: args, token: token), type: PCProductFirmware.ProductFirmwareList.self)
+        PCNetwork.shared.cloudRequest(.uploadProductFirmware(productID: product, path: firmware, arguments: args, token: token), type: PCProductFirmware.ProductFirmwareList.self)
     }
     
     
@@ -397,7 +392,7 @@ public extension PCProduct {
     /// - Returns: PCProductFirmware.ProductFirmwareList
     static func upload(_ firmware: FilePath, to product: ProductID, with args: PCProductFirmware.UploadArguments, token: PCAccessToken) async throws -> PCProductFirmware.ProductFirmwareList {
         
-        try await PCNetwork.shared.cloudRequest(.uploadProductFirmware(arguments: args, token: token), type: PCProductFirmware.ProductFirmwareList.self)
+        try await PCNetwork.shared.cloudRequest(.uploadProductFirmware(productID: product, path: firmware, arguments: args, token: token), type: PCProductFirmware.ProductFirmwareList.self)
     }
 
     
@@ -418,7 +413,7 @@ public extension PCProduct {
     /// - Returns: PCProductFirmware.ProductFirmwareList
     static func upload(_ firmware: FilePath, to product: ProductID, with args: PCProductFirmware.UploadArguments, token: PCAccessToken, completion: @escaping (Result<PCProductFirmware.ProductFirmwareList, PCError>) -> Void) {
         
-        PCNetwork.shared.cloudRequest(.uploadProductFirmware(arguments: args, token: token), type: PCProductFirmware.ProductFirmwareList.self, completion: completion)
+        PCNetwork.shared.cloudRequest(.uploadProductFirmware(productID: product, path: firmware, arguments: args, token: token), type: PCProductFirmware.ProductFirmwareList.self, completion: completion)
     }
 
     
@@ -433,11 +428,12 @@ public extension PCProduct {
     ///
     ///
     /// - Requires: Scope of firmware:update
+    /// - Parameter product: The productID to apply the firmware to .
     /// - Parameter Arguments: The arguments to be supplied to the server.
     /// - Parameter token: A currently active access token.
     /// - Returns: PCProductFirmware.ProductFirmwareList
-    static func editFirmware(arguments: PCProductFirmware.EditArguments, token: PCAccessToken) -> Future<PCProductFirmware.ProductFirmwareList, PCError> {
-        PCNetwork.shared.cloudRequest(.editProductFirmware(arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self)
+    static func editFirmware(for product: ProductID, arguments: PCProductFirmware.EditArguments, token: PCAccessToken) -> Future<PCProductFirmware.ProductFirmwareList, PCError> {
+        PCNetwork.shared.cloudRequest(.editProductFirmware(productID: product, arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self)
     }
     
     
@@ -452,11 +448,12 @@ public extension PCProduct {
     ///
     ///
     /// - Requires: Scope of firmware:update
+    /// - Parameter product: The productID to apply the firmware to .
     /// - Parameter Arguments: The arguments to be supplied to the server.
     /// - Parameter token: A currently active access token.
     /// - Returns: PCProductFirmware.ProductFirmwareList
-    static func editFirmware(arguments: PCProductFirmware.EditArguments, token: PCAccessToken) async throws -> PCProductFirmware.ProductFirmwareList {
-        try await PCNetwork.shared.cloudRequest(.editProductFirmware(arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self)
+    static func editFirmware(for product: ProductID, arguments: PCProductFirmware.EditArguments, token: PCAccessToken) async throws -> PCProductFirmware.ProductFirmwareList {
+        try await PCNetwork.shared.cloudRequest(.editProductFirmware(productID: product, arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self)
     }
 
     
@@ -471,11 +468,12 @@ public extension PCProduct {
     ///
     ///
     /// - Requires: Scope of firmware:update
+    /// - Parameter product: The productID to apply the firmware to .
     /// - Parameter Arguments: The arguments to be supplied to the server.
     /// - Parameter token: A currently active access token.
     /// - Parameter completion: PCProductFirmware.ProductFirmwareList
-    static func editFirmware(arguments: PCProductFirmware.EditArguments, token: PCAccessToken, completion: @escaping (Result<PCProductFirmware.ProductFirmwareList, PCError>) -> Void) {
-        PCNetwork.shared.cloudRequest(.editProductFirmware(arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self, completion: completion)
+    static func editFirmware(for product: ProductID, arguments: PCProductFirmware.EditArguments, token: PCAccessToken, completion: @escaping (Result<PCProductFirmware.ProductFirmwareList, PCError>) -> Void) {
+        PCNetwork.shared.cloudRequest(.editProductFirmware(productID: product, arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self, completion: completion)
     }
     
     
@@ -547,11 +545,12 @@ public extension PCProduct {
     ///
     ///
     /// - Requires: Scope of firmware:release
+    /// - Parameter product: The productID to apply the firmware to .
     /// - Parameter arguments: PCProductFirmware.ReleaseArguments
     /// - Parameter token: A currently active access token.
     /// - Returns: PCProductFirmware.ProductFirmwareList
-    static func releaseProductFirmware(arguments: PCProductFirmware.ReleaseArguments, token: PCAccessToken) -> Future<PCProductFirmware.ProductFirmwareList, PCError> {
-        PCNetwork.shared.cloudRequest(.releaseProductFirmware(arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self)
+    static func releaseProductFirmware(for product: ProductID, arguments: PCProductFirmware.ReleaseArguments, token: PCAccessToken) -> Future<PCProductFirmware.ProductFirmwareList, PCError> {
+        PCNetwork.shared.cloudRequest(.releaseProductFirmware(productID: product, arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self)
     }
     
     
@@ -566,11 +565,12 @@ public extension PCProduct {
     ///
     /// - Requires: Scope of firmware:release
     /// - Throws: PCError
+    /// - Parameter product: The productID to apply the firmware to .
     /// - Parameter arguments: PCProductFirmware.ReleaseArguments
     /// - Parameter token: A currently active access token.
     /// - Returns: PCProductFirmware.ProductFirmwareList
-    static func releaseProductFirmware(arguments: PCProductFirmware.ReleaseArguments, token: PCAccessToken) async throws -> PCProductFirmware.ProductFirmwareList {
-        try await PCNetwork.shared.cloudRequest(.releaseProductFirmware(arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self)
+    static func releaseProductFirmware(for product: ProductID, arguments: PCProductFirmware.ReleaseArguments, token: PCAccessToken) async throws -> PCProductFirmware.ProductFirmwareList {
+        try await PCNetwork.shared.cloudRequest(.releaseProductFirmware(productID: product, arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self)
     }
     
     
@@ -584,11 +584,12 @@ public extension PCProduct {
     ///
     ///
     /// - Requires: Scope of firmware:release
+    /// - Parameter product: The productID to apply the firmware to .
     /// - Parameter arguments: PCProductFirmware.ReleaseArguments
     /// - Parameter token: A currently active access token.
     /// - Parameter completion: Closure containing PCProductFirmware.ProductFirmwareList or a PCError
-    static func releaseProductFirmware(arguments: PCProductFirmware.ReleaseArguments, token: PCAccessToken, completion: @escaping (Result<PCProductFirmware.ProductFirmwareList, PCError>) -> Void) {
-        PCNetwork.shared.cloudRequest(.releaseProductFirmware(arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self, completion: completion)
+    static func releaseProductFirmware(for product: ProductID, arguments: PCProductFirmware.ReleaseArguments, token: PCAccessToken, completion: @escaping (Result<PCProductFirmware.ProductFirmwareList, PCError>) -> Void) {
+        PCNetwork.shared.cloudRequest(.releaseProductFirmware(productID: product, arguments: arguments, token: token), type: PCProductFirmware.ProductFirmwareList.self, completion: completion)
     }
     
     

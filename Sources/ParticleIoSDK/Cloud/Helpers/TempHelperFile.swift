@@ -1807,15 +1807,15 @@ extension CloudResource.RequestHelper {
                     //                GET /v1/products/:productIdOrSlug/firmware
                 return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/firmware")
                 
-            case .uploadProductFirmware(let arguments,_):
+            case .uploadProductFirmware(let productID,_,_,_):
                 
                     //POST /v1/products/:productIdOrSlug/firmware
-                return ParticlePaths.v1products.rawValue.appending(separator).appending(arguments.productIdOrSlug).appending("/firmware")
+            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/firmware")
                 
-            case .editProductFirmware(let arguments,_):
+            case .editProductFirmware(let productID, let arguments,_):
                 
                     //PUT /v1/products/:productIdOrSlug/firmware/:version
-                return ParticlePaths.v1products.rawValue.appending(separator).appending(arguments.productIdOrSlug).appending("/firmware/").appending(arguments.version)
+            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/firmware/").appending(arguments.version)
                 
                 
             case .downloadFirmwareBinary(let productId, let version,_):
@@ -1823,10 +1823,10 @@ extension CloudResource.RequestHelper {
                     //GET /v1/products/:productIdOrSlug/firmware/:version/binary
                 return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/firmware/").appending(String(version)).appending("/binary")
                 
-            case .releaseProductFirmware(let arguments,_):
+            case .releaseProductFirmware(let productID,_,_):
                 
                     // PUT /v1/products/:productIdOrSlug/firmware/release
-                return ParticlePaths.v1products.rawValue.appending(separator).appending(arguments.productIdOrSlug).appending("/firmware/release")
+            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/firmware/release")
                 
             case .deleteUnreleasedFirmwareBinary(let productId, let version,_):
                 
@@ -1919,7 +1919,7 @@ extension CloudResource.RequestHelper {
                 
             case .getProductFirmware(_,_,let token),
                     .listAllProductFirmwares(_, let token),
-                    .uploadProductFirmware(_, let token):
+                    .uploadProductFirmware(_,_,_, let token):
                 return [URLQueryItem(name: accessToken, value: token.accessToken )]
                 
             case .editProductFirmware:  return nil
@@ -1948,10 +1948,12 @@ extension CloudResource.RequestHelper {
             case .getProductFirmware,
                     .listAllProductFirmwares: return nil
                 
-            case .uploadProductFirmware(let arguments,_):
+            case .uploadProductFirmware(_,let filePath,let arguments,_):
                 
+            let data = FileManager.default.contents(atPath: filePath)!.base64EncodedData()
+            
                 payload = [
-                    "file=@\(arguments.file)",
+                    "file=@\(data)",
                     "version=\(arguments.version)",
                     "title=\(arguments.title)"
                 ]
@@ -1964,7 +1966,7 @@ extension CloudResource.RequestHelper {
                     payload?.append("mandatory=\(String(mandatory))")
                 }
                 
-            case .editProductFirmware(let arguments, let token):
+            case .editProductFirmware(_, let arguments, let token):
                 payload = [
                     "title=\(arguments.title)",
                     "version=\(arguments.version)",
@@ -1982,8 +1984,9 @@ extension CloudResource.RequestHelper {
             case .downloadFirmwareBinary: return nil
                 
                 
-            case .releaseProductFirmware(let arguments, let token):
-                payload = [
+            case .releaseProductFirmware(_,let arguments, let token):
+               
+            payload = [
                     "version=\(arguments.version)",
                     "product_default=\(arguments.product_default)",
                     "intelligent=\(arguments.intelligent)",

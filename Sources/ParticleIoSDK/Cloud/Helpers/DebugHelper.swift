@@ -265,17 +265,17 @@ extension CloudResource {
             case .listAllProductFirmwares(productIdOrSlug: let productIdOrSlug, token: let token):
                 return "listAllProductFirmwares\nproductIdOrSlug: \(productIdOrSlug.rawValue)\ntoken: \(token.debugDescription)\n"
                 
-            case .uploadProductFirmware(arguments: let arguments, token: let token):
-                return "uploadProductFirmware\narguments: \(arguments.debugDescription)\ntoken: \(token.debugDescription)\n"
+        case .uploadProductFirmware(let productID, let path, arguments: let arguments, token: let token):
+                return "uploadProductFirmware\nproductID: \(productID)\npath: \(path)\narguments: \(arguments.debugDescription)\ntoken: \(token.debugDescription)\n"
                 
-            case .editProductFirmware(arguments: let arguments, token: let token):
-                return "editProductFirmware\narguments: \(arguments.debugDescription)\ntoken: \(token.debugDescription)\n"
+            case .editProductFirmware(let productID, arguments: let arguments, token: let token):
+                return "editProductFirmware\nproductID: \(productID)\narguments: \(arguments.debugDescription)\ntoken: \(token.debugDescription)\n"
                 
             case .downloadFirmwareBinary(productIdOrSlug: let productIdOrSlug, version: let version, token: let token):
                 return "downloadFirmwareBinary\nproductIdOrSlug: \(productIdOrSlug.rawValue)\nversion: \(version)\ntoken: \(token.debugDescription)\n"
                 
-            case .releaseProductFirmware(arguments: let arguments, token: let token):
-                return "releaseProductFirmware\narguments: \(arguments.debugDescription)\ntoken: \(token.debugDescription)\n"
+            case .releaseProductFirmware(let productID, arguments: let arguments, token: let token):
+                return "releaseProductFirmware\nproductID: \(productID)\narguments: \(arguments.debugDescription)\ntoken: \(token.debugDescription)\n"
                 
             case .deleteUnreleasedFirmwareBinary(productIdOrSlug: let productIdOrSlug, version: let version, token: let token):
                 return "deleteUnreleasedFirmwareBinary\nproductIdOrSlug: \(productIdOrSlug.rawValue)\nversion: \(version)\ntoken: \(token.debugDescription)\n"
