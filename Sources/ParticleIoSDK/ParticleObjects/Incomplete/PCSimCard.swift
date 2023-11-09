@@ -1,78 +1,90 @@
-    //
-    //  PCSimCard.swift
-    //  ParticleSDK
-    //
-    //  Created by Craig Spell on 9/14/23.
-    //
+//
+//  PCSimCard.swift
+//  ParticleSDK
+//
+//  Created by Craig Spell on 9/14/23.
+//
 
 import Foundation
 import Combine
 
 
-public struct PCSimCard {
+
+
+// MARK: - Sims
+///Struct representing a device sim card.
+public struct PCSimCard: Decodable {
     
+    
+    ///Server response for a sim list request.
     public struct ListResponse: Decodable {
         
-        public let sims: [Sim]
+        ///Array of sim card respresentations.
+        public let sims: [PCSimCard]
         
-        private init(sims: [Sim]) { self.sims = sims }
+        private init(sims: [PCSimCard]) { self.sims = sims }
         
-            // MARK: - Sim
-            ///Struct representing a device sim card.
-        public struct Sim: Decodable {
-                ///ICCID of the SIM
-            public let id: String
-                ///Number of times the SIM has been activated.
-            public let activationsCount: Int
-                ///The ISO Alpha-2 code of the country where the SIM card is based
-            public let baseCountryCode: String
-                ///The monthly rate of the 1 MB data plan for this SIM card, in cents
-            public let baseMonthlyRate: Int
-                ///Number of times the SIM has been deactivated
-            public let deactivationsCount: Int
-                ///Timestamp of the first activation date of the SIM card
-            public let firstActivatedOn: String
-                ///Timestamp of the last activation date of the SIM card
-            public let lastActivatedOn: String
-            
-            @available(*, deprecated)
-                ///The method used to activate the SIM card. Internal use only, will be deprecated
-            public let lastActivatedVia: String?
-                ///The last state change of the SIM card
-            public let lastStatusChangeAction: String
-                ///Whether the last action change resulted in an error. Set to "yes" or "no"
-            public let lastStatusChangeActionError: String
-                ///MSISDN number of the Ublox modem
-            public let msisdn: String
-                ///The per-MB overage rate for this SIM card, in cents
-            public let overageMonthlyRate: Int
-                ///The current connectivity status of the SIM card
-            public let status: String
-            
-            @available(*, deprecated)
-                ///Data plan type. Internal use only, will be deprecated
-            public let stripePlanSlug: String?
-                ///Timestamp representing the last time the SIM was updated
-            public let updatedAt: String
-                ///The ID of the user who owns the SIM card
-            public let userID: String
-                ///The ID of the product who owns the SIM card
-            public let productID: String?
-                ///The Telefony provider for the SIM card's connectivity
-            public let carrier: String
-                ///The device ID of the SIM card's last associated device
-            public let lastDeviceID: String
-                ///The device name of the SIM card's last associated device
-            public let lastDeviceName: String
-            
-            private enum CodingKeys: String, CodingKey {
-                case id = "_id", activationsCount = "activations_count", baseCountryCode = "base_country_code", baseMonthlyRate = "base_monthly_rate", deactivationsCount = "deactivations_count", firstActivatedOn = "first_activated_on", lastActivatedOn = "last_activated_on", lastActivatedVia = "last_activated_via", lastStatusChangeAction = "last_status_change_action", lastStatusChangeActionError = "last_status_change_action_error", msisdn, overageMonthlyRate = "overage_monthly_rate", status, stripePlanSlug = "stripe_plan_slug", updatedAt = "updated_at", userID = "user_id", carrier, lastDeviceID = "last_device_id", lastDeviceName = "last_device_name", productID = "product_id"
-            }
-            
-            private init(id: String, activationsCount: Int, baseCountryCode: String, baseMonthlyRate: Int, deactivationsCount: Int, firstActivatedOn: String, lastActivatedOn: String, lastActivatedVia: String?, lastStatusChangeAction: String, lastStatusChangeActionError: String, msisdn: String, overageMonthlyRate: Int, status: String, stripePlanSlug: String?, updatedAt: String, userID: String, productID: String?, carrier: String, lastDeviceID: String, lastDeviceName: String) {
-                self.id = id; self.activationsCount = activationsCount; self.baseCountryCode = baseCountryCode; self.baseMonthlyRate = baseMonthlyRate; self.deactivationsCount = deactivationsCount; self.firstActivatedOn = firstActivatedOn; self.lastActivatedOn = lastActivatedOn; self.lastActivatedVia = lastActivatedVia; self.lastStatusChangeAction = lastStatusChangeAction; self.lastStatusChangeActionError = lastStatusChangeActionError; self.msisdn = msisdn; self.overageMonthlyRate = overageMonthlyRate; self.status = status; self.stripePlanSlug = stripePlanSlug; self.updatedAt = updatedAt; self.userID = userID; self.productID = productID; self.carrier = carrier; self.lastDeviceID = lastDeviceID; self.lastDeviceName = lastDeviceName
-            }
+        enum CodingKeys: CodingKey {
+            case sims
         }
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.sims = try container.decode([PCSimCard].self, forKey: .sims)
+        }
+    }
+    
+    ///ICCID of the SIM
+    public let id: String
+    ///Number of times the SIM has been activated.
+    public let activationsCount: Int
+    ///The ISO Alpha-2 code of the country where the SIM card is based
+    public let baseCountryCode: String
+    ///The monthly rate of the 1 MB data plan for this SIM card, in cents
+    public let baseMonthlyRate: Int
+    ///Number of times the SIM has been deactivated
+    public let deactivationsCount: Int
+    ///Timestamp of the first activation date of the SIM card
+    public let firstActivatedOn: String
+    ///Timestamp of the last activation date of the SIM card
+    public let lastActivatedOn: String
+    
+    @available(*, deprecated)
+    ///The method used to activate the SIM card. Internal use only, will be deprecated
+    public let lastActivatedVia: String?
+    ///The last state change of the SIM card
+    public let lastStatusChangeAction: String
+    ///Whether the last action change resulted in an error. Set to "yes" or "no"
+    public let lastStatusChangeActionError: String
+    ///MSISDN number of the Ublox modem
+    public let msisdn: String
+    ///The per-MB overage rate for this SIM card, in cents
+    public let overageMonthlyRate: Int
+    ///The current connectivity status of the SIM card
+    public let status: String
+    
+    @available(*, deprecated)
+    ///Data plan type. Internal use only, will be deprecated
+    public let stripePlanSlug: String?
+    ///Timestamp representing the last time the SIM was updated
+    public let updatedAt: String
+    ///The ID of the user who owns the SIM card
+    public let userID: String
+    ///The ID of the product who owns the SIM card
+    public let productID: String?
+    ///The Telefony provider for the SIM card's connectivity
+    public let carrier: String
+    ///The device ID of the SIM card's last associated device
+    public let lastDeviceID: String
+    ///The device name of the SIM card's last associated device
+    public let lastDeviceName: String
+    
+    private enum CodingKeys: String, CodingKey {
+        case id = "_id", activationsCount = "activations_count", baseCountryCode = "base_country_code", baseMonthlyRate = "base_monthly_rate", deactivationsCount = "deactivations_count", firstActivatedOn = "first_activated_on", lastActivatedOn = "last_activated_on", lastActivatedVia = "last_activated_via", lastStatusChangeAction = "last_status_change_action", lastStatusChangeActionError = "last_status_change_action_error", msisdn, overageMonthlyRate = "overage_monthly_rate", status, stripePlanSlug = "stripe_plan_slug", updatedAt = "updated_at", userID = "user_id", carrier, lastDeviceID = "last_device_id", lastDeviceName = "last_device_name", productID = "product_id"
+    }
+    
+    private init(id: String, activationsCount: Int, baseCountryCode: String, baseMonthlyRate: Int, deactivationsCount: Int, firstActivatedOn: String, lastActivatedOn: String, lastActivatedVia: String?, lastStatusChangeAction: String, lastStatusChangeActionError: String, msisdn: String, overageMonthlyRate: Int, status: String, stripePlanSlug: String?, updatedAt: String, userID: String, productID: String?, carrier: String, lastDeviceID: String, lastDeviceName: String) {
+        self.id = id; self.activationsCount = activationsCount; self.baseCountryCode = baseCountryCode; self.baseMonthlyRate = baseMonthlyRate; self.deactivationsCount = deactivationsCount; self.firstActivatedOn = firstActivatedOn; self.lastActivatedOn = lastActivatedOn; self.lastActivatedVia = lastActivatedVia; self.lastStatusChangeAction = lastStatusChangeAction; self.lastStatusChangeActionError = lastStatusChangeActionError; self.msisdn = msisdn; self.overageMonthlyRate = overageMonthlyRate; self.status = status; self.stripePlanSlug = stripePlanSlug; self.updatedAt = updatedAt; self.userID = userID; self.productID = productID; self.carrier = carrier; self.lastDeviceID = lastDeviceID; self.lastDeviceName = lastDeviceName
     }
     
     private static func getFile(at path: String?) -> String? {
@@ -86,37 +98,38 @@ public struct PCSimCard {
     }
 }
 
-    //MARK: - ListRequestArgument
+//MARK: - ListRequestArgument
 extension PCSimCard {
     
+    ///Arguments to porovide to the sever to limit the scop of the request.
     public struct ListRequestArgument {
         
         internal var debugDescription: String {
             return "iccid:\(String(describing: iccid?.rawValue))\ndeviceId:\(String(describing: deviceId?.rawValue))\ndeviceName:\(String(describing: deviceName?.rawValue))\npage:\(String(describing: page))\nperPage:\(String(describing: perPage))\nproductId:\(String(describing: productId?.rawValue))\n"
         }
         
-            ///Filter results to SIMs with this ICCID (partial matching)
+        ///Filter results to SIMs with this ICCID (partial matching)
         public let iccid: ICCIDNumber?
-            ///Filter results to SIMs with this associated device ID (partial matching)
+        ///Filter results to SIMs with this associated device ID (partial matching)
         public let deviceId: DeviceID?
-            ///Filter results to SIMs with this associated device name (partial matching)
+        ///Filter results to SIMs with this associated device name (partial matching)
         public let deviceName: DeviceName?
-            ///Current page of results
+        ///Current page of results
         public let page: Int?
-            ///Records per page
+        ///Records per page
         public let perPage: Int?
-            ///Product ID or slug. Product endpoint only
+        ///Product ID or slug. Product endpoint only
         public let productId: ProductID?
         
-            ///Used internally in combination with codingkeys to help ease urlqueryitem forming in RequestHelper
+        ///Used internally in combination with codingkeys to help ease urlqueryitem forming in RequestHelper
         internal func value(for keys: CodingKeys) -> String? {
             switch keys {
-                case .iccid: return self.iccid == nil ? nil : String(self.iccid!.rawValue)
-                case .deviceId: return self.deviceId?.rawValue
-                case .deviceName: return self.deviceName?.rawValue
-                case .page: return self.page == nil ? nil : String(self.page!)
-                case .perPage: return self.perPage == nil ? nil : String(self.perPage!)
-                case .productId: return self.productId == nil ? nil : String(self.productId!.rawValue)
+            case .iccid: return self.iccid == nil ? nil : String(self.iccid!.rawValue)
+            case .deviceId: return self.deviceId?.rawValue
+            case .deviceName: return self.deviceName?.rawValue
+            case .page: return self.page == nil ? nil : String(self.page!)
+            case .perPage: return self.perPage == nil ? nil : String(self.perPage!)
+            case .productId: return self.productId == nil ? nil : String(self.productId!.rawValue)
             }
         }
         
@@ -131,17 +144,18 @@ extension PCSimCard {
 }
 
 extension PCSimCard {
-        // MARK: - GetSimResponse
+    // MARK: - GetSimResponse
+    ///Sim info returned by the server on sim info request.
     public struct GetSimInfoResponse: Decodable {
-            ///ICCID of the SIM
+        ///ICCID of the SIM
         public let id: String
-            ///Number of times the SIM has been activated
+        ///Number of times the SIM has been activated
         public let activationsCount: Int
-            ///The ISO Alpha-2 code of the country where the SIM card is based
+        ///The ISO Alpha-2 code of the country where the SIM card is based
         public let baseCountryCode: String
-            ///The monthly rate of the 1 MB data plan for this SIM card, in cents
+        ///The monthly rate of the 1 MB data plan for this SIM card, in cents
         public let baseMonthlyRate: Int
-            ///Number of times the SIM has been deactivated
+        ///Number of times the SIM has been deactivated
         public let deactivationsCount: Int
         
         public let firstActivatedOn: String
@@ -171,7 +185,7 @@ extension PCSimCard {
     }
 }
 
-    // MARK: - DataUsageResponse
+// MARK: - DataUsageResponse
 extension PCSimCard {
     ///Get SIM card data usage for the current billing period, broken out by day. Note that date usage reports can be delayed by up to 1 hour.
     public struct IccidDataUsageResponse: Decodable {
@@ -195,7 +209,7 @@ extension PCSimCard {
             self.usageByDay = try container.decode([UsageByDay].self, forKey: .usageByDay)
         }
         
-            // MARK: - UsageByDay
+        // MARK: - UsageByDay
         public struct UsageByDay: Decodable {
             ///The date of the usage day FORMAT: YYYY-MM-DD
             public let date: String
@@ -217,7 +231,7 @@ extension PCSimCard {
     }
 }
 
-    // MARK: - FleetDataUsageResponse
+// MARK: - FleetDataUsageResponse
 extension PCSimCard {
     
     ///Get fleet-wide SIM card data usage for a product in the current billing period, broken out by day. Daily usage totals represent an aggregate of all SIM cards that make up the product. Data usage reports can be delayed until the next day, and occasionally by several days.
@@ -238,7 +252,7 @@ extension PCSimCard {
         }
     }
     
-        // MARK: - UsageByDay
+    // MARK: - UsageByDay
     public struct UsageByDay: Decodable {
         ///The date of the usage day FORMAT: YYYY-MM-DD
         public let date: String
@@ -293,7 +307,7 @@ extension PCSimCard {
     public static func getSimInformation(iccid: ICCIDNumber, productIDorSlug: ProductID, token: PCAccessToken) -> CurrentValueSubject<GetSimInfoResponse?, PCError> {
         PCNetwork.shared.cloudRequest(.getSimInformation(iccid: iccid.rawValue, productIDorSlug: productIDorSlug, token: token), type: GetSimInfoResponse.self)
     }
-
+    
     
     ///Get data usage.
     ///
@@ -310,7 +324,7 @@ extension PCSimCard {
     public static func getDataUsage(iccid: ICCIDNumber, productIDorSlug: ProductID, token: PCAccessToken) -> CurrentValueSubject<IccidDataUsageResponse?, PCError> {
         PCNetwork.shared.cloudRequest(.getDataUsage(iccid: iccid.rawValue, productIDorSlug: productIDorSlug, token: token), type: IccidDataUsageResponse.self)
     }
-
+    
     
     
     ///Get data usage for product fleet.
@@ -492,7 +506,7 @@ extension PCSimCard {
     public static func getDataUsage(iccid: ICCIDNumber, productIDorSlug: ProductID, token: PCAccessToken) async throws -> IccidDataUsageResponse {
         try await PCNetwork.shared.cloudRequest(.getDataUsage(iccid: iccid.rawValue, productIDorSlug: productIDorSlug, token: token), type: IccidDataUsageResponse.self)
     }
-
+    
     
     ///Get data usage for product fleet.
     ///
@@ -510,7 +524,7 @@ extension PCSimCard {
     public static func getFleetDataUsage(productIDorSlug: ProductID, token: PCAccessToken) async throws -> FleetDataUsageResponse {
         try await PCNetwork.shared.cloudRequest(.getDataUsageForProductFleet(productIDorSlug: productIDorSlug, token: token), type: FleetDataUsageResponse.self)
     }
-
+    
     
     ///Activate SIM.
     ///
@@ -529,7 +543,7 @@ extension PCSimCard {
     public static func activateSim(iccid: ICCIDNumber, token: PCAccessToken) async throws -> ServerResponses.NoResponse {
         try await PCNetwork.shared.cloudRequest(.activateSIM(iccid: iccid.rawValue, token: token), type: ServerResponses.NoResponse.self)
     }
-
+    
     
     ///Import and activate product SIMs.
     ///
@@ -553,10 +567,10 @@ extension PCSimCard {
         if filePath != nil && file == nil {
             throw PCError(code: .invalidArguments, description: "Could not get file at path \(filePath!)")
         }
-
+        
         return try await PCNetwork.shared.cloudRequest(.importAndActivateProductSIMs(productIDorSlug: productIdOrSlug, sims: iccids?.map({$0.rawValue}), file: filePath, token: token), type: ServerResponses.BoolResponse.self).ok
     }
-
+    
     
     ///Deactivate SIM.
     ///
@@ -575,7 +589,7 @@ extension PCSimCard {
     public static func deActivateSIM(productIdOrSlug: ProductID?, iccid: ICCIDNumber, token: PCAccessToken) async throws -> Bool {
         try await PCNetwork.shared.cloudRequest(.deactivateSIM(iccid: iccid.rawValue, productIDorSlug: productIdOrSlug, token: token), type: ServerResponses.NoResponse.self).ok
     }
-
+    
     
     ///Reactivate SIM.
     ///
@@ -594,7 +608,7 @@ extension PCSimCard {
     public static func reActivateSIM(productIdOrSlug: ProductID?, iccid: ICCIDNumber, token: PCAccessToken) async throws -> Bool {
         try await PCNetwork.shared.cloudRequest(.reactivateSIM(iccid: iccid.rawValue, productIDorSlug: productIdOrSlug, token: token), type: ServerResponses.NoResponse.self).ok
     }
-
+    
     
     ///Release SIM from account.
     ///
@@ -637,7 +651,7 @@ extension PCSimCard {
     public static func listSimCards(arguments: ListRequestArgument, token: PCAccessToken, completion: @escaping (Result<ListResponse, PCError>) -> Void){
         PCNetwork.shared.cloudRequest(.listSimCards(arguments: arguments, token: token), type: ListResponse.self, completion: completion)
     }
-
+    
     
     ///Get SIM information.
     ///
@@ -655,7 +669,7 @@ extension PCSimCard {
     public static func getSimInformation(iccid: ICCIDNumber, productIDorSlug: ProductID, token: PCAccessToken, completion: @escaping (Result<GetSimInfoResponse, PCError>) -> Void) {
         PCNetwork.shared.cloudRequest(.getSimInformation(iccid: iccid.rawValue, productIDorSlug: productIDorSlug, token: token), type: GetSimInfoResponse.self, completion: completion)
     }
-
+    
     
     ///Get data usage.
     ///
@@ -672,7 +686,7 @@ extension PCSimCard {
     public static func getDataUsage(iccid: ICCIDNumber, productIDorSlug: ProductID, token: PCAccessToken, completion: @escaping (Result<IccidDataUsageResponse, PCError>) -> Void) {
         PCNetwork.shared.cloudRequest(.getDataUsage(iccid: iccid.rawValue, productIDorSlug: productIDorSlug, token: token), type: IccidDataUsageResponse.self, completion: completion)
     }
-
+    
     
     
     ///Get data usage for product fleet.
@@ -690,7 +704,7 @@ extension PCSimCard {
     public static func getFleetDataUsage(productIDorSlug: ProductID, token: PCAccessToken, completion: @escaping (Result<FleetDataUsageResponse, PCError>) -> Void) {
         PCNetwork.shared.cloudRequest(.getDataUsageForProductFleet(productIDorSlug: productIDorSlug, token: token), type: FleetDataUsageResponse.self, completion: completion)
     }
-
+    
     
     ///Activate SIM.
     ///
@@ -708,7 +722,7 @@ extension PCSimCard {
     public static func activateSim(iccid: ICCIDNumber, token: PCAccessToken, completion: @escaping (Result<ServerResponses.NoResponse, PCError>) -> Void) {
         PCNetwork.shared.cloudRequest(.activateSIM(iccid: iccid.rawValue, token: token), type: ServerResponses.NoResponse.self, completion: completion)
     }
-
+    
     
     ///Import and activate product SIMs.
     ///
@@ -727,7 +741,7 @@ extension PCSimCard {
     public static func importAndActivateProductSim(productIdOrSlug: ProductID, iccids: [ICCIDNumber]?, filePath: String?, token: PCAccessToken, completion: @escaping (Result<ServerResponses.BoolResponse, PCError>) -> Void) {
         PCNetwork.shared.cloudRequest(.importAndActivateProductSIMs(productIDorSlug: productIdOrSlug, sims: iccids?.map({$0.rawValue}), file: filePath, token: token), type: ServerResponses.BoolResponse.self, completion: completion)
     }
-
+    
     
     ///Deactivate SIM.
     ///
@@ -746,7 +760,7 @@ extension PCSimCard {
     public static func deActivateSIM(productIdOrSlug: ProductID?, iccid: ICCIDNumber, token: PCAccessToken, completion: @escaping (Result<Bool, PCError>) -> Void) {
         
         PCNetwork.shared.cloudRequest(.deactivateSIM(iccid: iccid.rawValue, productIDorSlug: productIdOrSlug, token: token), type: ServerResponses.NoResponse.self) { response in
-           
+            
             switch response {
             case .success(let result):
                 completion(.success(result.ok))
@@ -755,7 +769,7 @@ extension PCSimCard {
             }
         }
     }
-
+    
     
     ///Reactivate SIM.
     ///
@@ -780,7 +794,7 @@ extension PCSimCard {
             }
         }
     }
-
+    
     
     ///Release SIM from account.
     ///
