@@ -17,9 +17,7 @@ final internal class PCNetwork: NSObject, NSURLConnectionDelegate, NSURLConnecti
     
     internal static let shared = PCNetwork()
     
-#if !os(watchOS)
     private var eventDelegate = EventDelegate()
-#endif
     
     internal var cancellables = Set<AnyCancellable>()
     
@@ -43,6 +41,7 @@ final internal class PCNetwork: NSObject, NSURLConnectionDelegate, NSURLConnecti
     //MARK: - Events
 extension PCNetwork {
     
+    
     private func subscribe(request: URLRequest, token: PCAccessToken, onEvent: EventBlock?, completion: CompletionBlock?) {
         
 #if !os(watchOS)
@@ -54,20 +53,13 @@ extension PCNetwork {
         eventDelegate.connectionTasks[connection] = (event: onEvent, completion: completion)
 #else
         
-        //FIXME: - add watchOS support
-        URLSession(configuration: configurationForUrlSession)
-            .dataTask(with: request) { data, response, error in
-                if let data = data,
-                   let event = PCEvent(serverData: data) {
-                    onEvent?(event)
-                } else if let error = error {
-                    completion?(PCError(code: .undelyingError, underlyingError: error))
-                } else if let response = response {
-                    completion?(PCError(code: .networkError, description: "recieved this response from the server:\n\(response)\n"))
-                }
-            }
+        let task = URLSession(configuration: self.configurationForUrlSession).dataTask(with: request)
+        task.delegate = self.eventDelegate
+        task.resume()
+        
 #endif
     }
+    
     
     internal func subscribe(eventName: EventName?, deviceId: DeviceID, token: PCAccessToken, onEvent: EventBlock? = nil, completion: CompletionBlock?) {
         
@@ -76,6 +68,7 @@ extension PCNetwork {
         
         return self.subscribe(request: request, token: token, onEvent: onEvent, completion: completion)
     }
+    
     
     internal func subscribe(eventName: EventName?, productId: ProductID, token: PCAccessToken, onEvent: EventBlock?, completion: CompletionBlock?) {
         
@@ -94,6 +87,7 @@ extension PCNetwork {
         return self.subscribe(request: request, token: token, onEvent: onEvent, completion: completion)
     }
 }
+
 
 
     //MARK: - Cloud Requests aka api calls
@@ -230,6 +224,54 @@ extension PCNetwork {
 }
 
 #if os(watchOS)
+
+#warning("This is a total hack job. This needs to be fixed when an update or bug fix is available")
+internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionStreamDelegate {
+    
+    
+    internal var connectionTasks = [URLSession : (event: EventBlock?, completion: CompletionBlock?)]()
+    
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
+        
+        if let event = PCEvent(serverData: data) {
+            let block = connectionTasks[session]?.event
+            block?(event)
+        }
+    }
+    
+    
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse) async -> URLSession.ResponseDisposition {
+        
+        if response.url?.host == "api.particle.io",
+           response.expectedContentLength < 1024,
+           response.mimeType == HTTPContentType.events.rawValue {
+            
+            return .becomeStream
+        }
+        
+        return .cancel
+    }
+    
+    func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
+        print("error:\n\(error)\nfunction: \(#function) in \(#file)")
+        
+    }
+    
+    
+    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome streamTask: URLSessionStreamTask) {
+        
+        Task {
+            while true {
+                
+                let data = try await streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60).0 ?? Data()
+                print("data: \(String(describing: String(data: data, encoding: .ascii)))")
+                print(PCEvent(serverData: data)?.description ?? "")
+                NSLog("")
+                sleep(30)
+            }
+        }
+    }
+}
 
 
 

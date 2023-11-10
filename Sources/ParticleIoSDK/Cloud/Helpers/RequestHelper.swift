@@ -14,18 +14,20 @@ public enum HTTPMethodType: String {
 }
 
 
+internal enum HTTPContentType: String {
+    case form = "application/x-www-form-urlencoded"
+    case jSon = "application/json"
+    case jSon_schema = "application/schema+json"
+    case events = "text/event-stream"
+}
+
+
 extension CloudResource {
     
     internal final class RequestHelper {
         internal let separator = "/"
         internal let accessToken = "access_token"
         
-        enum AllowableContentType: String {
-            case form = "application/x-www-form-urlencoded"
-            case jSon = "application/json"
-            case jSon_schema = "application/schema+json"
-            case events = "text/event-stream"
-        }
                 
             //MARK: - ParticlePaths
 #warning("needs to be changed back to private after all cases have been made and brought in")
@@ -213,7 +215,7 @@ extension CloudResource {
             }
         }
         
-        internal func acceptHeaderForResource(_ resource: CloudResource) -> AllowableContentType? {
+        internal func acceptHeaderForResource(_ resource: CloudResource) -> HTTPContentType? {
             
             switch resource.type {
                 case .accessToken: return nil

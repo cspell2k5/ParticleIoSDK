@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 
 public struct PCServiceAgreement: Decodable {
@@ -675,5 +676,60 @@ extension PCServiceAgreement {
                 fatalError("CurrentUsageNotificationResponse.HierarchyInfo can only be initialized with a decoder.")
             }
         }
+    }
+}
+
+
+
+public extension PCServiceAgreement {
+    
+    //MARK: Get Service Agreement
+    
+    
+    
+    ///Get user service agreements
+    ///
+    ///Get the service agreements related to a user
+    ///
+    ///calls GET /v1/orgs/:name/service_agreements
+    ///
+    /// - Parameter organizationName: The organization name. In most cases this will be `Sandbox`.
+    /// - Parameter token: A currently active access token scoped to customers:update and that has access to the product, not a customer access token.
+    /// - Requires: Token scope of service_agreements:list
+    /// - Returns: PCServiceAgreement
+    static func getUserServiceAgreements(organizationName: OrganizationName, token: PCAccessToken) -> Future<PCServiceAgreement, PCError> {
+        PCNetwork.shared.cloudRequest(.getUserServiceAgreements(orgName: organizationName.rawValue, token: token), type: PCServiceAgreement.self)
+    }
+    
+    
+    
+    ///Get user service agreements
+    ///
+    ///Get the service agreements related to a user
+    ///
+    ///calls GET /v1/orgs/:name/service_agreements
+    ///
+    /// - Parameter organizationName: The organization name. In most cases this will be `Sandbox`.
+    /// - Parameter token: A currently active access token scoped to customers:update and that has access to the product, not a customer access token.
+    /// - Requires: Token scope of service_agreements:list
+    /// - Returns: PCServiceAgreement
+    static func getUserServiceAgreements(organizationName: OrganizationName, token: PCAccessToken) async throws -> PCServiceAgreement {
+       try await PCNetwork.shared.cloudRequest(.getUserServiceAgreements(orgName: organizationName.rawValue, token: token), type: PCServiceAgreement.self)
+    }
+
+    
+    
+    ///Get user service agreements
+    ///
+    ///Get the service agreements related to a user
+    ///
+    ///calls GET /v1/orgs/:name/service_agreements
+    ///
+    /// - Parameter organizationName: The organization name. In most cases this will be `Sandbox`.
+    /// - Parameter token: A currently active access token scoped to customers:update and that has access to the product, not a customer access token.
+    /// - Requires: Token scope of service_agreements:list
+    /// - Returns: PCServiceAgreement
+    static func getUserServiceAgreements(organizationName: OrganizationName, token: PCAccessToken, completion: @escaping (Result<PCServiceAgreement, PCError>) -> Void) {
+        PCNetwork.shared.cloudRequest(.getUserServiceAgreements(orgName: organizationName.rawValue, token: token), type: PCServiceAgreement.self, completion: completion)
     }
 }

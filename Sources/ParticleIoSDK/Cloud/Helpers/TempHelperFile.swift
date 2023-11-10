@@ -39,7 +39,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func tokenContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func tokenContentType(_ resource: CloudResource) -> HTTPContentType {
         switch resource {
             case .generateAccessToken,
                     .listAccessTokens,
@@ -183,7 +183,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func clientContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func clientContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case  .listClients,
@@ -319,7 +319,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func APiUserContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func APiUserContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .createAPiUser, .updateAPiUser, .listAPiUsers, .deleteAPiUser:
@@ -328,7 +328,7 @@ extension CloudResource.RequestHelper {
         }
     }
     
-    internal func APiUserAcceptType(_ resource: CloudResource) -> AllowableContentType {
+    internal func APiUserAcceptType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .createAPiUser, .updateAPiUser, .listAPiUsers, .deleteAPiUser:
@@ -512,7 +512,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func deviceContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func deviceContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -781,7 +781,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func remoteDiagnosticsContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func remoteDiagnosticsContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -899,7 +899,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func userContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func userContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .getUser: return .form
@@ -995,7 +995,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func quarantineContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func quarantineContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -1106,7 +1106,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func simCardContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func simCardContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .listSimCards,
@@ -1271,7 +1271,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func eventsAcceptType(_ resource: CloudResource) -> AllowableContentType? {
+    internal func eventsAcceptType(_ resource: CloudResource) -> HTTPContentType? {
         
         switch resource {
             case .getEventStream,
@@ -1284,7 +1284,7 @@ extension CloudResource.RequestHelper {
         }
     }
     
-    internal func eventContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func eventContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .getEventStream,
@@ -1374,7 +1374,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func integrationsAndWebhooksContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func integrationsAndWebhooksContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -1441,7 +1441,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func specialEventsContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func specialEventsContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -1508,7 +1508,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func assetTrackingSpecialEventsContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func assetTrackingSpecialEventsContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -1614,7 +1614,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func firmwareContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func firmwareContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -1631,7 +1631,7 @@ extension CloudResource.RequestHelper {
         }
     }
     
-    internal func firmwareContentAcceptType(_ resource: CloudResource) -> AllowableContentType {
+    internal func firmwareContentAcceptType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -1838,7 +1838,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func productFirmwareContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func productFirmwareContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -1855,7 +1855,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Accept Type
-    internal func productFirmwareAcceptType(_ resource: CloudResource) -> AllowableContentType {
+    internal func productFirmwareAcceptType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -2039,7 +2039,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func libraryContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func libraryContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .listLibraries,
@@ -2054,7 +2054,7 @@ extension CloudResource.RequestHelper {
         }
     }
     
-    internal func libraryAcceptType(_ resource: CloudResource) -> AllowableContentType {
+    internal func libraryAcceptType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .listLibraries,
@@ -2219,7 +2219,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func productContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func productContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .listProducts,
@@ -2386,7 +2386,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func deviceGroupsContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func deviceGroupsContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -2403,7 +2403,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Accept Type
-    internal func deviceGroupsAcceptType(_ resource: CloudResource) -> AllowableContentType {
+    internal func deviceGroupsAcceptType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -2631,7 +2631,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func assetTrackingContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func assetTrackingContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .queryLocationForDevicesWithinProduct,
@@ -2645,7 +2645,7 @@ extension CloudResource.RequestHelper {
         }
     }
     
-    internal func assetTrackingAcceptType(_ resource: CloudResource) -> AllowableContentType {
+    internal func assetTrackingAcceptType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .queryLocationForDevicesWithinProduct,
@@ -2782,7 +2782,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func customerContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func customerContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 
@@ -2987,7 +2987,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Content Type
-    internal func serviceAgreementsContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func serviceAgreementsContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .getServiceAgreements,
@@ -3005,7 +3005,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: Accept Type
-    internal func serviceAgreementsAcceptType(_ resource: CloudResource) -> AllowableContentType {
+    internal func serviceAgreementsAcceptType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
             case .getServiceAgreements,
@@ -3146,7 +3146,7 @@ extension CloudResource.RequestHelper {
     //    }
     //
     //        //MARK: Content Type
-    //    internal func <#name#>ContentType(_ resource: CloudResource) -> AllowableContentType {
+    //    internal func <#name#>ContentType(_ resource: CloudResource) -> ContentType {
     //
     //        switch resource {
     //

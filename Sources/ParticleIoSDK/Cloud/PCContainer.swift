@@ -18,7 +18,7 @@ public class PCContainer: ObservableObject {
     @Published public var isAuthenticated = PCAuthenticationManager.shared.userIsAuthenticated
     
     ///An encapsulation of all authentication needs of the framework. Your application should use this to determine the authenticated state of the application. If you want to handle login yourself, you must still provide a valid token to the authentication manager. This can be done through the method on PCAuthenticationManager directly or simply call login(token:) on the PCContainer.
-    public let authenticationManager = PCAuthenticationManager.shared
+    @Published private(set) public var authenticationManager = PCAuthenticationManager.shared
     
     //private tracking of cancellables to unwrap return types on Combine overloads.
     private var cancellables = Set<AnyCancellable>()

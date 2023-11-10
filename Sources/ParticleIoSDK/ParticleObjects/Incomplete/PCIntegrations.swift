@@ -217,7 +217,7 @@ extension CloudResource.RequestHelper {
     }
     
         //MARK: - Content Type
-    internal func integrationContentType(_ resource: CloudResource) -> AllowableContentType {
+    internal func integrationContentType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
                 

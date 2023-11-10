@@ -159,11 +159,17 @@ extension PCProduct {
     //MARK: Completion Handlers
 extension PCProduct {
     
+    
+    
     public static func listProducts(token: PCAccessToken, completion: @escaping (Result<PCProduct.ListResponse, PCError>) -> Void) {
+       
         PCNetwork.shared.cloudRequest(.listProducts(token: token), type: PCProduct.ListResponse.self, completion: completion)
     }
     
+    
+    
     public static func getProduct(productIdOrSlug: ProductID, token: PCAccessToken, completion: @escaping (Result<PCProduct, PCError>) -> Void) {
+       
         PCNetwork.shared.cloudRequest(.retrieveProduct(productIDorSlug: productIdOrSlug, token: token), type: ProductGetResponse.self) { result in
         
             switch result {
