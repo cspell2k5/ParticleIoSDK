@@ -268,7 +268,7 @@ PCDevice: {
     }
         
     public let id: DeviceID
-    private (set) public var name: DeviceName
+    private(set) public var name: DeviceName
     public let lastIPAddress: String
     public let lastHeard: String
     public let lastHandshakeAt: String
@@ -276,7 +276,8 @@ PCDevice: {
     public let platformID: PlatformID
     public let firmwareProductID: Int?
     public let online, connected, cellular, firmwareUpdatesEnabled, firmwareUpdatesForced: Bool?
-    public let notes, status, serialNumber, systemFirmwareVersion, currentBuildTarget, defaultBuildTarget, targetedFirmwareReleaseVersion, owner: String?
+    private(set)  public var notes: String?
+    public let status, serialNumber, systemFirmwareVersion, currentBuildTarget, defaultBuildTarget, targetedFirmwareReleaseVersion, owner: String?
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -1733,14 +1734,23 @@ extension PCDevice {
     public func addNote(_ note: String)
     -> CurrentValueSubject<PCDevice.AddNoteResponse?, PCError>  {
         
+        let sub = CurrentValueSubject<PCDevice.AddNoteResponse?, PCError>(nil)
+
         guard let token = self.token
         else {
-            let sub = CurrentValueSubject<PCDevice.AddNoteResponse?, PCError>(nil)
             sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
             return sub
         }
         
-        return  PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: self.id, productIdorSlug: self.productID, note: note, token: token), type: PCDevice.AddNoteResponse.self)
+          PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: self.id, productIdorSlug: self.productID, note: note, token: token), type: PCDevice.AddNoteResponse.self)
+            .sink { completion in
+                sub.send(completion: completion)
+            } receiveValue: { response in
+                sub.send(response)
+                self.notes = response?.notes
+            }.store(in: &cancellables)
+        
+        return sub
     }
     
     public static func addDeviceNote(deviceID: DeviceID, productIdorSlug: ProductID? = nil, note: String, token: PCAccessToken)
@@ -1756,7 +1766,11 @@ extension PCDevice {
             throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
         }
         
-        return try await PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: self.id, productIdorSlug: self.productID, note: note, token: token), type: PCDevice.AddNoteResponse.self)
+        let response = try await PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: self.id, productIdorSlug: self.productID, note: note, token: token), type: PCDevice.AddNoteResponse.self)
+        
+        self.notes = response.notes
+        
+        return response
     }
     
     public static func addDeviceNote(deviceID: DeviceID, productIdorSlug: ProductID? = nil, note: String, token: PCAccessToken) async throws -> PCDevice.AddNoteResponse {
@@ -1772,7 +1786,14 @@ extension PCDevice {
             return
         }
         
-        return PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: self.id, productIdorSlug: self.productID, note: note, token: token), type: PCDevice.AddNoteResponse.self, completion: completion)
+        PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: self.id, productIdorSlug: self.productID, note: note, token: token), type: PCDevice.AddNoteResponse.self) { result in
+           
+            if let response = try? result.get() {
+                self.notes = response.notes
+            }
+            
+            completion(result)
+        }
     }
     
     public static func addDeviceNote(deviceID: DeviceID, productIdorSlug: ProductID? = nil, note: String, token: PCAccessToken, completion: @escaping (Result<PCDevice.AddNoteResponse, PCError>) -> Void) {
