@@ -268,7 +268,7 @@ PCDevice: {
     }
         
     public let id: DeviceID
-    public let name: DeviceName
+    private (set) public var name: DeviceName
     public let lastIPAddress: String
     public let lastHeard: String
     public let lastHandshakeAt: String
@@ -1632,14 +1632,25 @@ extension PCDevice {
     //MARK: CurrentValueSubjects
     public func rename(newName: String) -> CurrentValueSubject<PCDevice.NameUpdateResponse?, PCError> {
         
+        let sub = CurrentValueSubject<PCDevice.NameUpdateResponse?, PCError>(nil)
+        
         guard let token = self.token
         else {
-            let sub = CurrentValueSubject<PCDevice.NameUpdateResponse?, PCError>(nil)
             sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
             return sub
         }
         
-        return PCNetwork.shared.cloudRequest(.renameDevice(deviceID: self.id, productIdorSlug: self.productID, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self)
+        PCNetwork.shared.cloudRequest(.renameDevice(deviceID: self.id, productIdorSlug: self.productID, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self)
+            .sink { completion in
+                sub.send(completion: completion)
+            } receiveValue: { response in
+                if let name = response?.name {
+                    self.name = DeviceName(name)
+                }
+                sub.send(response)
+            }.store(in: &cancellables)
+        
+        return sub
     }
     
     public static func renameDevice(deviceID: DeviceID, productIdorSlug: ProductID? = nil, newName: String, token: PCAccessToken)
@@ -1656,7 +1667,11 @@ extension PCDevice {
             throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
         }
         
-        return try await PCNetwork.shared.cloudRequest(.renameDevice(deviceID: self.id, productIdorSlug: self.productID, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self)
+        let response =  try await PCNetwork.shared.cloudRequest(.renameDevice(deviceID: self.id, productIdorSlug: self.productID, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self)
+        
+        self.name = DeviceName(response.name)
+        
+        return response
     }
     
     public static func renameDevice(deviceID: DeviceID, productIdorSlug: ProductID? = nil, newName: String, token: PCAccessToken) async throws -> PCDevice.NameUpdateResponse {
@@ -1672,7 +1687,14 @@ extension PCDevice {
             return
         }
         
-        return PCNetwork.shared.cloudRequest(.renameDevice(deviceID: self.id, productIdorSlug: self.productID, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self, completion: completion)
+        PCNetwork.shared.cloudRequest(.renameDevice(deviceID: self.id, productIdorSlug: self.productID, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self) { response in
+            
+            if let result = try? response.get() {
+                self.name = DeviceName(result.name)
+            }
+            
+            completion(response)
+        }
     }
     
     public static func renameDevice(deviceID: DeviceID, productIdorSlug: ProductID? = nil, newName: String, token: PCAccessToken, completion: @escaping (Result<PCDevice.NameUpdateResponse, PCError>) -> Void)  {
