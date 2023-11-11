@@ -188,7 +188,11 @@ import Combine
     ///Versioning
     /// - The API endpoints all start with /v1 to represent the first official version of the Particle Device Cloud API.
     ///  - The existing API is stable, and we may add new endpoints with the /v1 prefix.If in the future we make backwards-incompatible changes to the API, the new endpoints will start with something different, probably /v2. If we decide to deprecate any /v1 endpoints, we'll give you lots of notice and a clear upgrade path.
-public struct PCAPIUser: Decodable {
+public struct PCAPIUser: Decodable, Hashable, Identifiable {
+   
+    public var id: Int {
+        self.hashValue
+    }
     
         ///Human readable debug description.
     internal var debugDescription: String {
