@@ -3481,7 +3481,7 @@ internal enum CloudResource {
         /// - Parameter friendlyName: A friendly name used to recognise the user.
         /// - Parameter scope: List of scopes to grant for this user.
         /// - Parameter token: A currently active access token scoped to teams.users:invite
-    case createAnAPIuser(productIdOrSlug: ProductID, friendlyName: String, scope:[UserScopes], token: PCAccessToken)
+    case createAnAPIuser(productIdOrSlug: ProductID, friendlyName: String, scope:[UserPermissions], token: PCAccessToken)
     
         /// - Requires: scope of teams_users_update
         /// - Parameter productIDorSlug: String representing the product id or slug.

@@ -307,10 +307,10 @@ extension PCAPIUser {
             ///The "friendlyName" to associate with the API User.
         public let friendlyName: String
             ///An array of scopes or permissions to associate with the API User.
-        public let scopes: [UserScopes]
+        public let scopes: [UserPermissions]
         
             ///private init to shield against creating without decoder.
-        public init(friendlyName: String, scopes: [UserScopes]) {
+        public init(friendlyName: String, scopes: [UserPermissions]) {
             self.friendlyName = friendlyName;  self.scopes = scopes
         }
     }

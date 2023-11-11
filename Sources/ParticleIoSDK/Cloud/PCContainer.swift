@@ -490,7 +490,7 @@ public extension PCContainer {
     /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
     /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
     /// - Returns: `CurrentValueSubject<PCAPIUser?, PCError>`
-    func createApiUser(scopedTo: PCAPIUser.UserType, friendlyName: String, scopes: UserScopes...) -> CurrentValueSubject<PCAPIUser?, PCError> {
+    func createApiUser(scopedTo: PCAPIUser.UserType, friendlyName: String, scopes: UserPermissions...) -> CurrentValueSubject<PCAPIUser?, PCError> {
         
         let subject = CurrentValueSubject<PCAPIUser?, PCError>(nil)
         
@@ -520,7 +520,7 @@ public extension PCContainer {
     /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
     /// - Returns: `PCAPIUser.ServerResponse>`
     /// - Throws: `PCError`
-    func createApiUser(scopedTo: PCAPIUser.UserType, friendlyName: String, scopes: UserScopes...) async throws -> PCAPIUser? {
+    func createApiUser(scopedTo: PCAPIUser.UserType, friendlyName: String, scopes: UserPermissions...) async throws -> PCAPIUser? {
         
         guard let token = authenticationManager.token
         else {
@@ -538,7 +538,7 @@ public extension PCContainer {
     /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
     /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
     /// - Parameter completion: A completion handler for the request The completion closure will provide an result of either an optional PCAPIUser or a PCError.
-    func createApiUser(scopedTo: PCAPIUser.UserType, friendlyName: String, scopes: UserScopes..., completion: @escaping (Result<PCAPIUser?, PCError>) -> Void) {
+    func createApiUser(scopedTo: PCAPIUser.UserType, friendlyName: String, scopes: UserPermissions..., completion: @escaping (Result<PCAPIUser?, PCError>) -> Void) {
         
         guard let token = authenticationManager.token
         else {
