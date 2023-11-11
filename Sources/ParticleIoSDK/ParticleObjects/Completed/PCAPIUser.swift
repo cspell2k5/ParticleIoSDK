@@ -195,8 +195,8 @@ public struct PCAPIUser: Decodable, Hashable, Identifiable {
     }
     
         ///Human readable debug description.
-    internal var debugDescription: String {
-        return "username:\(username)\nisProgrammatic:\(isProgrammatic)\ntokens:\(tokens)\ntokens: \(tokens.description)"
+    public var debugDescription: String {
+        return "username:\(username)\nisProgrammatic:\(isProgrammatic)\ntokens: \(tokens.description)"
     }
     
         ///The "friendly name" of the API user.
@@ -231,61 +231,73 @@ extension PCAPIUser {
         
         var keyValue: String {
             switch self {
-                case .organization: return "orgs"
-                case .product: return "products"
+            case .organization: return "orgs"
+            case .product: return "products"
             }
         }
         
         internal var carriedValue: String {
             switch self {
-                case .organization(let name): return name.rawValue
-                case .product(let name): return String(name.rawValue)
+            case .organization(let name): return name.rawValue
+            case .product(let name): return String(name.rawValue)
             }
         }
     }
-        
-        // MARK: Team
-        ///The team associated with the API user.
+    
+    // MARK: Team
+    ///The team associated with the API user.
     public struct Team: Decodable, Hashable, Identifiable {
-       
+        
         public var id: Int {
             self.hashValue
         }
         
-            ///Human readable debug description.
+        ///Human readable debug description.
         internal var debugDescription: String {
-            return "username:\(username)\nrole:\(String(describing: role?.debugDescription))\nisProgrammatic:\(String(describing: isProgrammatic))"
+            return "username:\(username)\nrole:\(String(describing: info?.debugDescription))\nisProgrammatic:\(String(describing: isProgrammatic))"
         }
         
-            ///The human readable name of the team.
+        ///The human readable name of the team.
         public let username: String
-            ///The role for the team.
-        public let role: Role?
-            ///Indicating whether or not the user is of API origin.
+        ///The role for the team.
+        public let info: Info?
+        ///Indicating whether or not the user is of API origin.
         public let isProgrammatic: Bool?
         
-            ///Provided to keep access limited to the decoder init.
+        ///Provided to keep access limited to the decoder init.
         private init() {
             fatalError("Must use init with decoder.")
         }
         
-            ///The Role of the API user.
-        public struct Role: Decodable, Hashable, Identifiable {
+        private enum CodingKeys: String, CodingKey {
+            case username, info = "role", isProgrammatic //= "is_programmatic"
+        }
+        
+        
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.username = try container.decode(String.self, forKey: .username)
+            self.info = try container.decodeIfPresent(Info.self, forKey: .info)
+            self.isProgrammatic = try container.decodeIfPresent(Bool.self, forKey: .isProgrammatic)
+        }
+        
+        ///The Role of the API user.
+        public struct Info: Decodable, Hashable, Identifiable {
             
-                ///Human readable debug description.
+            ///Human readable debug description.
             internal var debugDescription: String {
                 return "id: \(id)\nname: \(name)\nowner: \(String(describing: owner))\n"
             }
             
-                ///The id for the role.
+            ///The id for the role.
             public let id: String
             
-                ///The human readable name for the role.
+            ///The human readable name for the role.
             public let name: String
             
             public let owner: Bool?
-
-                ///Provided to keep access limited to the decoder init.
+            
+            ///Provided to keep access limited to the decoder init.
             private init(id: String, name: String) {
                 fatalError("Must use init with decoder.")
             }
@@ -296,7 +308,9 @@ extension PCAPIUser {
             lhs.hashValue == rhs.hashValue
         }
     }
-    
+}
+
+extension PCAPIUser {
         ///Parameter used for creating or updating an API User.
     public struct UserParameters {
         
