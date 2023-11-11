@@ -246,7 +246,11 @@ extension PCAPIUser {
         
         // MARK: Team
         ///The team associated with the API user.
-    public struct Team: Decodable {
+    public struct Team: Decodable, Hashable, Identifiable {
+       
+        public var id: Int {
+            self.hashValue
+        }
         
             ///Human readable debug description.
         internal var debugDescription: String {
@@ -266,7 +270,7 @@ extension PCAPIUser {
         }
         
             ///The Role of the API user.
-        public struct Role: Decodable {
+        public struct Role: Decodable, Hashable {
             
                 ///Human readable debug description.
             internal var debugDescription: String {
@@ -285,6 +289,11 @@ extension PCAPIUser {
             private init(id: String, name: String) {
                 fatalError("Must use init with decoder.")
             }
+        }
+        
+        
+        public static func == (lhs: PCAPIUser.Team, rhs: PCAPIUser.Team) -> Bool {
+            lhs.hashValue == rhs.hashValue
         }
     }
     
