@@ -270,7 +270,7 @@ extension PCAPIUser {
         }
         
             ///The Role of the API user.
-        public struct Role: Decodable, Hashable {
+        public struct Role: Decodable, Hashable, Identifiable {
             
                 ///Human readable debug description.
             internal var debugDescription: String {
