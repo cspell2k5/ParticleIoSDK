@@ -1,10 +1,12 @@
 #  PariticleIO SDK
 
+##NOTICE - This software does not rely on any third party apis outside of Particle.io and Apple.inc. Anyone may request a Pull request, however no merges will be allowed add any other third party dependencies.
+
 
 ## NOTE This software is to be considered untested at this point. Though some functionality seems to be working well it is an extensive framework and as such has not been thoroughly tested. Please submit requests for improvements or make a pull request to help chase down issues.
 
 ## Known issues: 
- 1. The event subscriptions can only be done through deprecated APIs a bug report has been submitted to address the issue.
+ 1. The event subscriptions can only be done through deprecated APIs and a buggy stream subscription. A bug report has been submitted to address the issue.
  2. The OTP is not implemented for use with two factor authentication.
  3. Device claiming and wifi setup is not yet implemented.
  4. The example app is not very well thoughtout it is just a quick example of what the sdk can do and how it works.
