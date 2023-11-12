@@ -223,7 +223,7 @@ public struct PCAPIUser: Decodable, Hashable, Identifiable {
 extension PCAPIUser {
     
     /// Simple enum used to provide a product id or an organization id when submitting a cloud request.
-    public enum UserType {
+    public enum UserScope {
         ///Represents the organization name.
         case organization(name: OrganizationName)
         ///Represents the product name.
@@ -316,16 +316,16 @@ extension PCAPIUser {
         
             ///Human readable debug description.
         public var debugDescription: String {
-            return "friendlyName:\(friendlyName)\nscopes:\(scopes.debugDescription)\n"
+            return "friendlyName:\(friendlyName)\nscopes:\(permissions.debugDescription)\n"
         }
             ///The "friendlyName" to associate with the API User.
         public let friendlyName: String
             ///An array of scopes or permissions to associate with the API User.
-        public let scopes: [UserPermissions]
+        public let permissions: [UserPermissions]
         
             ///private init to shield against creating without decoder.
-        public init(friendlyName: String, scopes: [UserPermissions]) {
-            self.friendlyName = friendlyName;  self.scopes = scopes
+        public init(friendlyName: String, permissions: [UserPermissions]) {
+            self.friendlyName = friendlyName;  self.permissions = permissions
         }
     }
     
@@ -379,7 +379,8 @@ extension PCAPIUser {
                 let error = try container.decodeIfPresent(String.self, forKey: .error)
                 let errorDescription = try container.decodeIfPresent(String.self, forKey: .errorDescription)
 
-                throw PCError(code: .undelyingError, description: errorDescription)
+                
+                throw PCError(code: .undelyingError, description: errorDescription, underlyingError: PCError(code: .errorsOnServer, description: error))
             }
         }
     }
@@ -447,7 +448,7 @@ extension PCAPIUser {
         /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: `CurrentValueSubject<PCAPIUser.ServerResponse?, PCError>`
-    static public func createAn_API_User(type: PCAPIUser.UserType, parameters: UserParameters, token: PCAccessToken) -> CurrentValueSubject<PCAPIUser.ServerResponse?, PCError> {
+    static public func createAn_API_User(type: PCAPIUser.UserScope, parameters: UserParameters, token: PCAccessToken) -> CurrentValueSubject<PCAPIUser.ServerResponse?, PCError> {
         PCNetwork.shared.cloudRequest(.createAPiUser(type: type, parameters: parameters, token: token), type: PCAPIUser.ServerResponse.self)
             
 
@@ -488,7 +489,7 @@ extension PCAPIUser {
         /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: `CurrentValueSubject<PCAPIUser.ServerResponse?, PCError>`
-    static public func updateAn_API_User(type: PCAPIUser.UserType, parameters: UserParameters, token: PCAccessToken) -> CurrentValueSubject<PCAPIUser.ServerResponse?, PCError> {
+    static public func updateAn_API_User(type: PCAPIUser.UserScope, parameters: UserParameters, token: PCAccessToken) -> CurrentValueSubject<PCAPIUser.ServerResponse?, PCError> {
         PCNetwork.shared.cloudRequest(.updateAPiUser(type: type, parameters: parameters, token: token), type: PCAPIUser.ServerResponse.self)
     }
 
@@ -523,7 +524,7 @@ extension PCAPIUser {
         /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: `CurrentValueSubject<PCAPIUser.ServerResponse?, PCError>`
-    static public func list_API_Users(type: PCAPIUser.UserType, token: PCAccessToken) -> CurrentValueSubject<PCAPIUser.ListResponse?, PCError> {
+    static public func list_API_Users(type: PCAPIUser.UserScope, token: PCAccessToken) -> CurrentValueSubject<PCAPIUser.ListResponse?, PCError> {
         PCNetwork.shared.cloudRequest(.listAPiUsers(type: type, token: token), type: PCAPIUser.ListResponse.self)
     }
 
@@ -560,7 +561,7 @@ extension PCAPIUser {
         /// - Parameter username: The username or "friendly name" of the API user to delete.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: `CurrentValueSubject<PCAPIUser.ServerResponse?, PCError>`
-    static public func deleteAn_API_User(type: PCAPIUser.UserType, username: String, token: PCAccessToken) -> CurrentValueSubject<PCAPIUser.ServerResponse?, PCError> {
+    static public func deleteAn_API_User(type: PCAPIUser.UserScope, username: String, token: PCAccessToken) -> CurrentValueSubject<PCAPIUser.ServerResponse?, PCError> {
         PCNetwork.shared.cloudRequest(.deleteAPiUser(type: type, username: username, token: token ), type: PCAPIUser.ServerResponse.self)
     }
 }
@@ -590,7 +591,7 @@ extension PCAPIUser {
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: `PCAPIUser.ServerResponse>`
         /// - Throws: `PCError`
-    static public func createAn_API_User(type: PCAPIUser.UserType, parameters: UserParameters, token: PCAccessToken) async throws -> PCAPIUser.ServerResponse {
+    static public func createAn_API_User(type: PCAPIUser.UserScope, parameters: UserParameters, token: PCAccessToken) async throws -> PCAPIUser.ServerResponse {
         try await PCNetwork.shared.cloudRequest(.createAPiUser(type: type, parameters: parameters, token: token), type: PCAPIUser.ServerResponse.self)
     }
     
@@ -618,7 +619,7 @@ extension PCAPIUser {
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: `PCAPIUser.ServerResponse`
         /// - Throws: `PCError`
-    static public func updateAn_API_User(type: PCAPIUser.UserType, parameters: UserParameters, token: PCAccessToken) async throws -> PCAPIUser.ServerResponse {
+    static public func updateAn_API_User(type: PCAPIUser.UserScope, parameters: UserParameters, token: PCAccessToken) async throws -> PCAPIUser.ServerResponse {
         try await PCNetwork.shared.cloudRequest(.updateAPiUser(type: type, parameters: parameters, token: token), type: PCAPIUser.ServerResponse.self)
     }
 
@@ -643,7 +644,7 @@ extension PCAPIUser {
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: `PCAPIUser.ListResponse`
         /// - Throws: `PCError`
-    static public func list_API_Users(type: PCAPIUser.UserType, token: PCAccessToken) async throws -> PCAPIUser.ListResponse {
+    static public func list_API_Users(type: PCAPIUser.UserScope, token: PCAccessToken) async throws -> PCAPIUser.ListResponse {
         try await PCNetwork.shared.cloudRequest(.listAPiUsers(type: type, token: token), type: PCAPIUser.ListResponse.self)
     }
 
@@ -668,7 +669,7 @@ extension PCAPIUser {
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: `PCAPIUser.ServerResponse`
         /// - Throws: `PCError`
-    static public func deleteAn_API_User(type: PCAPIUser.UserType, username: String, token: PCAccessToken) async throws -> PCAPIUser.ServerResponse {
+    static public func deleteAn_API_User(type: PCAPIUser.UserScope, username: String, token: PCAccessToken) async throws -> PCAPIUser.ServerResponse {
         try await PCNetwork.shared.cloudRequest(.deleteAPiUser(type: type, username: username, token: token), type: PCAPIUser.ServerResponse.self)
     }
 }
@@ -698,12 +699,12 @@ extension PCAPIUser {
         /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCAPIUser.ServerResponse or a PCError.
-    static public func createAn_API_User(type: PCAPIUser.UserType, parameters: UserParameters, token: PCAccessToken, completion: @escaping (Result<PCAPIUser.ServerResponse, PCError>) -> Void) {
+    static public func createAn_API_User(type: PCAPIUser.UserScope, parameters: UserParameters, token: PCAccessToken, completion: @escaping (Result<PCAPIUser.ServerResponse, PCError>) -> Void) {
         PCNetwork.shared.cloudRequest(.createAPiUser(type: type, parameters: parameters, token: token), type: PCAPIUser.ServerResponse.self, completion: completion)
     }
     
     #warning("This needs review.")
-    static func createUser(type: PCAPIUser.UserType, parameters: PCAPIUser.UserParameters, username: String, password: String?, accountInfo: PCUser.Info, currentPassword: String, token: PCAccessToken, completion: @escaping (Result<PCAPIUser.ServerResponse, PCError>) -> Void ) {
+    static func createUser(type: PCAPIUser.UserScope, parameters: PCAPIUser.UserParameters, username: String, password: String?, accountInfo: PCUser.Info, currentPassword: String, token: PCAccessToken, completion: @escaping (Result<PCAPIUser.ServerResponse, PCError>) -> Void ) {
         
         PCNetwork.shared.cloudRequest(.createAPiUser(type: type, parameters: parameters, token: token), type: PCAPIUser.ServerResponse.self, completion: completion)
     }
@@ -733,7 +734,7 @@ extension PCAPIUser {
         /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCAPIUser.ServerResponse or a PCError.
-    static public func updateAn_API_User(type: PCAPIUser.UserType, parameters: UserParameters, token: PCAccessToken, completion: @escaping (Result<PCAPIUser.ServerResponse, PCError>) -> Void) {
+    static public func updateAn_API_User(type: PCAPIUser.UserScope, parameters: UserParameters, token: PCAccessToken, completion: @escaping (Result<PCAPIUser.ServerResponse, PCError>) -> Void) {
         PCNetwork.shared.cloudRequest(.updateAPiUser(type: type, parameters: parameters, token: token), type: PCAPIUser.ServerResponse.self, completion: completion)
     }
 
@@ -760,7 +761,7 @@ extension PCAPIUser {
         /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCAPIUser.ListResponse or a PCError.
-    static public func list_API_Users(type: PCAPIUser.UserType, token: PCAccessToken, completion: @escaping (Result<PCAPIUser.ListResponse, PCError>) -> Void) {
+    static public func list_API_Users(type: PCAPIUser.UserScope, token: PCAccessToken, completion: @escaping (Result<PCAPIUser.ListResponse, PCError>) -> Void) {
         PCNetwork.shared.cloudRequest(.listAPiUsers(type: type, token: token), type: PCAPIUser.ListResponse.self, completion: completion)
     }
 
@@ -789,7 +790,7 @@ extension PCAPIUser {
         /// - Parameter username: The username or "friendly name" of the API user to delete.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCAPIUser.ServerResponse or a PCError.
-    static public func deleteAn_API_User(type: PCAPIUser.UserType, username: String, token: PCAccessToken, completion: @escaping (Result<PCAPIUser.ServerResponse, PCError>) -> Void) {
+    static public func deleteAn_API_User(type: PCAPIUser.UserScope, username: String, token: PCAccessToken, completion: @escaping (Result<PCAPIUser.ServerResponse, PCError>) -> Void) {
         PCNetwork.shared.cloudRequest(.deleteAPiUser(type: type, username: username, token: token), type: PCAPIUser.ServerResponse.self, completion: completion)
     }
 }

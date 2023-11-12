@@ -54,13 +54,13 @@ final class ParticleIoSDKTests: XCTestCase {
         let tokenListResponse = try await PCAccessToken.listAccessToken(credentials: .testCase)
         XCTAssertNotNil(tokenListResponse)
         
-        let userResponse = try await PCAPIUser.createAn_API_User(type: .product(name: .testCase), parameters: .init(friendlyName: "friend", scopes: [.clients_create]), token: token)
+        let userResponse = try await PCAPIUser.createAn_API_User(type: .product(name: .testCase), parameters: .init(friendlyName: "friend", permissions: [.clients_create]), token: token)
         XCTAssertNotNil(userResponse)
         
         let listResponse = try await PCAPIUser.list_API_Users(type: .product(name: .testCase), token: token)
         XCTAssertNotNil(listResponse)
         
-        let updateResponse = try? await PCAPIUser.updateAn_API_User(type: .product(name: .testCase), parameters: .init(friendlyName: userResponse.user!.username, scopes: [UserPermissions.clients_list]), token: token)
+        let updateResponse = try? await PCAPIUser.updateAn_API_User(type: .product(name: .testCase), parameters: .init(friendlyName: userResponse.user!.username, permissions: [UserPermissions.clients_list]), token: token)
         XCTAssertNotNil(updateResponse)
         
         let deletionResponse = try await PCAPIUser.deleteAn_API_User(type: .product(name: .testCase), username: userResponse.user!.username, token: token)

@@ -490,7 +490,7 @@ public extension PCContainer {
     /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
     /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
     /// - Returns: `CurrentValueSubject<PCAPIUser?, PCError>`
-    func createApiUser(scopedTo: PCAPIUser.UserType, friendlyName: String, scopes: [UserPermissions]) -> CurrentValueSubject<PCAPIUser?, PCError> {
+    func createApiUser(scopedTo: PCAPIUser.UserScope, friendlyName: String, permissions: [UserPermissions]) -> CurrentValueSubject<PCAPIUser?, PCError> {
         
         let subject = CurrentValueSubject<PCAPIUser?, PCError>(nil)
         
@@ -500,7 +500,7 @@ public extension PCContainer {
             return subject
         }
         
-        PCAPIUser.createAn_API_User(type: scopedTo, parameters: .init(friendlyName: friendlyName, scopes: scopes), token: token)
+        PCAPIUser.createAn_API_User(type: scopedTo, parameters: .init(friendlyName: friendlyName, permissions: permissions), token: token)
             .sink { completion in
                 subject.send(completion: completion)
             } receiveValue: { response in
@@ -521,14 +521,14 @@ public extension PCContainer {
     /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
     /// - Returns: `PCAPIUser.ServerResponse>`
     /// - Throws: `PCError`
-    func createApiUser(scopedTo: PCAPIUser.UserType, friendlyName: String, scopes: [UserPermissions]) async throws -> PCAPIUser? {
+    func createApiUser(scopedTo: PCAPIUser.UserScope, friendlyName: String, permissions: [UserPermissions]) async throws -> PCAPIUser? {
         
         guard let token = authenticationManager.token
         else {
             throw PCError.unauthenticated
         }
         
-        return try await PCAPIUser.createAn_API_User(type: scopedTo, parameters: .init(friendlyName: friendlyName, scopes: scopes), token: token).user
+        return try await PCAPIUser.createAn_API_User(type: scopedTo, parameters: .init(friendlyName: friendlyName, permissions: permissions), token: token).user
     }
     
     
@@ -539,7 +539,7 @@ public extension PCContainer {
     /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
     /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
     /// - Parameter completion: A completion handler for the request The completion closure will provide an result of either an optional PCAPIUser or a PCError.
-    func createApiUser(scopedTo: PCAPIUser.UserType, friendlyName: String, scopes: [UserPermissions], completion: @escaping (Result<PCAPIUser?, PCError>) -> Void) {
+    func createApiUser(scopedTo: PCAPIUser.UserScope, friendlyName: String, permissions: [UserPermissions], completion: @escaping (Result<PCAPIUser?, PCError>) -> Void) {
         
         guard let token = authenticationManager.token
         else {
@@ -547,7 +547,7 @@ public extension PCContainer {
             return
         }
         
-        PCAPIUser.createAn_API_User(type: scopedTo, parameters: .init(friendlyName: friendlyName, scopes: scopes), token: token) { result in
+        PCAPIUser.createAn_API_User(type: scopedTo, parameters: .init(friendlyName: friendlyName, permissions: permissions), token: token) { result in
             
             switch result {
             case .success(let response):
@@ -573,7 +573,7 @@ public extension PCContainer {
     /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
     /// - Parameter parameters: An PCAPIUser.UserParameters instace to be used for the request parameter.
     /// - Returns: `CurrentValueSubject<PCAPIUser?, PCError>`
-    func updateApiUser(scopedTo: PCAPIUser.UserType, parameters: PCAPIUser.UserParameters) -> CurrentValueSubject<PCAPIUser?, PCError> {
+    func updateApiUser(scopedTo: PCAPIUser.UserScope, parameters: PCAPIUser.UserParameters) -> CurrentValueSubject<PCAPIUser?, PCError> {
         
         let subject = CurrentValueSubject<PCAPIUser?, PCError>(nil)
         
@@ -602,7 +602,7 @@ public extension PCContainer {
     /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
     /// - Returns: `PCAPIUser`
     /// - Throws: `PCError`
-    func updateApiUser(scopedTo: PCAPIUser.UserType, parameters: PCAPIUser.UserParameters) async throws -> PCAPIUser? {
+    func updateApiUser(scopedTo: PCAPIUser.UserScope, parameters: PCAPIUser.UserParameters) async throws -> PCAPIUser? {
         
         guard let token = authenticationManager.token
         else {
@@ -621,7 +621,7 @@ public extension PCContainer {
     /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
     /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
     /// - Parameter completion: A completion handler for the request The completion closure will provide a result of an optional PCAPIUser or a PCError indicating the failure.
-    func updateApiUser(scopedTo: PCAPIUser.UserType, parameters: PCAPIUser.UserParameters, completion: @escaping (Result<PCAPIUser?, PCError>) -> Void) {
+    func updateApiUser(scopedTo: PCAPIUser.UserScope, parameters: PCAPIUser.UserParameters, completion: @escaping (Result<PCAPIUser?, PCError>) -> Void) {
         
         guard let token = authenticationManager.token
         else {
@@ -653,7 +653,7 @@ public extension PCContainer {
     ///
     /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
     /// - Returns: `CurrentValueSubject<PCAPIUser.Team?, PCError>`
-    func listApiUsers(scopedTo: PCAPIUser.UserType) -> CurrentValueSubject<[PCAPIUser.Team]?, PCError> {
+    func listApiUsers(scopedTo: PCAPIUser.UserScope) -> CurrentValueSubject<[PCAPIUser.Team]?, PCError> {
         
         let subject = CurrentValueSubject<[PCAPIUser.Team]?, PCError>(nil)
         
@@ -682,7 +682,7 @@ public extension PCContainer {
     /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
     /// - Returns: `PCAPIUser.Team`
     /// - Throws: `PCError`
-    func listApiUsers(scopedTo: PCAPIUser.UserType) async throws -> [PCAPIUser.Team] {
+    func listApiUsers(scopedTo: PCAPIUser.UserScope) async throws -> [PCAPIUser.Team] {
         
         guard let token = authenticationManager.token
         else {
@@ -701,7 +701,7 @@ public extension PCContainer {
     ///
     /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
     /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCAPIUser.ListResponse or a PCError.
-    func listApiUsers(scopedTo: PCAPIUser.UserType, completion: @escaping (Result<[PCAPIUser.Team], PCError>) -> Void) {
+    func listApiUsers(scopedTo: PCAPIUser.UserScope, completion: @escaping (Result<[PCAPIUser.Team], PCError>) -> Void) {
         
         guard let token = authenticationManager.token
         else {
@@ -735,7 +735,7 @@ public extension PCContainer {
     /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
     /// - Parameter username: The username or "friendly name" of the API user to delete.
     /// - Returns: `CurrentValueSubject<Bool?, PCError>`
-    func deleteApiUser(scopedTo: PCAPIUser.UserType, username: String) -> CurrentValueSubject<Bool?, PCError> {
+    func deleteApiUser(scopedTo: PCAPIUser.UserScope, username: String) -> CurrentValueSubject<Bool?, PCError> {
         
         let subject = CurrentValueSubject<Bool?, PCError>(nil)
         
@@ -765,7 +765,7 @@ public extension PCContainer {
     /// - Parameter username: The username or "friendly name" of the API user to delete.
     /// - Returns: A `Bool` indicating success.
     /// - Throws: `PCError`
-    func deleteApiUser(scopedTo: PCAPIUser.UserType, username: String) async throws -> Bool {
+    func deleteApiUser(scopedTo: PCAPIUser.UserScope, username: String) async throws -> Bool {
         
         guard let token = authenticationManager.token
         else {
@@ -800,7 +800,7 @@ public extension PCContainer {
     /// - Parameter type: PCAPIUser.UserType supplied with the correct name of the org or product.
     /// - Parameter username: The username or "friendly name" of the API user to delete.
     /// - Parameter completion: A completion handler for the request The completion will contain a result of either an Bool indicating success or an PCError indicating the failure.
-    func deleteApiUser(scopedTo: PCAPIUser.UserType, username: String, completion: @escaping (Result<Bool, PCError>) -> Void) {
+    func deleteApiUser(scopedTo: PCAPIUser.UserScope, username: String, completion: @escaping (Result<Bool, PCError>) -> Void) {
         
         guard let token = authenticationManager.token
         else {

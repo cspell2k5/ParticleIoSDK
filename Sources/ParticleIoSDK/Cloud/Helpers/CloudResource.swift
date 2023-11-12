@@ -513,7 +513,7 @@ internal enum CloudResource {
         /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: An PCAPIUser.ServerResponse json.
-    case createAPiUser(type: PCAPIUser.UserType, parameters: PCAPIUser.UserParameters, token: PCAccessToken)
+    case createAPiUser(type: PCAPIUser.UserScope, parameters: PCAPIUser.UserParameters, token: PCAccessToken)
     
         ///Updating an API user
         ///
@@ -538,7 +538,7 @@ internal enum CloudResource {
         /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: An PCAPIUser.ServerResponse json.
-    case updateAPiUser(type: PCAPIUser.UserType, parameters: PCAPIUser.UserParameters, token: PCAccessToken)
+    case updateAPiUser(type: PCAPIUser.UserScope, parameters: PCAPIUser.UserParameters, token: PCAccessToken)
     
         ///Listing API users
         ///
@@ -579,7 +579,7 @@ internal enum CloudResource {
         /// - Parameter parameters: an PCAPIUser.UserParameters to be used for the request parameter.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: Likely an array of PCAPIUser.ListResponse json.
-    case listAPiUsers(type: PCAPIUser.UserType, token: PCAccessToken)
+    case listAPiUsers(type: PCAPIUser.UserScope, token: PCAccessToken)
 
         ///Deleting an API user
         ///
@@ -606,7 +606,7 @@ internal enum CloudResource {
         /// - Parameter username: The "friendly name" of the API user to delete.
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: Likely an array of PCAPIUser.ListResponse json.
-    case deleteAPiUser(type: PCAPIUser.UserType, username: String, token: PCAccessToken)
+    case deleteAPiUser(type: PCAPIUser.UserScope, username: String, token: PCAccessToken)
         
         //MARK: - Devices - Done
     

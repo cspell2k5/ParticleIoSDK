@@ -394,7 +394,7 @@ extension CloudResource.RequestHelper {
             case .createAPiUser(_, let parameters,_):
                 payload = [
                     "{\"friendly_name\":\"\(parameters.friendlyName)\"",
-                    "\"scopes\":[\(parameters.scopes.map({"\"\($0.rawValue)\""}).joined(separator: ","))]}"
+                    "\"scopes\":[\(parameters.permissions.map({"\"\($0.rawValue)\""}).joined(separator: ","))]}"
                 ]
                 
                 return payload?.joined(separator:",").data(using: .utf8)
@@ -403,7 +403,7 @@ extension CloudResource.RequestHelper {
                 
                 payload = [
                     "{\"friendly_name\":\"\(parameters.friendlyName)\"",
-                    "\"scopes\":[\(parameters.scopes.map({"\"\($0.rawValue)\""}).joined(separator: ","))]}"
+                    "\"scopes\":[\(parameters.permissions.map({"\"\($0.rawValue)\""}).joined(separator: ","))]}"
                 ]
                 
                 return payload?.joined(separator:",").data(using: .utf8)
