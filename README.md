@@ -1,6 +1,6 @@
 #  PariticleIO SDK
 
-##NOTICE - This software does not rely on any third party apis outside of Particle.io and Apple.inc. Anyone may request a Pull request, however no merges will be allowed add any other third party dependencies.
+## NOTICE - This software does not rely on any third party apis outside of Particle.io and Apple.inc. Anyone may request a Pull request, however no merges will be allowed add any other third party dependencies.
 
 
 ## NOTE This software is to be considered untested at this point. Though some functionality seems to be working well it is an extensive framework and as such has not been thoroughly tested. Please submit requests for improvements or make a pull request to help chase down issues.
