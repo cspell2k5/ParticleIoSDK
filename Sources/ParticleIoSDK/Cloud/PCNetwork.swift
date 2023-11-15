@@ -235,6 +235,17 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
         
         return .cancel
     }
+    
+    
+    func urlSession(_ session: URLSession, task: URLSessionTask, needNewBodyStream completionHandler: @escaping (InputStream?) -> Void) {
+        let stream = InputStream()
+        
+        stream.schedule(in: .current, forMode: .default)
+        stream.delegate = self
+        stream.open()
+        
+        completionHandler(stream)
+    }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
        
@@ -306,6 +317,6 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
             }
         }
         
-//        streamTask.captureStreams()
+        streamTask.captureStreams()
     }
 }
