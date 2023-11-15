@@ -288,15 +288,18 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
         
 //        streamTask.delegate = self
        
-        while true {
-            
-            streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60) { data,_,_ in
-                if let data,
-                   let event = PCEvent(serverData: data),
-                   let block = self.connectionTasks[dataTask]?.event {
-                    
-                    block(event)
+        DispatchQueue.global().async {
+            while true {
+                
+                streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60) { data,_,_ in
+                    if let data,
+                       let event = PCEvent(serverData: data),
+                       let block = self.connectionTasks[dataTask]?.event {
+                        
+                        block(event)
+                    }
                 }
+                sleep(30)
             }
             sleep(30)
         }
