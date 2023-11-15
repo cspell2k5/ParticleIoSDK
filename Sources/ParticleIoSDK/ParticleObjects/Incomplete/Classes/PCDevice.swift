@@ -496,7 +496,7 @@ PCDevice: {
         lhs.id == rhs.id
     }
                                
-                               ///Hash function for Hashable protocol.
+    ///Hash function for Hashable protocol.
     public override var hash: Int {
         var hasher = Hasher()
             hasher.combine(id.rawValue)
@@ -533,6 +533,35 @@ PCDevice: {
 
 //MARK: - Refresh
 extension PCDevice {
+    
+    
+    public func refresh() -> Future<Bool, PCError> {
+        
+        Future { promise in
+            
+            guard let token = PCAuthenticationManager.shared.token
+            else {
+                promise(.failure( PCError(code: .unauthenticated, description: "Could not complete the operation because you are not currently authenticated.")))
+                return
+            }
+            
+            Task {
+                let device = try await PCDevice.getDevice(deviceID: self.id, token: token)
+                
+                for propertyKey in device.propertyKeys {
+                    if propertyKey != .events {
+                        self.setValue(device.value(for: propertyKey), forKey: propertyKey.rawValue)
+                    }
+                }
+                
+                self.token = token
+                
+                promise(.success(true))
+            }
+        }
+    }
+
+    
     public func refresh(completion: ((Result<Never, PCError>) -> Void)? = nil) {
         
         guard let token = PCAuthenticationManager.shared.token
@@ -580,6 +609,99 @@ extension PCDevice {
 //MARK: - Events
 extension PCDevice {
     
+    
+    public func subscribe(eventName: EventName, productIdOrSlug: ProductID?) -> CurrentValueSubject<PCEvent?, PCError> {
+        
+        let subject = CurrentValueSubject<PCEvent?, PCError>(nil)
+        
+        if let error = checkToken() {
+            subject.send(completion: .failure(error))
+            return subject
+        }
+        
+        if let error = checkName(eventName.rawValue, type: .event) {
+            subject.send(completion: .failure(error))
+            return subject
+        }
+        
+        if let productIdOrSlug {
+            
+            if let error = checkName(productIdOrSlug.rawValue, type: .productID) {
+                subject.send(completion: .failure(error))
+                return subject
+            }
+            
+            PCNetwork.shared.subscribe(eventName: eventName, productId: productIdOrSlug, token: self.token!) { event in
+                
+                self.updateSubject(subject, for: event)
+                
+            } completion: { error in
+                
+                self.handleSubscriptionError(error, subject: subject)
+            }
+        } else {
+            
+            PCNetwork.shared.subscribe(eventName: eventName, token: self.token!) { event in
+                
+                self.updateSubject(subject, for: event)
+            } completion: { error in
+                
+                self.handleSubscriptionError(error, subject: subject)
+            }
+        }
+        return subject
+    }
+    
+    private func checkToken() -> PCError? {
+        if let token = self.token {
+            return nil
+        }
+        return PCError.unauthenticated
+        
+    }
+    
+    private enum NameType {
+        case event, productID
+    }
+    
+    private func checkName(_ name: String, type: NameType) -> PCError? {
+        if name.isEmpty{
+            return PCError(code: .invalidArguments, description: "\(type == .event ? "Event name" : "ProductID" ) parameter cannot be an empty string.")
+        }
+        return nil
+    }
+    
+    
+    private func updateSubject(_ subject: CurrentValueSubject<PCEvent?, PCError>, for event: PCEvent) {
+        
+        DispatchQueue.main.async {
+            
+            self.objectWillChange.send()
+            
+            do {
+                try self.events.append(event)
+                subject.send( event )
+            } catch {
+                subject.send(completion: .failure(PCError(code: .failedToParseJsonDate, description: "Could not parse date for event: \(event.debugDescription) in function: \(#function) of file: \(#file)\n" )))
+            }
+        }
+    }
+    
+    
+    
+    private func handleSubscriptionError(_ error: PCError?, subject: CurrentValueSubject<PCEvent?, PCError>) {
+        
+        if let error {
+            subject.send(completion: .failure(error))
+        } else {
+            subject.send(completion: .finished)
+        }
+    }
+}
+
+
+
+extension PCDevice {
     
     public func subscribe(eventName: EventName?, productIdOrSlug: ProductID?, onEvent: EventBlock?, completion: CompletionBlock?) {
         

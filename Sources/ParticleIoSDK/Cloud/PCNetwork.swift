@@ -35,7 +35,6 @@ final internal class PCNetwork: NSObject, NSURLConnectionDelegate, NSURLConnecti
         
         return configuration
     }()
-    
 }
 
     //MARK: - Events
@@ -44,20 +43,10 @@ extension PCNetwork {
     
     private func subscribe(request: URLRequest, token: PCAccessToken, onEvent: EventBlock?, completion: CompletionBlock?) {
         
-#if !os(watchOS)
-        
-        guard let connection = NSURLConnection(request: request, delegate: self.eventDelegate, startImmediately: true) else {
-            completion?(PCError(code: .networkFailure, description: "Could not create an NSURLConnection."))
-            return
-        }
-        eventDelegate.connectionTasks[connection] = (event: onEvent, completion: completion)
-#else
-        
-        let task = URLSession(configuration: self.configurationForUrlSession).dataTask(with: request)
+        let task = session.dataTask(with: request)
         task.delegate = self.eventDelegate
+        eventDelegate.connectionTasks[task] = (event: onEvent, completion: completion)
         task.resume()
-        
-#endif
     }
     
     
@@ -178,7 +167,11 @@ extension PCNetwork {
         let task = self.session.dataTask(with: request) { [weak self] data, response, error in
             
             guard let self = self else {
-                completion?( .failure( PCError(code: .deinitializedObject, description: PCErrorCode.deinitializedObject.description ) ) )
+                completion?(
+                    .failure(
+                        PCError(code: .deinitializedObject, description: PCErrorCode.deinitializedObject.description ) 
+                    )
+                )
                 return
             }
             
@@ -193,18 +186,20 @@ extension PCNetwork {
     //MARK: - Decoding and Error Handling
 extension PCNetwork {
     
-    private func decodeParticleResponse<T: Decodable>(resource: CloudResource, request: URLRequest, type: T.Type, data: Data?, response: URLResponse?, error: Error? = nil) -> Result<T,PCError> {
+    private func decodeParticleResponse<T: Decodable>(resource: CloudResource, request: URLRequest, type: T.Type, data: Data?, response: URLResponse?, error: Error? = nil) -> Result<T, PCError> {
                 
         
         if type == ServerResponses.NoResponse.self,
            let data = data,
+           let code = (response as? HTTPURLResponse)?.statusCode,
            String(data: data, encoding: .utf8) == "",
-           (response as? HTTPURLResponse)?.statusCode ?? 0 > 199 && (response as? HTTPURLResponse)?.statusCode ?? 301 < 299 {
+            code > 199 && code < 299 {
             
             if let error = error {
                 
                 return .failure(PCError(code: .undelyingError, description: "\((error as NSError).localizedDescription)", underlyingError: error))
             } else {
+                
                 return .success(ServerResponses.NoResponse(ok: true) as! T)
             }
         }
@@ -223,23 +218,11 @@ extension PCNetwork {
     }
 }
 
-#if os(watchOS)
+internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionDataDelegate {
+    
+    
+    internal var connectionTasks = [URLSessionDataTask : (event: EventBlock?, completion: CompletionBlock?)]()
 
-#warning("This is a total hack job. This needs to be fixed when an update or bug fix is available")
-internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionDataDelegate, URLSessionStreamDelegate {
-    
-    
-    internal var connectionTasks = [URLSession : (event: EventBlock?, completion: CompletionBlock?)]()
-    
-    func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
-        
-        if let event = PCEvent(serverData: data) {
-            let block = connectionTasks[session]?.event
-            block?(event)
-        }
-    }
-    
-    
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse) async -> URLSession.ResponseDisposition {
         
         if response.url?.host == "api.particle.io",
@@ -251,57 +234,28 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionDataDelega
         
         return .cancel
     }
-    
-    func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
-        print("error:\n\(error)\nfunction: \(#function) in \(#file)")
-        
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        guard let request = task.currentRequest else {return}
+        let replacement = session.dataTask(with: request)
+        self.connectionTasks[replacement] = self.connectionTasks[task as! URLSessionDataTask]
+        self.connectionTasks[task as! URLSessionDataTask] = nil
     }
-    
-    
+        
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome streamTask: URLSessionStreamTask) {
         
         Task {
-            while true {
-                
-                let data = try await streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60).0 ?? Data()
-                print("data: \(String(describing: String(data: data, encoding: .ascii)))")
-                print(PCEvent(serverData: data)?.description ?? "")
-                NSLog("")
-                sleep(30)
-            }
-        }
-    }
-}
-
-
-
-#else
-internal class EventDelegate: NSObject, NSURLConnectionDelegate, NSURLConnectionDataDelegate {
-    
-    
-    internal var connectionTasks = [NSURLConnection : (event: EventBlock?, completion: CompletionBlock?)]()
-
-    func connection(_ connection: NSURLConnection, didReceive data: Data) {
-        
-        if let event = PCEvent(serverData: data) {
-            let block = connectionTasks[connection]?.event
-            block?(event)
-        }
-    }
-    
-
-    func connection(_ connection: NSURLConnection, didFailWithError error: Error) {
-        if (error as NSError).userInfo["NSLocalizedDescription"] as? String == "The request timed out." {
-            let request = connection.originalRequest
-            if let newConnection = NSURLConnection(request: request, delegate: self, startImmediately: true) {
-                connectionTasks[newConnection] = connectionTasks[connection]
-            }
-            connectionTasks[connection] = nil
             
-        } else {
-            connectionTasks[connection]?.completion?(PCError(code: .undelyingError, underlyingError: error))
+            while dataTask.state == .running {
+               
+                if let data = try await streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60).0,
+                   let event = PCEvent(serverData: data),
+                   let block = self.connectionTasks[dataTask]?.event {
+                    
+                    block(event)
+                    sleep(30)
+                }
+            }
         }
-        print("error:\n\(error)\nfunction: \(#function) in \(#file)")
     }
 }
-#endif
