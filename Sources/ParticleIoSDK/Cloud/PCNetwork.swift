@@ -270,6 +270,8 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
             var buffer = UnsafeMutablePointer<UInt8>(bitPattern: 0)!
             let length = (aStream as! InputStream).read(&buffer, maxLength: 128)
             
+            guard length > 0 else { return }
+            
             let data = Data(bytes: buffer, count: length)
            
             if let event = PCEvent(serverData: data) {
@@ -283,17 +285,22 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
         
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome streamTask: URLSessionStreamTask) {
         
-        Task {
+        
+//        streamTask.delegate = self
+       
+        while true {
             
-            streamTask.delegate = self
-            
-            if let data = try await streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60).0,
-               let event = PCEvent(serverData: data),
-               let block = self.connectionTasks[dataTask]?.event {
-                
-                block(event)
+            streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60) { data,_,_ in
+                if let data,
+                   let event = PCEvent(serverData: data),
+                   let block = self.connectionTasks[dataTask]?.event {
+                    
+                    block(event)
+                }
             }
+            sleep(30)
         }
-        streamTask.captureStreams()
+        
+//        streamTask.captureStreams()
     }
 }
