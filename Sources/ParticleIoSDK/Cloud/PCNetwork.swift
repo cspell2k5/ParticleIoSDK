@@ -288,8 +288,6 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
                    let block = self.connectionTasks[dataTask]?.event {
                     
                     block(event)
-                    sleep(30)
-                }
             }
         }
         
