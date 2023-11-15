@@ -253,9 +253,10 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
         
         inputStream.delegate = self
         inputStream.schedule(in: runloop, forMode: .common)
-        inputStream.open()
         
         runloop.run()
+        inputStream.open()
+        
     }
     
     func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
@@ -286,12 +287,14 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome streamTask: URLSessionStreamTask) {
         
         
-//        streamTask.delegate = self
+        streamTask.delegate = self
        
         DispatchQueue.global().async {
+           
             while true {
                 
                 streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60) { data,_,_ in
+                    
                     if let data,
                        let event = PCEvent(serverData: data),
                        let block = self.connectionTasks[dataTask]?.event {
@@ -299,9 +302,8 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
                         block(event)
                     }
                 }
-                sleep(30)
+                sleep(15)
             }
-            sleep(30)
         }
         
 //        streamTask.captureStreams()
