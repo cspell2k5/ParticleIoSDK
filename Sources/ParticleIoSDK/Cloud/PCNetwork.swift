@@ -248,9 +248,6 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
     func urlSession(_ session: URLSession, streamTask: URLSessionStreamTask, didBecome inputStream: InputStream, outputStream: OutputStream) {
             
         self.streamTasks[inputStream] = self.connectionTasks[streamTask]
-        inputStream.delegate = self
-        inputStream.schedule(in: RunLoop.current, forMode: .common)
-        inputStream.open()
     }
     
     func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
