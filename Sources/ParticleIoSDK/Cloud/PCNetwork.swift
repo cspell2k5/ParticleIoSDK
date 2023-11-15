@@ -306,6 +306,6 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
             }
         }
         
-//        streamTask.captureStreams()
+        streamTask.captureStreams()
     }
 }
