@@ -218,10 +218,11 @@ extension PCNetwork {
     }
 }
 
-internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionDataDelegate {
+internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLSessionDataDelegate, URLSessionStreamDelegate, StreamDelegate {
     
     
-    internal var connectionTasks = [URLSessionDataTask : (event: EventBlock?, completion: CompletionBlock?)]()
+    internal var connectionTasks = [URLSessionTask : (event: EventBlock?, completion: CompletionBlock?)]()
+    internal var streamTasks = [Stream : (event: EventBlock?, completion: CompletionBlock?)]()
 
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse) async -> URLSession.ResponseDisposition {
         
@@ -236,18 +237,52 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionDataDelega
     }
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+       
         guard let request = task.currentRequest else {return}
         let replacement = session.dataTask(with: request)
-        self.connectionTasks[replacement] = self.connectionTasks[task as! URLSessionDataTask]
-        self.connectionTasks[task as! URLSessionDataTask] = nil
+       
+        self.connectionTasks[replacement] = self.connectionTasks[task]
+        self.connectionTasks[task] = nil
+    }
+    
+    func urlSession(_ session: URLSession, streamTask: URLSessionStreamTask, didBecome inputStream: InputStream, outputStream: OutputStream) {
+            
+        self.streamTasks[inputStream] = self.connectionTasks[streamTask]
+        inputStream.delegate = self
+        inputStream.schedule(in: RunLoop.current, forMode: .common)
+        inputStream.open()
+    }
+    
+    func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
+        
+        switch eventCode {
+            
+        case .endEncountered, .errorOccurred:
+            aStream.close()
+            
+        case .hasBytesAvailable:
+            
+            var buffer = UnsafeMutablePointer<UInt8>(bitPattern: 0)!
+            let length = (aStream as! InputStream).read(&buffer, maxLength: 128)
+            
+            let data = Data(bytes: buffer, count: length)
+           
+            if let event = PCEvent(serverData: data) {
+                self.streamTasks[aStream]?.event?(event)
+            }
+            
+        default:
+            break
+        }
     }
         
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome streamTask: URLSessionStreamTask) {
         
         Task {
+
+            streamTask.delegate = self
             
-            while dataTask.state == .running {
-               
+            while dataTask.state != .canceling || dataTask.state != .completed {
                 if let data = try await streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60).0,
                    let event = PCEvent(serverData: data),
                    let block = self.connectionTasks[dataTask]?.event {
@@ -257,5 +292,7 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionDataDelega
                 }
             }
         }
+        
+        streamTask.captureStreams()
     }
 }
