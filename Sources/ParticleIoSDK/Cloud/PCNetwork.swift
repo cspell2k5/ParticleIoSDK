@@ -279,18 +279,16 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome streamTask: URLSessionStreamTask) {
         
         Task {
-
+            
             streamTask.delegate = self
             
-            while dataTask.state != .canceling || dataTask.state != .completed {
-                if let data = try await streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60).0,
-                   let event = PCEvent(serverData: data),
-                   let block = self.connectionTasks[dataTask]?.event {
-                    
-                    block(event)
+            if let data = try await streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60).0,
+               let event = PCEvent(serverData: data),
+               let block = self.connectionTasks[dataTask]?.event {
+                
+                block(event)
             }
         }
-        
         streamTask.captureStreams()
     }
 }
