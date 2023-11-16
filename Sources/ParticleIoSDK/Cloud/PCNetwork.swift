@@ -309,8 +309,10 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
                 
                 streamTask.readData(ofMinLength: 0, maxLength: 128, timeout: 0) { data, isEOF, error in
                     
-                    guard let data else {return}
                     print(isEOF, error as Any)
+
+                    guard let data else {return}
+
                     print(String(data: data, encoding: .utf8) as Any)
                     
                     if let event = PCEvent(serverData: data),
