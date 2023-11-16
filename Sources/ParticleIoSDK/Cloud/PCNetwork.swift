@@ -336,6 +336,7 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
     }
         
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome streamTask: URLSessionStreamTask) {
+        streamTask.delegate = self
         streamTask.captureStreams()
     }
 }
