@@ -43,20 +43,20 @@ extension PCNetwork {
     
     private func subscribe(request: URLRequest, token: PCAccessToken, onEvent: EventBlock?, completion: CompletionBlock?) {
         
-//        #if os(watchOS)
+        #if os(watchOS)
         let task = session.dataTask(with: request)
         task.delegate = self.eventDelegate
         eventDelegate.connectionTasks[task] = (event: onEvent, completion: completion)
         task.resume()
-//        #else
-//        
-//        guard let task = NSURLConnection(request: request, delegate: self.eventDelegate, startImmediately: true)
-//        else {
-//            completion?(PCError(code: .networkError, description: "Unable to get URL connection."))
-//            return
-//        }
-//        eventDelegate.connectionTasks[task] = (event: onEvent, completion: completion)
-//        #endif
+        #else
+        
+        guard let task = NSURLConnection(request: request, delegate: self.eventDelegate, startImmediately: true)
+        else {
+            completion?(PCError(code: .networkError, description: "Unable to get URL connection."))
+            return
+        }
+        eventDelegate.connectionTasks[task] = (event: onEvent, completion: completion)
+        #endif
     }
     
     
@@ -228,32 +228,32 @@ extension PCNetwork {
     }
 }
 
-//
-//#if !os(watchOS)
-//internal class EventDelegate: NSObject, NSURLConnectionDataDelegate, NSURLConnectionDelegate {
-//    
-//    internal var connectionTasks = [NSURLConnection : (event: EventBlock?, completion: CompletionBlock?)]()
-//    
-//    func connection(_ connection: NSURLConnection, didReceive data: Data) {
-//
-//        if let event = PCEvent(serverData: data) {
-//            self.connectionTasks[connection]?.event?(event)
-//        }
-//    }
-//    
-//    func connection(_ connection: NSURLConnection, didFailWithError error: Error) {
-//        guard let replacement = NSURLConnection(request: connection.currentRequest, delegate: self, startImmediately: true)
-//        else {
-//            self.connectionTasks[connection]?.completion?(PCError(code: .networkFailure, description: "Failed to create URL Connection."))
-//            return
-//        }
-//        self.connectionTasks[replacement] = self.connectionTasks[connection]
-//        self.connectionTasks[connection] = nil
-//    }
-//}
-//
-//
-//#else
+
+#if !os(watchOS)
+internal class EventDelegate: NSObject, NSURLConnectionDataDelegate, NSURLConnectionDelegate {
+    
+    internal var connectionTasks = [NSURLConnection : (event: EventBlock?, completion: CompletionBlock?)]()
+    
+    func connection(_ connection: NSURLConnection, didReceive data: Data) {
+
+        if let event = PCEvent(serverData: data) {
+            self.connectionTasks[connection]?.event?(event)
+        }
+    }
+    
+    func connection(_ connection: NSURLConnection, didFailWithError error: Error) {
+        guard let replacement = NSURLConnection(request: connection.currentRequest, delegate: self, startImmediately: true)
+        else {
+            self.connectionTasks[connection]?.completion?(PCError(code: .networkFailure, description: "Failed to create URL Connection."))
+            return
+        }
+        self.connectionTasks[replacement] = self.connectionTasks[connection]
+        self.connectionTasks[connection] = nil
+    }
+}
+
+
+#else
 
 internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLSessionDataDelegate, URLSessionStreamDelegate, StreamDelegate {
     
@@ -341,4 +341,4 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
     }
 }
 
-//#endif
+#endif
