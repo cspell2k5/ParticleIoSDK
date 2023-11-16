@@ -338,7 +338,7 @@ ReleaseArguments: {
         ///firmware version number to release to the fleet
         public let version: Int
         
-        ///Pass true to set the firmware version as the product default release
+        ///Bool indicating if this is the product default firmware.
         public let product_default: Bool
         
         ///An array of device groups to release the firmware to.
@@ -348,8 +348,13 @@ ReleaseArguments: {
         public let intelligent: Bool
         
     
-        
-        
+        ///Designated initializer.
+        ///
+        /// - Parameter version: The version number of the firmware binary you are uploading.
+        /// - Parameter productId: The id of the product claiming the firmware.
+        /// - Parameter product_default: Pass true to set as the product default firmware.
+        /// - Parameter groups: An array of device groups to release the firmware to.
+        /// - Parameter intelligent: Flag this firmware release as an intelligent release so that devices do not need to reconnect to the cloud to receive the update and that they are informed of pending updates when devices are not available for updating.
         public init(version: Int, productId: ProductID, product_default: Bool, groups: [String]?, intelligent: Bool) {
             self.productId = productId
             self.version = version
