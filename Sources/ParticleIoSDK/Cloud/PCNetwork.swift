@@ -43,10 +43,20 @@ extension PCNetwork {
     
     private func subscribe(request: URLRequest, token: PCAccessToken, onEvent: EventBlock?, completion: CompletionBlock?) {
         
+        #if os(watchOS)
         let task = session.dataTask(with: request)
         task.delegate = self.eventDelegate
         eventDelegate.connectionTasks[task] = (event: onEvent, completion: completion)
         task.resume()
+        #else
+        
+        guard let task = NSURLConnection(request: request, delegate: self.eventDelegate, startImmediately: true)
+        else {
+            completion?(PCError(code: .networkError, description: "Unable to get URL connection."))
+            return
+        }
+        eventDelegate.connectionTasks[task] = (event: onEvent, completion: completion)
+        #endif
     }
     
     
@@ -218,6 +228,33 @@ extension PCNetwork {
     }
 }
 
+
+#if !os(watchOS)
+internal class EventDelegate: NSObject, NSURLConnectionDataDelegate, NSURLConnectionDelegate {
+    
+    internal var connectionTasks = [NSURLConnection : (event: EventBlock?, completion: CompletionBlock?)]()
+    
+    func connection(_ connection: NSURLConnection, didReceive data: Data) {
+        if let event = PCEvent(serverData: data) {
+            self.connectionTasks[connection]?.event?(event)
+        }
+    }
+    
+    func connection(_ connection: NSURLConnection, didFailWithError error: Error) {
+        guard let replacement = NSURLConnection(request: connection.currentRequest, delegate: self, startImmediately: true)
+        else {
+            self.connectionTasks[connection]?.completion?(PCError(code: .networkFailure, description: "Failed to create URL Connection."))
+            return
+        }
+        self.connectionTasks[replacement] = self.connectionTasks[connection]
+        self.connectionTasks[connection] = nil
+    }
+
+}
+
+
+#else
+
 internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelegate, URLSessionDataDelegate, URLSessionStreamDelegate, StreamDelegate {
     
     
@@ -238,6 +275,7 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
     
     
     func urlSession(_ session: URLSession, task: URLSessionTask, needNewBodyStream completionHandler: @escaping (InputStream?) -> Void) {
+        
         let stream = InputStream()
         
         stream.schedule(in: .current, forMode: .default)
@@ -270,6 +308,7 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
         inputStream.schedule(in: runloop, forMode: .common)
         
         runloop.run()
+        
         inputStream.open()
     }
     
@@ -299,32 +338,10 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
     }
         
     func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didBecome streamTask: URLSessionStreamTask) {
-        
-        
-        streamTask.delegate = self
-       
-        DispatchQueue.global().async {
-           
-            while true {
-                
-                streamTask.readData(ofMinLength: 0, maxLength: 128, timeout: 0) { data, isEOF, error in
-                    
-                    print(isEOF, error as Any)
-
-                    guard let data else {return}
-
-                    print(String(data: data, encoding: .utf8) as Any)
-                    
-                    if let event = PCEvent(serverData: data),
-                       let block = self.connectionTasks[dataTask]?.event {
-                        
-                        block(event)
-                    }
-                }
-                sleep(5)
-            }
-        }
-        
+        streamTask.startSecureConnection()
+        streamTask.closeWrite()
         streamTask.captureStreams()
     }
 }
+
+#endif
