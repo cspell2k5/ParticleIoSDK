@@ -235,7 +235,7 @@ internal class EventDelegate: NSObject, NSURLConnectionDataDelegate, NSURLConnec
     internal var connectionTasks = [NSURLConnection : (event: EventBlock?, completion: CompletionBlock?)]()
     
     func connection(_ connection: NSURLConnection, didReceive data: Data) {
-        String(data: data, encoding: .utf8)
+        print(String(data: data, encoding: .utf8))
         if let event = PCEvent(serverData: data) {
             self.connectionTasks[connection]?.event?(event)
         }
