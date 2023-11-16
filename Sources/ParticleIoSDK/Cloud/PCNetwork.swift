@@ -308,10 +308,11 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
                 
                 streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60) { data,_,_ in
                     
-                    print(String(data: data ?? Data(), encoding: .utf8))
+                    guard let data else {return}
                     
-                    if let data,
-                       let event = PCEvent(serverData: data),
+                    print(String(data: data, encoding: .utf8) as Any)
+                    
+                    if let event = PCEvent(serverData: data),
                        let block = self.connectionTasks[dataTask]?.event {
                         
                         block(event)
