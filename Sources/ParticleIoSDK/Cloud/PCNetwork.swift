@@ -249,6 +249,8 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
 
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
        
+        print("error:\n\(String(describing: error))\nfunction: \(#function) in \(#file)")
+
         guard let request = task.currentRequest else {return}
         let replacement = session.dataTask(with: request)
        
@@ -269,7 +271,6 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
         
         runloop.run()
         inputStream.open()
-        
     }
     
     func stream(_ aStream: Stream, handle eventCode: Stream.Event) {
@@ -306,10 +307,10 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
            
             while true {
                 
-                streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60) { data,_,_ in
+                streamTask.readData(ofMinLength: 0, maxLength: 128, timeout: 0) { data, isEOF, error in
                     
                     guard let data else {return}
-                    
+                    print(isEOF, error as Any)
                     print(String(data: data, encoding: .utf8) as Any)
                     
                     if let event = PCEvent(serverData: data),
@@ -318,7 +319,7 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
                         block(event)
                     }
                 }
-                sleep(15)
+                sleep(5)
             }
         }
         
