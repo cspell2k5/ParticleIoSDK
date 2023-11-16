@@ -13,6 +13,30 @@ public struct PCProductFirmware: Decodable {
         // MARK: - ProductFirmwareList
     public struct ProductFirmwareList: Codable, CustomDebugStringConvertible, CustomStringConvertible {
         
+        
+        /// A textual representation of this instance.
+        ///
+        /// Calling this property directly is discouraged. Instead, convert an
+        /// instance of any type to a string by using the `String(describing:)`
+        /// initializer. This initializer works with any type, and uses the custom
+        /// `description` property for types that conform to
+        /// `CustomStringConvertible`:
+        ///
+        ///     struct Point: CustomStringConvertible {
+        ///         let x: Int, y: Int
+        ///
+        ///         var description: String {
+        ///             return "(\(x), \(y))"
+        ///         }
+        ///     }
+        ///
+        ///     let p = Point(x: 21, y: 30)
+        ///     let s = String(describing: p)
+        ///     print(s)
+        ///     // Prints "(21, 30)"
+        ///
+        /// The conversion of `p` to a string in the assignment to `s` uses the
+        /// `Point` type's `description` property.
        public var description: String {
 """
     id: \(id),
@@ -29,6 +53,29 @@ public struct PCProductFirmware: Decodable {
 """
         }
         
+        /// A textual representation of this instance, suitable for debugging.
+        ///
+        /// Calling this property directly is discouraged. Instead, convert an
+        /// instance of any type to a string by using the `String(reflecting:)`
+        /// initializer. This initializer works with any type, and uses the custom
+        /// `debugDescription` property for types that conform to
+        /// `CustomDebugStringConvertible`:
+        ///
+        ///     struct Point: CustomDebugStringConvertible {
+        ///         let x: Int, y: Int
+        ///
+        ///         var debugDescription: String {
+        ///             return "(\(x), \(y))"
+        ///         }
+        ///     }
+        ///
+        ///     let p = Point(x: 21, y: 30)
+        ///     let s = String(reflecting: p)
+        ///     print(s)
+        ///     // Prints "(21, 30)"
+        ///
+        /// The conversion of `p` to a string in the assignment to `s` uses the
+        /// `Point` type's `debugDescription` property.
         public var debugDescription: String {
 """
 ProductFirmwareList: {
@@ -42,20 +89,46 @@ ProductFirmwareList: {
     uploadedOn: \(uploadedOn),
     productID: \(productID),
     mandatory: \(mandatory),
-    uploadedBy: \(uploadedBy.username)
+    uploadedBy: \(uploadedBy)
 }
 """
         }
         
+        ///The id of the product firmare.
         public let id: String
+        
+        ///The version of the product firmware.
         public let version: Int
-        public let title, info, name: String
+        
+        ///The firmwares title
+        public let title: String
+        
+        ///Supplemental information about the frimware.
+        public let info: String
+        
+        ///The namd of the firmware.
+        public let name: String
+        
+        ///The size of the firmware in bytes.
         public let size: Int
+        
+        ///Whether this is the default product firmware.
         public let productDefault: Bool
+        
+        ///The date the firmware was uploaded.
         public let uploadedOn: String
+        
+        ///The id of the product that owns the firmware.
         public let productID: Int
+        
+        ///[Enterprise only] Product upgrades and downgrades must install this firmware first.
         public let mandatory: Bool
-        public let uploadedBy: UploadedBy
+        
+        ///The user who uploaded the frimware.
+        public let uploadedBy: String
+        
+        ///Groups the firmware is released to.
+        public let groups: [String]
         
         private enum CodingKeys: String, CodingKey {
             case id = "_id"
@@ -67,39 +140,45 @@ ProductFirmwareList: {
             case productID = "product_id"
             case mandatory
             case uploadedBy = "uploaded_by"
-        }
-    }
-    
-        // MARK: - UploadedBy
-    public struct UploadedBy: Codable, CustomDebugStringConvertible, CustomStringConvertible {
-        public var description: String {
-            "username: \(username)"
+            case groups
         }
         
-        public var debugDescription: String {
-            description
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.id = try container.decode(String.self, forKey: .id)
+            self.version = try container.decode(Int.self, forKey: .version)
+            self.title = try container.decode(String.self, forKey: .title)
+            self.info = try container.decode(String.self, forKey: .info)
+            self.name = try container.decode(String.self, forKey: .name)
+            self.size = try container.decode(Int.self, forKey: .size)
+            self.productDefault = try container.decode(Bool.self, forKey: .productDefault)
+            self.uploadedOn = try container.decode(String.self, forKey: .uploadedOn)
+            self.productID = try container.decode(Int.self, forKey: .productID)
+            self.mandatory = try container.decode(Bool.self, forKey: .mandatory)
+            self.groups = try container.decode([String].self, forKey: .groups)
+            let uploadedBy = try container.decode([String:String].self, forKey: .uploadedBy)
+            self.uploadedBy = uploadedBy["username"]!
         }
-        
-        public let username: String
     }
 }
 
+
 extension PCProductFirmware {
-        
+    
     public struct UploadArguments: CustomDebugStringConvertible {
         
         
-//        public var description: String {
-//"""
-//    version: \(version),
-//    title: \(title),
-//    file: \(file),
-//    productIdOrSlug: \(productIdOrSlug),
-//    description: \(description),
-//    mandatory: \(mandatory)
-//"""
-//        }
-        
+        //        public var description: String {
+        //"""
+        //    version: \(version),
+        //    title: \(title),
+        //    file: \(file),
+        //    productIdOrSlug: \(productIdOrSlug),
+        //    description: \(description),
+        //    mandatory: \(mandatory)
+        //"""
+        //        }
+        /// A textual representation of this instance, suitable for debugging.
         public var debugDescription: String {
 """
 PCProductFirmware: {
@@ -110,30 +189,45 @@ PCProductFirmware: {
 }
 """
         }
-
+        
         ///The version number of the firmware binary you are uploading
         public let version: Int
-
-            ///Title of the firmware version. Handy for quickly identifying the firmware
+        
+        ///Title of the firmware version. Handy for quickly identifying the firmware
         public let title: String
-                    
-            
-            ///Optionally provide a description for the new firmware version
+        
+        ///Optionally provide a description for the new firmware version
         public let description: String?
         
-            ///[Enterprise only] Flag this firmware release as a mandatory release so that product upgrades and downgrades apply this version of firmware before flashing the targeted version.
+        ///[Enterprise only] Flag this firmware release as a mandatory release so that product upgrades and downgrades apply this version of firmware before flashing the targeted version.
         public let mandatory: Bool?
         
-        public init(version: Int, title: String, file: FilePath, productIdOrSlug: ProductID, description: String?, mandatory: Bool?) {
+        ///The path of the binary firmware file to upload.
+        public let file: FilePath
+        
+        ///The id of the product claiming the firmware.
+        public let productId: ProductID
+        
+        ///Designated initializer.
+        ///
+        /// - Parameter version: The version number of the firmware binary you are uploading.
+        /// - Parameter title: Title of the firmware version. Handy for quickly identifying the firmware.
+        /// - Parameter file: The path of the binary firmware file to upload.
+        /// - Parameter productId: The id of the product claiming the firmware.
+        /// - Parameter description: Optionally provide a description for the new firmware version.
+        /// - Parameter mandatory: [Enterprise only] Flag this firmware release as a mandatory release so that product upgrades and downgrades apply this version of firmware before flashing the targeted version.
+        public init(version: Int, title: String, file: FilePath, productId: ProductID, description: String?, mandatory: Bool?) {
             self.version = version
             self.title = title
             self.description = description
             self.mandatory = mandatory
+            self.productId = productId
+            self.file = file
         }
     }
     
     public struct EditArguments: CustomDebugStringConvertible {
-                
+        
         //        public var description: String {
         //"""
         //    title: \(title),
@@ -143,43 +237,67 @@ PCProductFirmware: {
         //    mandatory: \(String(describing: mandatory))
         //"""
         //        }
-
+        
+        /// A textual representation of this instance, suitable for debugging.
         public var debugDescription: String {
 """
 EditArguments: {
     title: \(title),
-    version: \(version),
+    version: \(String(describing: version)),
     description: \(String(describing: description)),
     mandatory: \(String(describing: mandatory))
 }
 """
         }
-            ///Title of the firmware version. Handy for quickly identifying the firmware
+        
+        ///Title of the firmware version. Handy for quickly identifying the firmware
         public let title: String
         
-            ///The version number of the firmware binary you are uploading
-        public let version: String
+        ///The version number of the firmware binary you are uploading
+        public let version: Int
         
-            ///Optionally provide a description for the new firmware version
+        ///Optionally provide a description for the new firmware version
         public let description: String?
         
-            ///[Enterprise only] Flag this firmware release as a mandatory release so that product upgrades and downgrades apply this version of firmware before flashing the targeted version.
+        ///[Enterprise only] Flag this firmware release as a mandatory release so that product upgrades and downgrades apply this version of firmware before flashing the targeted version.
         public let mandatory: Bool?
         
-        public init(title: String, version: String, description: String?, mandatory: Bool? = false) {
+        ///The id of the product claiming the firmware.
+        public let productID: ProductID
+        
+        ///Designated initializer.
+        ///
+        /// - Parameter version: The version number of the firmware binary you are uploading.
+        /// - Parameter title: Title of the firmware version. Handy for quickly identifying the firmware.
+        /// - Parameter productId: The id of the product claiming the firmware.
+        /// - Parameter description: Optionally provide a description for the new firmware version.
+        /// - Parameter mandatory: [Enterprise only] Flag this firmware release as a mandatory release so that product upgrades and downgrades apply this version of firmware before flashing the targeted version.
+        public init(version: Int, 
+                    title: String,
+                    productID: ProductID,
+                    description: String?,
+                    mandatory: Bool? = false
+        ) {
             self.title = title
-            self.version = String(version)
+            self.version = version
             self.description = description
             self.mandatory = mandatory
+            self.productID = productID
         }
     }
+}
 
+
+
+extension PCProductFirmware {
+    
+    
     public struct ReleaseArguments: CustomDebugStringConvertible, CustomStringConvertible {
         
-        
+        /// A textual representation of this instance.
         public var description: String {
 """
-    productIdOrSlug: \(productIdOrSlug),
+    productIdOrSlug: \(productId),
     version: \(version),
     product_default: \(product_default),
     groups: \(groupsDescription),
@@ -187,10 +305,11 @@ EditArguments: {
 """
         }
         
+        /// A textual representation of this instance, suitable for debugging.
         public var debugDescription: String {
 """
 ReleaseArguments: {
-    productIdOrSlug: \(productIdOrSlug),
+    productIdOrSlug: \(productId),
     version: \(version),
     product_default: \(product_default),
     groups: \(groupsDescription),
@@ -199,6 +318,7 @@ ReleaseArguments: {
 """
         }
         
+        //print helper
         private var groupsDescription: String {
             if groups == nil {
                 return "nil"
@@ -213,10 +333,10 @@ ReleaseArguments: {
         }
         
         ///Product ID or slug
-        public let productIdOrSlug: String
+        public let productId: ProductID
         
         ///firmware version number to release to the fleet
-        public let version: String
+        public let version: Int
         
         ///Pass true to set the firmware version as the product default release
         public let product_default: Bool
@@ -227,9 +347,12 @@ ReleaseArguments: {
             /// Flag this firmware release as an intelligent release so that devices do not need to reconnect to the cloud to receive the update and that they are informed of pending updates when devices are not available for updating.
         public let intelligent: Bool
         
-        public init(productIdOrSlug: ProductID, version: Int, product_default: Bool, groups: [String]?, intelligent: Bool) {
-            self.productIdOrSlug = String(productIdOrSlug.rawValue)
-            self.version = String(version)
+    
+        
+        
+        public init(version: Int, productId: ProductID, product_default: Bool, groups: [String]?, intelligent: Bool) {
+            self.productId = productId
+            self.version = version
             self.product_default = product_default
             self.groups = groups
             self.intelligent = intelligent

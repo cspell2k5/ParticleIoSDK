@@ -1811,7 +1811,7 @@ extension CloudResource.RequestHelper {
         case .editProductFirmware(let productID, let arguments,_):
             
             //PUT /v1/products/:productIdOrSlug/firmware/:version
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/firmware/").appending(arguments.version)
+            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/firmware/").appending(String(describing: arguments.version))
             
             
         case .downloadFirmwareBinary(let productId, let version,_):
