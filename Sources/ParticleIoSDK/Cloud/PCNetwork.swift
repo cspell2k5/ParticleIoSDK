@@ -258,6 +258,8 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
     
     func urlSession(_ session: URLSession, streamTask: URLSessionStreamTask, didBecome inputStream: InputStream, outputStream: OutputStream) {
             
+        outputStream.close()
+        
         self.streamTasks[inputStream] = self.connectionTasks[streamTask]
 
         let runloop = RunLoop()
@@ -305,6 +307,8 @@ internal class EventDelegate: NSObject, URLSessionDelegate, URLSessionTaskDelega
             while true {
                 
                 streamTask.readData(ofMinLength: 1, maxLength: 128, timeout: 60) { data,_,_ in
+                    
+                    print(String(data: data ?? Data(), encoding: .utf8))
                     
                     if let data,
                        let event = PCEvent(serverData: data),
