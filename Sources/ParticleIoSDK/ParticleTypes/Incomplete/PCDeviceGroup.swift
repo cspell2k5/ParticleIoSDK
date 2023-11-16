@@ -8,26 +8,6 @@
 import Foundation
 
 
-///Created to use extentions giving the ability to remove hard coded strings in your app.
-///
-///Intended Usage Example
-///
-///````swift
-///
-///            extension GroupName {
-///                 public static let myGroupName = GroupName("my_group_name")
-///            }
-///
-///````
-///
-public struct GroupName: Hashable {
-    public var rawValue: String
-    public init(_ rawValue: String) {
-        self.rawValue = rawValue
-    }
-}
-
-
 
 public struct PCDeviceGroup : Decodable, Hashable {
     

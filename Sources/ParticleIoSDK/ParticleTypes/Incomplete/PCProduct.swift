@@ -10,22 +10,6 @@ import Foundation
 import Combine
 
 
-///Encapsulation of a productIdOrSlug.
-///Failable init only fails if nil is passed as the rawvalue.
-public struct ProductID {
-    
-    public let rawValue: String
-    
-    public init(_ rawValue: String) {
-//        if rawValue == nil { return nil }
-        self.rawValue = rawValue
-    }
-    
-    public init?(_ rawValue: Int?) {
-        if rawValue == nil { return nil }
-        self.rawValue = String(rawValue!)
-    }
-}
 
 public struct PCProduct : Decodable, Hashable, CustomDebugStringConvertible {
 

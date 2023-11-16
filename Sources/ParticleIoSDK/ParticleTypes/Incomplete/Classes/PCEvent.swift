@@ -9,17 +9,6 @@ import Foundation
 import Combine
 
 
-///The name of a particle event.
-public struct EventName {
-    
-    ///The string value of the instance..
-    public let rawValue: String
-    
-    ///Creates a new instance.
-    public init(_ rawValue: String) {
-        self.rawValue = rawValue
-    }
-}
 
 ///Simple cache of PCEvent to keep memory from growing out of control when a lot of events are recieved and stored over time.
 public class EventCache: NSObject, ObservableObject {

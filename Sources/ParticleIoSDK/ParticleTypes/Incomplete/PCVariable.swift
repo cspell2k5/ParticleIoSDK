@@ -10,13 +10,6 @@ import Foundation
 
 
 
-public struct VariableName {
-    public let rawValue: String
-    public init(_ rawValue: String) {
-        self.rawValue = rawValue
-    }
-}
-
 ///Used to represent the variable returned by the server. This type should not be interacted with directly instead use the get variable method on PCDevice.
 ///
 /// Example:
