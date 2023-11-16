@@ -82,7 +82,7 @@ final class ParticleIoSDKTests: XCTestCase {
         XCTAssertNotNil(deviceListResponse.first?.name)
         
         let device = try await PCDevice.getDevice(deviceID: .testCase, token: token)
-        XCTAssertNoThrow(device.subscribe(eventName: .testCase, onEvent: nil, completion: nil))
+        XCTAssertNoThrow(device.subscribeToEvents(eventName: .testCase, onEvent: nil, completion: nil))
         
         let pingSuccess = try await device.ping()
         XCTAssert(pingSuccess.ok)

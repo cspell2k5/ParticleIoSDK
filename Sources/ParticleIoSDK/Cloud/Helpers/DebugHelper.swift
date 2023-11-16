@@ -69,7 +69,7 @@ extension CloudResource {
                 return "importDevices\ndevices: \(devices)\nproductID: \(productID)\narguments: \(arguments.debugDescription)\ntoken: \(token.debugDescription)\n"
            
             case .getDeviceEventStream(eventName: let eventName, deviceID: let deviceID, token: let token):
-                return "getDeviceEventStream\neventName: \(String(describing: eventName?.rawValue))\ndeviceID: \(deviceID.rawValue)\ntoken: \(token.debugDescription)\n"
+                return "getDeviceEventStream\neventName: \(String(describing: eventName.rawValue))\ndeviceID: \(deviceID.rawValue)\ntoken: \(token.debugDescription)\n"
            
             case .getProductEventStream(eventName: let eventName, productIdOrSlug: let productIdOrSlug, token: let token):
                 return "getProductEventStream\neventName: \(String(describing: eventName?.rawValue))\nproductIdOrSlug: \(productIdOrSlug.rawValue)\ntoken: \(token.debugDescription)\n"

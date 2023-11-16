@@ -610,59 +610,10 @@ extension PCDevice {
 extension PCDevice {
     
     
-    public func subscribe(eventName: EventName, productIdOrSlug: ProductID?) -> CurrentValueSubject<PCEvent?, PCError> {
-        
-        let subject = CurrentValueSubject<PCEvent?, PCError>(nil)
-        
-        if let error = checkToken() {
-            subject.send(completion: .failure(error))
-            return subject
-        }
-        
-        if let error = checkName(eventName.rawValue, type: .event) {
-            subject.send(completion: .failure(error))
-            return subject
-        }
-        
-        if let productIdOrSlug {
-            
-            if let error = checkName(productIdOrSlug.rawValue, type: .productID) {
-                subject.send(completion: .failure(error))
-                return subject
-            }
-            
-            PCNetwork.shared.subscribe(eventName: eventName, productId: productIdOrSlug, token: self.token!) { event in
-                
-                self.updateSubject(subject, for: event)
-                
-            } completion: { error in
-                
-                self.handleSubscriptionError(error, subject: subject)
-            }
-        } else {
-            
-            PCNetwork.shared.subscribe(eventName: eventName, token: self.token!) { event in
-                
-                self.updateSubject(subject, for: event)
-            } completion: { error in
-                
-                self.handleSubscriptionError(error, subject: subject)
-            }
-        }
-        return subject
-    }
-    
-    private func checkToken() -> PCError? {
-        if let token = self.token {
-            return nil
-        }
-        return PCError.unauthenticated
-        
-    }
-    
     private enum NameType {
         case event, productID
     }
+    
     
     private func checkName(_ name: String, type: NameType) -> PCError? {
         if name.isEmpty{
@@ -672,29 +623,65 @@ extension PCDevice {
     }
     
     
-    private func updateSubject(_ subject: CurrentValueSubject<PCEvent?, PCError>, for event: PCEvent) {
+    public func subscribeToProductEvents(_ name: EventName, productID: ProductID, token: PCAccessToken, onEvent: EventBlock?, completion: CompletionBlock?) {
         
-        DispatchQueue.main.async {
-            
-            self.objectWillChange.send()
-            
-            do {
-                try self.events.append(event)
-                subject.send( event )
-            } catch {
-                subject.send(completion: .failure(PCError(code: .failedToParseJsonDate, description: "Could not parse date for event: \(event.debugDescription) in function: \(#function) of file: \(#file)\n" )))
-            }
+        if let error = checkName(productID.rawValue, type: .productID) {
+            completion?(error)
+            return
+        }
+        
+        guard let token = self.token
+        else {
+            completion?(PCError.unauthenticated)
+            return
+        }
+        
+        PCNetwork.shared.subscribeToProductEvents(eventName: name, productID: productID, token: token) { event in
+            onEvent?(event)
+        } completion: { error in
+            completion?(error)
         }
     }
     
     
-    
-    private func handleSubscriptionError(_ error: PCError?, subject: CurrentValueSubject<PCEvent?, PCError>) {
+    public func subscribeToEvents(eventName: EventName, onEvent: EventBlock?, completion: CompletionBlock?) {
         
-        if let error {
-            subject.send(completion: .failure(error))
-        } else {
-            subject.send(completion: .finished)
+        guard let token
+        else {
+            completion?(PCError.unauthenticated)
+            return
+        }
+        
+        if let error = checkName(eventName.rawValue, type: .event) {
+            completion?(error)
+            return
+        }
+        
+        PCNetwork.shared.subscribeToEvents(eventName: eventName, token: token) { event in
+            onEvent?(event)
+        } completion: { error in
+            completion?(error)
+        }
+    }
+    
+    
+    public func subscribeToDeviceEvents(eventName: EventName, onEvent: EventBlock?, completion: CompletionBlock?) {
+        
+        guard let token
+        else {
+            completion?(PCError.unauthenticated)
+            return
+        }
+        
+        if let error = checkName(eventName.rawValue, type: .event) {
+            completion?(error)
+            return
+        }
+        
+        PCNetwork.shared.subscribeToDeviceEvents(eventName: eventName, deviceId: self.id, token: token) { event in
+            onEvent?(event)
+        } completion: { error in
+            completion?(error)
         }
     }
 }
@@ -702,92 +689,6 @@ extension PCDevice {
 
 
 extension PCDevice {
-    
-    public func subscribe(eventName: EventName?, productIdOrSlug: ProductID?, onEvent: EventBlock?, completion: CompletionBlock?) {
-        
-        guard let token = self.token
-        else {
-            completion?(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource."))
-            return
-        }
-        
-        if let productIdOrSlug,
-           !productIdOrSlug.rawValue.isEmpty {
-            
-            PCNetwork.shared.subscribe(eventName: eventName, productId: productIdOrSlug, token:  token, onEvent: { event in
-                
-                DispatchQueue.main.async {
-                    self.objectWillChange.send()
-                }
-                
-                do {
-                    try self.events.append(event)
-                    onEvent?(event)
-                } catch {
-                    completion?(PCError(code: .failedToParseJsonDate, description: "Could not parse date for event: \(event.debugDescription) in function: \(#function) of file: \(#file)\n" ))
-                }
-            }, completion: completion)
-            return
-        }
-        
-        
-        guard eventName != nil,
-              eventName?.rawValue.isEmpty == false
-        else {
-            completion?(
-                PCError(code: .invalidArguments,
-                        description: "eventName parameter cannot be nil or an empty string when subscribing to events, unless you are subscribing to product events.\n"
-                       )
-            )
-            return
-        }
-        
-        PCNetwork.shared.subscribe(eventName: eventName!, token:  self.token!, onEvent: { event in
-            
-            DispatchQueue.main.async {
-                self.objectWillChange.send()
-            }
-            do {
-                try self.events.append(event)
-                onEvent?(event)
-            } catch {
-                completion?(PCError(code: .failedToParseJsonDate, description: "Could not parse date for event: \(event.debugDescription) in function: \(#function) of file: \(#file)\n" ))
-            }
-        }, completion: completion)
-        
-    }
-    
-    public func subscribe(eventName: EventName, onEvent: EventBlock?, completion: CompletionBlock? = nil) {
-        
-        guard let token = self.token
-        else {
-            completion?(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource."))
-            return
-        }
-        
-        guard !eventName.rawValue.isEmpty
-        else {
-            completion?(PCError(code: .invalidArguments,
-                                description: "eventName parameter cannot be an empty string when subscribing to events.\n"))
-            return
-        }
-        
-        PCNetwork.shared.subscribe(eventName: eventName, deviceId: self.id, token: token, onEvent: { event in
-            
-            DispatchQueue.main.async {
-                self.objectWillChange.send()
-            }
-            
-            onEvent?(event)
-            do {
-                try self.events.append(event)
-            } catch {
-                completion?(PCError(code: .failedToParseJsonDate, description: "Could not parse date for event: \(event.debugDescription) in function: \(#function) of file: \(#file)\n" ))
-            }
-            
-        }, completion: completion)
-    }
-    
     
     public func publishProductEvent(_ eventName: EventName, data: String?, isPrivate: Bool? = nil, ttl: Int? = nil, completion: @escaping (Result<Bool, PCError>) -> Void)  {
         
@@ -832,7 +733,6 @@ extension PCDevice {
         }
         
         return PCEvent.publishEvent(productIdOrSlug: self.productID, eventName: eventName, data: data, isPrivate: isPrivate, ttl: ttl, token: token, completion: completion)
-        
     }
 }
 
@@ -856,7 +756,11 @@ extension PCDevice {
         public let productIdOrSlug: ProductID?
         
         //Create arguments to be passed with particle function call.
-        public init(functionName: FunctionName, functionArgument: FunctionArgument? = nil, productIdOrSlug: ProductID? = nil) {
+        public init(
+            functionName: FunctionName,
+            functionArgument: FunctionArgument? = nil,
+            productIdOrSlug: ProductID? = nil
+        ) {
             self.functionName = functionName
             self.functionArgument = functionArgument
             self.productIdOrSlug = productIdOrSlug

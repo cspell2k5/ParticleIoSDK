@@ -60,7 +60,7 @@ extension PCNetwork {
     }
     
     
-    internal func subscribe(eventName: EventName?, deviceId: DeviceID, token: PCAccessToken, onEvent: EventBlock? = nil, completion: CompletionBlock?) {
+    internal func subscribeToDeviceEvents(eventName: EventName, deviceId: DeviceID, token: PCAccessToken, onEvent: EventBlock? = nil, completion: CompletionBlock?) {
         
         var request = CloudResource.requestForResource(.getDeviceEventStream(eventName: eventName, deviceID: deviceId, token: token))
         request.timeoutInterval = .infinity
@@ -68,19 +68,19 @@ extension PCNetwork {
         return self.subscribe(request: request, token: token, onEvent: onEvent, completion: completion)
     }
     
-    
-    internal func subscribe(eventName: EventName?, productId: ProductID, token: PCAccessToken, onEvent: EventBlock?, completion: CompletionBlock?) {
         
-        var request = CloudResource.requestForResource(.getProductEventStream(eventName: eventName, productIdOrSlug: productId, token: token))
+    internal func subscribeToEvents(eventName: EventName, token:PCAccessToken, onEvent: EventBlock?, completion: CompletionBlock?) {
+        
+        var request = CloudResource.requestForResource(.getEventStream(eventName: eventName, token: token))
         request.timeoutInterval = .infinity
         
         return self.subscribe(request: request, token: token, onEvent: onEvent, completion: completion)
     }
-
     
-    internal func subscribe(eventName: EventName, token:PCAccessToken, onEvent: EventBlock?, completion: CompletionBlock?) {
+    
+    internal func subscribeToProductEvents(eventName: EventName, productID: ProductID,token:PCAccessToken, onEvent: EventBlock?, completion: CompletionBlock?) {
         
-        var request = CloudResource.requestForResource(.getEventStream(eventName: eventName, token: token))
+        var request = CloudResource.requestForResource(.getProductEventStream(eventName: eventName, productIdOrSlug: productID, token: token))
         request.timeoutInterval = .infinity
         
         return self.subscribe(request: request, token: token, onEvent: onEvent, completion: completion)
@@ -125,7 +125,7 @@ extension PCNetwork {
     }
 
         //MARK: Async
-    internal func cloudRequest<T: Decodable>(_ resource: CloudResource, type: T.Type) async throws-> T {
+    internal func cloudRequest<T: Decodable>(_ resource: CloudResource, type: T.Type) async throws -> T {
         
         let request = CloudResource.requestForResource(resource)
         

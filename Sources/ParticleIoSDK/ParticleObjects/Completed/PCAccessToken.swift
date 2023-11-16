@@ -420,11 +420,13 @@ extension PCAccessToken {
         /// - Parameter expiresIn: Number of seconds the token remain valid. 0 means forever. Short lived tokens are prefered for better security. Defaults to nil.
         /// - Parameter expireAt: An ISO8601 formatted date string indicatiing when the token will expire. Defaults to nil.
         /// - Returns: An CurrentValueSubject<PCAccessToken?, PCError> representing the servers response of an access token or an error.
-    static public func generateAccessToken(client: PCClient? = nil, credentials: PCCredentials, grantType: PCAccessToken.GrantType = .password, expiresIn: Int? = nil, expireAt: String? = nil) -> CurrentValueSubject<PCAccessToken?, PCError> {
+    static public func generateAccessToken(client: PCClient? = nil, 
+                                           credentials: PCCredentials,
+                                           grantType: PCAccessToken.GrantType = .password,
+                                           expiresIn: Int? = nil,
+                                           expireAt: String? = nil) -> CurrentValueSubject<PCAccessToken?, PCError> {
         
         PCNetwork.shared.cloudRequest(.generateAccessToken(client: client, credentials: credentials, grantType: grantType, expiresIn: expiresIn, expireAt: expireAt), type: PCAccessToken.self)
-            
-
     }
     
         /// List access tokens issued to your account.
@@ -455,6 +457,7 @@ extension PCAccessToken {
         /// - Parameter otp: One time password for multifactor authentication.
         /// - Returns: A `CurrentValueSubject<[PCAccessToken.Info]?, PCError>`  representing  an array of PCAccessToken.Info representing all the issued oAuth tokens for your account.  In the case of failure a PCError is the completion result.
     static public func listAccessToken(credentials: PCCredentials, otp: String? = nil) -> CurrentValueSubject<[PCAccessToken.ListResponseElement]?, PCError> {
+       
         PCNetwork.shared.cloudRequest(.listAccessTokens(credentials: credentials, otp: otp), type: [PCAccessToken.ListResponseElement].self)
     }
     
@@ -485,8 +488,8 @@ extension PCAccessToken {
         /// - Parameter credentials: Your Particle account username and password.
         /// - Returns: `CurrentValueSubject<PCAccessToken.DeletionResponse?, PCError>` representing the server response.
     static public func deleteAnAccessToken(credentials: PCCredentials, token: PCAccessToken) -> CurrentValueSubject<PCAccessToken.DeletionResponse?, PCError> {
-        PCNetwork.shared.cloudRequest(.deleteAnAccessToken(tokenID: token.accessToken, credentials: credentials), type: PCAccessToken.DeletionResponse.self)
         
+        PCNetwork.shared.cloudRequest(.deleteAnAccessToken(tokenID: token.accessToken, credentials: credentials), type: PCAccessToken.DeletionResponse.self)
     }
     
         /// Delete all current access tokens from your account.
@@ -515,6 +518,7 @@ extension PCAccessToken {
         /// - Parameter token: An PCAccessToken carrying the server oAuth access token and associated information.
         /// - Returns: `CurrentValueSubject<PCAccessToken.DeletionResponse?, PCError>` representing the server response or an error if unsuccessful.
     static public func deleteAllAccessTokens(token: PCAccessToken) -> CurrentValueSubject<PCAccessToken.DeletionResponse?, PCError> {
+        
         PCNetwork.shared.cloudRequest(.deleteAllAccessTokens(token: token), type: PCAccessToken.DeletionResponse.self)
     }
     
@@ -543,6 +547,7 @@ extension PCAccessToken {
         ///
         /// - Returns: `CurrentValueSubject<PCAccessToken.DeletionResponse?, PCError>` representing the server response or an error if unsuccessful.
     public func deleteAllAccessTokens() -> CurrentValueSubject<PCAccessToken.DeletionResponse?, PCError> {
+       
         PCNetwork.shared.cloudRequest(.deleteAllAccessTokens(token: self), type: PCAccessToken.DeletionResponse.self)
     }
 
@@ -574,6 +579,7 @@ extension PCAccessToken {
         /// - Parameter credentials: Your Particle account username and password.
         /// - Returns: `CurrentValueSubject<PCAccessToken.DeletionResponse?, PCError>` representing the server response or an error if unsuccessful.
     static public func deleteCurrentAccessToken(token: PCAccessToken) -> CurrentValueSubject<PCAccessToken.DeletionResponse?, PCError> {
+       
         PCNetwork.shared.cloudRequest(.deleteCurrentAccessToken(token: token), type: PCAccessToken.DeletionResponse.self)
     }
     
@@ -604,6 +610,7 @@ extension PCAccessToken {
         /// - Parameter credentials: Your Particle account username and password.
         /// - Returns: `CurrentValueSubject<PCAccessToken.DeletionResponse?, PCError>` representing the server response or an error if unsuccessful.
     public func delete() -> CurrentValueSubject<PCAccessToken.DeletionResponse?, PCError> {
+       
         PCNetwork.shared.cloudRequest(.deleteCurrentAccessToken(token: self), type: PCAccessToken.DeletionResponse.self)
     }
 
@@ -634,6 +641,7 @@ extension PCAccessToken {
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: An `CurrentValueSubject<PCAccessToken.Info?, PCError>` of PCAccessToken.Info representing the oAuth token.  In the case of failure a PCError is provided at completion.
     static public func verifyToken(token: PCAccessToken) -> CurrentValueSubject<PCAccessToken.VerificationResponse?, PCError> {
+        
         PCNetwork.shared.cloudRequest(.getCurrentAccessTokenInfo(token: token), type: PCAccessToken.VerificationResponse.self)
     }
     
@@ -663,9 +671,9 @@ extension PCAccessToken {
         /// - Parameter token: An PCAccessToken carrying the access token and associated information.
         /// - Returns: An `CurrentValueSubject<PCAccessToken.Info?, PCError>` of PCAccessToken.Info representing the oAuth token.  In the case of failure a PCError is provided at completion.
     public func verifyToken() -> CurrentValueSubject<PCAccessToken.VerificationResponse?, PCError> {
+        
         PCNetwork.shared.cloudRequest(.getCurrentAccessTokenInfo(token: self), type: PCAccessToken.VerificationResponse.self)
     }
-
 }
 
     // MARK: - Completion Handler
@@ -698,7 +706,13 @@ extension PCAccessToken {
         ///                     }
         ///                 }
         ///
-    static public func generateAccessToken(client: PCClient? = nil, credentials: PCCredentials, grantType: PCAccessToken.GrantType = .password, expiresIn: Int? = nil, expireAt: String? = nil, completion: @escaping (Result<PCAccessToken,PCError>) -> Void) {
+    static public func generateAccessToken(client: PCClient? = nil, 
+                                           credentials: PCCredentials,
+                                           grantType: PCAccessToken.GrantType = .password,
+                                           expiresIn: Int? = nil,
+                                           expireAt: String? = nil,
+                                           completion: @escaping (Result<PCAccessToken,PCError>) -> Void) {
+        
         PCNetwork.shared.cloudRequest(.generateAccessToken(client: client, credentials: credentials, expiresIn: expiresIn, expireAt: expireAt), type: PCAccessToken.self, completion: completion)
     }
     
@@ -718,6 +732,7 @@ extension PCAccessToken {
         ///                 }
         ///
     static public func listAccessToken(credentials: PCCredentials, otp: String? = nil, completion: @escaping (Result<[PCAccessToken.ListResponseElement], PCError>) -> Void) {
+       
         PCNetwork.shared.cloudRequest(.listAccessTokens(credentials: credentials, otp: otp), type: [PCAccessToken.ListResponseElement].self, completion: completion)
     }
     
@@ -746,6 +761,7 @@ extension PCAccessToken {
         ///                 }
         ///
     static public func deleteAnAccessToken(credentials: PCCredentials, token: PCAccessToken, completion: @escaping (Result<PCAccessToken.DeletionResponse, PCError>) -> Void) {
+       
         PCNetwork.shared.cloudRequest(.deleteAnAccessToken(tokenID: token.accessToken, credentials: credentials), type: PCAccessToken.DeletionResponse.self, completion: completion)
     }
     
@@ -777,6 +793,7 @@ extension PCAccessToken {
         /// - Parameter token: `PCAccessToken` representing the cloud access token to delete
         /// - Parameter completion: The block to be called when the server task has completed.
     static public func deleteAllAccessTokens(token: PCAccessToken, completion: @escaping (Result<PCAccessToken.DeletionResponse, PCError>) -> Void) {
+        
         PCNetwork.shared.cloudRequest(.deleteAllAccessTokens(token: token), type: PCAccessToken.DeletionResponse.self, completion: completion)
     }
     
@@ -807,6 +824,7 @@ extension PCAccessToken {
         ///
         /// - Parameter completion: The block to be called when the server task has completed.
     public func deleteAllAccessTokens(completion: @escaping (Result<PCAccessToken.DeletionResponse, PCError>) -> Void) {
+        
         PCNetwork.shared.cloudRequest(.deleteAllAccessTokens(token: self), type: PCAccessToken.DeletionResponse.self, completion: completion)
     }
 
@@ -837,6 +855,7 @@ extension PCAccessToken {
         ///````
         ///
     static public func deleteCurrentAccessToken(token: PCAccessToken, completion: @escaping (Result<PCAccessToken.DeletionResponse, PCError>) -> Void) {
+       
         PCNetwork.shared.cloudRequest(.deleteCurrentAccessToken(token: token), type: PCAccessToken.DeletionResponse.self, completion: completion)
     }
     
@@ -870,6 +889,7 @@ extension PCAccessToken {
         /// - Parameter token: `PCAccessToken` representing the cloud access token to delete
         /// - Parameter completion: The block to be called when the server task has completed.
     static public func verifyToken(token: PCAccessToken, completion: @escaping (Result<PCAccessToken.VerificationResponse, PCError>) -> Void) {
+       
         PCNetwork.shared.cloudRequest(.getCurrentAccessTokenInfo(token: token), type: PCAccessToken.VerificationResponse.self, completion: completion)
     }
     
@@ -891,6 +911,7 @@ extension PCAccessToken {
         ///
         /// - Parameter completion: The block to be called when the server task has completed.
     public func verifyToken(completion: @escaping (Result<PCAccessToken.VerificationResponse, PCError>) -> Void) {
+       
         PCNetwork.shared.cloudRequest(.getCurrentAccessTokenInfo(token: self), type: PCAccessToken.VerificationResponse.self, completion: completion)
     }
 }
@@ -919,7 +940,12 @@ extension PCAccessToken {
         /// - Parameter expireAt: An ISO8601 formatted date string indicatiing when the token will expire. Defaults to nil.
         /// - Returns: A `PCAccessToken`  representing the servers response of an access token.
         /// - Throws: PCError
-    static public func generateAccessToken(client: PCClient? = nil, credentials: PCCredentials, grantType: PCAccessToken.GrantType = .password, expiresIn: Int? = nil, expireAt: String? = nil) async throws -> PCAccessToken {
+    static public func generateAccessToken(client: PCClient? = nil, 
+                                           credentials: PCCredentials,
+                                           grantType: PCAccessToken.GrantType = .password,
+                                           expiresIn: Int? = nil,
+                                           expireAt: String? = nil) async throws -> PCAccessToken {
+       
         try await PCNetwork.shared.cloudRequest(.generateAccessToken(client: client, credentials: credentials, grantType: grantType, expiresIn: expiresIn, expireAt: expireAt), type: PCAccessToken.self)
     }
     
@@ -939,7 +965,8 @@ extension PCAccessToken {
         /// - Returns: An  array of PCAccessToken.Info representing all the issued oAuth tokens for your account.
         /// - Throws: PCError
     static public func listAccessToken(credentials: PCCredentials, otp: String? = nil) async throws-> [PCAccessToken.ListResponseElement] {
-        return try await PCNetwork.shared.cloudRequest(.listAccessTokens(credentials: credentials, otp: otp), type: [PCAccessToken.ListResponseElement].self)
+        
+        try await PCNetwork.shared.cloudRequest(.listAccessTokens(credentials: credentials, otp: otp), type: [PCAccessToken.ListResponseElement].self)
     }
     
         /// Delete an access token from your account.
@@ -959,7 +986,7 @@ extension PCAccessToken {
         /// - Throws: PCError
     static public func deleteAnAccessToken(credentials: PCCredentials, token: PCAccessToken) async throws -> PCAccessToken.DeletionResponse {
        
-        return try await PCNetwork.shared.cloudRequest(.deleteAnAccessToken(tokenID: token.accessToken, credentials: credentials), type: PCAccessToken.DeletionResponse.self)
+        try await PCNetwork.shared.cloudRequest(.deleteAnAccessToken(tokenID: token.accessToken, credentials: credentials), type: PCAccessToken.DeletionResponse.self)
     }
     
         /// Delete all access tokens from your account.
@@ -979,7 +1006,7 @@ extension PCAccessToken {
         /// - Throws: PCError
     static public func deleteAllAccessTokens(token: PCAccessToken) async throws -> PCAccessToken.DeletionResponse {
 
-        return try await PCNetwork.shared.cloudRequest(.deleteAllAccessTokens(token: token), type: PCAccessToken.DeletionResponse.self)
+        try await PCNetwork.shared.cloudRequest(.deleteAllAccessTokens(token: token), type: PCAccessToken.DeletionResponse.self)
     }
     
         /// Delete all access tokens from your account.
@@ -997,6 +1024,7 @@ extension PCAccessToken {
         /// - Returns: `PCAccessToken.DeletionResponse` representing the server response.
         /// - Throws: PCError
     public func deleteAllAccessTokens() async throws -> PCAccessToken.DeletionResponse {
+        
         try await PCNetwork.shared.cloudRequest(.deleteAllAccessTokens(token: self), type: PCAccessToken.DeletionResponse.self)
     }
 
@@ -1016,6 +1044,7 @@ extension PCAccessToken {
         /// - Returns:`PCAccessToken.DeletionResponse` representing the server response.
         /// - Throws: PCError
     static public func deleteCurrentAccessToken(token: PCAccessToken) async throws -> PCAccessToken.DeletionResponse {
+       
         try await PCNetwork.shared.cloudRequest(.deleteCurrentAccessToken(token: token), type: PCAccessToken.DeletionResponse.self)
     }
     
@@ -1033,6 +1062,7 @@ extension PCAccessToken {
         /// - Returns:`PCAccessToken.DeletionResponse` representing the server response.
         /// - Throws: PCError
     public func delete() async throws -> PCAccessToken.DeletionResponse {
+        
         try await PCNetwork.shared.cloudRequest(.deleteCurrentAccessToken(token: self), type: PCAccessToken.DeletionResponse.self)
     }
 
@@ -1051,7 +1081,8 @@ extension PCAccessToken {
         /// - Returns: An array of PCAccessToken.Info representing the oAuth token.
         /// - Throws: PCError
     static public func verifyToken(token: PCAccessToken) async throws -> PCAccessToken.VerificationResponse {
-            return try await PCNetwork.shared.cloudRequest(.getCurrentAccessTokenInfo(token: token), type: PCAccessToken.VerificationResponse.self)
+            
+        try await PCNetwork.shared.cloudRequest(.getCurrentAccessTokenInfo(token: token), type: PCAccessToken.VerificationResponse.self)
     }
     
         /// Gets current server information for the access token.
@@ -1067,6 +1098,7 @@ extension PCAccessToken {
         /// - Returns: An array of PCAccessToken.Info representing the oAuth token.
         /// - Throws: PCError
     public func verifyToken() async throws -> PCAccessToken.VerificationResponse {
+        
         try await PCNetwork.shared.cloudRequest(.getCurrentAccessTokenInfo(token: self), type: PCAccessToken.VerificationResponse.self)
     }
 }

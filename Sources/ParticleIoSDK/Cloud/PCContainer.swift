@@ -3337,7 +3337,7 @@ public extension PCContainer {
             return
         }
         
-        PCEvent.subscribeToEventsFor(eventName: event, token: token, onEvent: onEvent, completion: completion)
+        PCEvent.subscribeToEvents(eventName: event, token: token, onEvent: onEvent, completion: completion)
     }
     
     ///Publish an event

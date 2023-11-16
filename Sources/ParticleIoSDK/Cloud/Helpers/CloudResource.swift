@@ -2515,7 +2515,7 @@ internal enum CloudResource {
         /// - Parameter eventName: Filters the stream to only events starting with the specified prefix. Omit to get all events.
         /// - Parameter deviceID: The device identifier of the device to filter by.
         /// - Parameter token: The representation of a particle access token with appropriate permissions.
-    case getDeviceEventStream(eventName: EventName?, deviceID: DeviceID, token: PCAccessToken)
+    case getDeviceEventStream(eventName: EventName, deviceID: DeviceID, token: PCAccessToken)
 
         ///Product event stream.
         ///

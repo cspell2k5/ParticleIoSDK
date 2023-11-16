@@ -279,14 +279,14 @@ extension PCEvent {
     /// - Parameter token: The representation of a particle access token with appropriate permissions.
     /// - Parameter onEvent: Closure that is called when an event by that name is recieved.
     /// - Parameter completion: Closure that is called when the connection is closed. This will contain an PCError indicating the subscription failure.
-    public func subscribeToEventsFor(eventName: EventName, token: PCAccessToken, onEvent: @escaping (PCEvent) -> Void, completion: ((PCError?) -> Void)?) {
+    public func subscribeToEvents(_ name: EventName, token: PCAccessToken, onEvent: @escaping (PCEvent) -> Void, completion: ((PCError?) -> Void)?) {
         
-        guard !eventName.rawValue.isEmpty else {
+        guard !name.rawValue.isEmpty else {
             completion?(PCError(code: .invalidArguments, description: "event name cannot be nil."))
             return
         }
         
-        PCNetwork.shared.subscribe(eventName: eventName, token: token, onEvent: onEvent, completion: completion)
+        PCNetwork.shared.subscribeToEvents(eventName: name, token: token, onEvent: onEvent, completion: completion)
     }
 
     
@@ -300,14 +300,14 @@ extension PCEvent {
     /// - Parameter token: The representation of a particle access token with appropriate permissions.
     /// - Parameter onEvent: Closure that is called when an event by that name is recieved.
     /// - Parameter completion: Closure that is called when the connection is closed. This will contain an PCError indicating the subscription failure.
-    static public func subscribeToEventsFor(eventName: EventName, token: PCAccessToken, onEvent: @escaping (PCEvent) -> Void, completion: ((PCError?) -> Void)?) {
+    static public func subscribeToEvents(eventName: EventName, token: PCAccessToken, onEvent: @escaping (PCEvent) -> Void, completion: ((PCError?) -> Void)?) {
         
         guard !eventName.rawValue.isEmpty else {
             completion?(PCError(code: .invalidArguments, description: "event name cannot be nil."))
             return
         }
         
-        PCNetwork.shared.subscribe(eventName: eventName, token: token, onEvent: onEvent, completion: completion)
+        PCNetwork.shared.subscribeToEvents(eventName: eventName, token: token, onEvent: onEvent, completion: completion)
     }
 
     
