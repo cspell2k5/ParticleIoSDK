@@ -60,6 +60,9 @@ public final class PCDevice: NSObject, Decodable, ObservableObject, Identifiable
     
     public typealias TransferID = String
 
+    //used for currentvaluesubject subscriptions to change output before passing down the line.
+    private var cancellables = Set<AnyCancellable>()
+
     ///Human readable description of the instance.
     public override var description: String {
 """
@@ -120,6 +123,7 @@ PCDevice: {
 """
     }
     
+    //Description helper
     private var functionsDescription: String {
         if functions.isEmpty {
             return "[]"
@@ -132,6 +136,7 @@ PCDevice: {
 """
     }
     
+    //Description helper
     private var variablesDescription: String {
         if variables.isEmpty {
             return "[]"
@@ -174,19 +179,71 @@ PCDevice: {
         case events
     }
         
+    ///The id of the physical particle device.
     public let id: DeviceID
-    private(set) public var name: DeviceName
-    public let lastIPAddress: String
-    public let lastHeard: String
-    public let lastHandshakeAt: String
-    public let productID: ProductID
-    public let platformID: PlatformID
-    public let firmwareProductID: Int?
-    public let online, connected, cellular, firmwareUpdatesEnabled, firmwareUpdatesForced: Bool?
-    private(set)  public var notes: String?
-    public let status, serialNumber, systemFirmwareVersion, currentBuildTarget, defaultBuildTarget, targetedFirmwareReleaseVersion, owner: String?
     
-    private var cancellables = Set<AnyCancellable>()
+    ///The currently assigned name of of the physical device.
+    private(set) public var name: DeviceName
+    
+    ///The last detected ip address of the physical device.
+    public let lastIPAddress: String
+    
+    ///The last time the cloud heard from the physical device.
+    public let lastHeard: String
+    
+    ///The last successful handshake with the phsyical device.
+    public let lastHandshakeAt: String
+    
+    ///The id of the product that the physical device is assigned to.
+    /// - note: If the productID has a length of 5 it is a productID otherwise it is a value assigned by particle.
+    public let productID: ProductID
+    
+    ///The platform id of the physical device.
+    /// - note: A best effort was made to account for all possible device types, but the enum also contains an unknown case if the product is not found.
+    public let platformID: PlatformID
+    
+    ///The id of the firmware currently assigned to the product that the device is associated with. Returns nil if firmware is not assigned or if the physical device is not associated with a product.
+    public let firmwareProductID: Int?
+    
+    ///Bool indicating if the phsyical device was online when the 'internal or application'  instance was created.
+    public let online: Bool
+    
+    ///Bool indicating if the phsyical device was connected to the cloud when the 'internal or application'  instance was created.
+    public let connected: Bool
+    
+    ///Bool indicating if the physical device connects to a cellular network.
+    public let cellular: Bool
+    
+    ///Bool indicating whether automatic firmware updates are enabled.
+    public let firmwareUpdatesEnabled: Bool
+    
+    ///Bool indicating whether automatic firmware updates are forced on the physical device.
+    public let firmwareUpdatesForced: Bool?
+    
+    ///Notes kept in the cloud for the physical device or nil if not present.
+    private(set) public var notes: String?
+    
+    ///The last known status pf the physical device.
+    /// - Important: This status can change over time and is not automatically updated.
+    public let status: String
+    
+    ///The serial number of the physical particle device.
+    public let serialNumber: String
+    
+    ///Current system firmware version on the physical device.
+    public let systemFirmwareVersion: String
+    
+    ///The current build target for the device firmware.
+    public let currentBuildTarget: String
+    
+    ///The default build target for the device firmware.
+    public let defaultBuildTarget: String
+    
+    ///Targeted firmware release verion..?
+    public let targetedFirmwareReleaseVersion: String?
+    
+    ///The current owner of the physical device. If the device has been claimed by a user or a customer.
+    public let owner: String?
     
     ///The names of the functions the device has exposed to the cloud.
     /// - note: If you update these function names in the actual device firmware you must replace the device representation in memory. ie: get the device again.
@@ -232,29 +289,29 @@ PCDevice: {
         self.name = DeviceName(try container.decode(String.self, forKey: .name))
         self.functions = try container.decode([String].self, forKey: .functions).map({FunctionName($0)})
         self.variables = try container.decode([String : String].self, forKey: .variables)
-        self.status = try? container.decodeIfPresent(String.self, forKey: .status)
-        self.owner = try? container.decodeIfPresent(String.self, forKey: .owner)
-        self.cellular = try container.decodeIfPresent(Bool.self, forKey: .cellular)
-        self.notes = try? container.decodeIfPresent(String.self, forKey: .notes)
-        self.online = try container.decodeIfPresent(Bool.self, forKey: .online)
-        self.connected = try container.decodeIfPresent(Bool.self, forKey: .connected)
+        self.status = try container.decode(String.self, forKey: .status)
+        self.owner = try container.decodeIfPresent(String.self, forKey: .owner)
+        self.cellular = try container.decode(Bool.self, forKey: .cellular)
+        self.notes = try container.decodeIfPresent(String.self, forKey: .notes)
+        self.online = try container.decode(Bool.self, forKey: .online)
+        self.connected = try container.decode(Bool.self, forKey: .connected)
         self.lastIPAddress = try container.decode(String.self, forKey: .lastIPAddress)
         self.lastHeard = try container.decode(String.self, forKey: .lastHeard)
         self.lastHandshakeAt = try container.decode(String.self, forKey: .lastHandshakeAt)
         self.productID = ProductID(try container.decode(Int.self, forKey: .productID)) ?? ProductID("0") //Fault value
         self.platformID = PlatformID(rawValue: try container.decode(Int.self, forKey: .platformID)) ?? PlatformID.Unknown
-        self.firmwareUpdatesEnabled = try? container.decodeIfPresent(Bool.self, forKey: .firmwareUpdatesEnabled)
-        self.firmwareUpdatesForced = try? container.decodeIfPresent(Bool.self, forKey: .firmwareUpdatesForced)
-        self.serialNumber = try? container.decodeIfPresent(String.self, forKey: .serialNumber)
-        self.systemFirmwareVersion = try? container.decodeIfPresent(String.self, forKey: .systemFirmwareVersion)
-        self.currentBuildTarget = try? container.decodeIfPresent(String.self, forKey: .currentBuildTarget)
-        self.defaultBuildTarget = try? container.decodeIfPresent(String.self, forKey: .defaultBuildTarget)
-        self.groups = try? container.decodeIfPresent([String].self, forKey: .groups)
-        self.development = try? container.decodeIfPresent(Bool.self, forKey: .development)
-        self.quarantined = try? container.decodeIfPresent(Bool.self, forKey: .quarantined)
-        self.denied = try? container.decodeIfPresent(Bool.self, forKey: .denied)
-        self.targetedFirmwareReleaseVersion = try? container.decodeIfPresent(String.self, forKey: .targetedFirmwareReleaseVersion)
-        self.firmwareProductID = try? container.decodeIfPresent(Int.self, forKey: .firmwareProductID)
+        self.firmwareUpdatesEnabled = try container.decode(Bool.self, forKey: .firmwareUpdatesEnabled)
+        self.firmwareUpdatesForced = try container.decodeIfPresent(Bool.self, forKey: .firmwareUpdatesForced)
+        self.serialNumber = try container.decode(String.self, forKey: .serialNumber)
+        self.systemFirmwareVersion = try container.decode(String.self, forKey: .systemFirmwareVersion)
+        self.currentBuildTarget = try container.decode(String.self, forKey: .currentBuildTarget)
+        self.defaultBuildTarget = try container.decode(String.self, forKey: .defaultBuildTarget)
+        self.groups = try container.decodeIfPresent([String].self, forKey: .groups)
+        self.development = try container.decodeIfPresent(Bool.self, forKey: .development)
+        self.quarantined = try container.decodeIfPresent(Bool.self, forKey: .quarantined)
+        self.denied = try container.decodeIfPresent(Bool.self, forKey: .denied)
+        self.targetedFirmwareReleaseVersion = try container.decodeIfPresent(String.self, forKey: .targetedFirmwareReleaseVersion)
+        self.firmwareProductID = try container.decodeIfPresent(Int.self, forKey: .firmwareProductID)
         
         super.init()
         
@@ -288,13 +345,13 @@ PCDevice: {
             case .productID:
                 return self.productID.rawValue
             case .online:
-                return self.online?.description ?? "nil"
+            return self.online.description
             case .connected:
-                return self.connected?.description ?? "nil"
+                return self.connected.description
             case .platformID:
                 return self.platformID.description
             case .cellular:
-                return self.cellular?.description ?? "nil"
+                return self.cellular.description
             case .notes:
                 return self.notes?.description ?? "nil"
             case .functions:
@@ -302,13 +359,13 @@ PCDevice: {
             case .variables:
                 return "[\n\(self.variables.map({"  \($0):\($1)"}).joined(separator: ",\n"))\n]"
             case .status:
-                return self.status?.description ?? "nil"
+                return self.status.description
             case .serialNumber:
-                return self.serialNumber?.description ?? "nil"
+                return self.serialNumber.description
             case .systemFirmwareVersion:
-                return self.systemFirmwareVersion?.description ?? "nil"
+                return self.systemFirmwareVersion.description
             case .currentBuildTarget:
-                return self.currentBuildTarget?.description ?? "nil"
+                return self.currentBuildTarget.description
             case .firmwareProductID:
                 return self.firmwareProductID?.description ?? "nil"
             case .groups:
@@ -324,16 +381,17 @@ PCDevice: {
             case .owner:
                 return self.owner?.description ?? "nil"
             case .firmwareUpdatesEnabled:
-                return self.firmwareUpdatesEnabled?.description ?? "nil"
+                return self.firmwareUpdatesEnabled.description
             case .firmwareUpdatesForced:
                 return self.firmwareUpdatesForced?.description ?? "nil"
             case .defaultBuildTarget:
-                return self.defaultBuildTarget?.description ?? "nil"
+                return self.defaultBuildTarget.description
             case .events:
                 return self.events.description
         }
     }
     
+    ///Little cheat to iterate over all property values.
     public func value(for key: PropertyKey) -> Any? {
         
         switch key {
@@ -441,7 +499,7 @@ PCDevice: {
 //MARK: - Refresh
 extension PCDevice {
     
-    
+    ///Refresh the PCDevice instance against the physical device.
     public func refresh() -> Future<Bool, PCError> {
         
         Future { promise in
@@ -468,7 +526,7 @@ extension PCDevice {
         }
     }
 
-    
+    ///Refresh the PCDevice instance against the physical device.
     public func refresh(completion: ((Result<Never, PCError>) -> Void)? = nil) {
         
         guard let token = PCAuthenticationManager.shared.token
@@ -491,7 +549,7 @@ extension PCDevice {
         }
     }
     
-    
+    ///Refresh the PCDevice instance against the physical device.
     public func refresh() async throws {
         
         guard let token = PCAuthenticationManager.shared.token
@@ -516,12 +574,12 @@ extension PCDevice {
 //MARK: - Events
 extension PCDevice {
     
-    
+    //Shared error handling
     private enum NameType {
         case event, productID
     }
     
-    
+    //Shared error handling
     private func checkName(_ name: String, type: NameType) -> PCError? {
         if name.isEmpty{
             return PCError(code: .invalidArguments, description: "\(type == .event ? "Event name" : "ProductID" ) parameter cannot be an empty string.")
@@ -529,7 +587,7 @@ extension PCDevice {
         return nil
     }
     
-    
+    ///Subscribe to events by the product they are sent with.
     public func subscribeToProductEvents(_ name: EventName, productID: ProductID, token: PCAccessToken, onEvent: EventBlock?, completion: CompletionBlock?) {
         
         if let error = checkName(productID.rawValue, type: .productID) {
@@ -550,7 +608,7 @@ extension PCDevice {
         }
     }
     
-    
+    ///Subscribe to any events matching the event name.
     public func subscribeToEvents(eventName: EventName, onEvent: EventBlock?, completion: CompletionBlock?) {
         
         guard let token
@@ -571,7 +629,7 @@ extension PCDevice {
         }
     }
     
-    
+    ///Subscribe to events issued by the represented device only.
     public func subscribeToDeviceEvents(eventName: EventName, onEvent: EventBlock?, completion: CompletionBlock?) {
         
         guard let token
@@ -597,27 +655,49 @@ extension PCDevice {
 
 extension PCDevice {
     
+    ///Causes the device to publish a product event.
     public func publishProductEvent(_ eventName: EventName, data: String?, isPrivate: Bool? = nil, ttl: Int? = nil, completion: @escaping (Result<Bool, PCError>) -> Void)  {
         
         guard let token = self.token
         else {
-            completion(.failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
+            completion(.failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.\n")))
             return
         }
         
-        PCEvent.publishEvent(productIdOrSlug: self.productID, eventName: eventName, data: data, isPrivate: isPrivate, ttl: ttl, token: token, completion: completion)
+        if self.productID.rawValue.count != 5 {
+            completion(.failure(PCError(code: .invalidArguments, description: "The device \(self.id) is not claimed by a product. You cannot publish a product event through a device not associated with a product. Use PCEvent.publishEvent instead.\n")))
+            return
+        }
         
+        PCNetwork.shared.cloudRequest(.publishEvent(eventName: eventName, productIDorSlug: self.productID, data: data, private: isPrivate, ttl: ttl, token: token), type: PCEvent.PublishResponse.self) { response in
+            do {
+                let result = try response.get().ok
+                completion(.success(result))
+            } catch {
+                completion(.failure(error as! PCError))
+            }
+        }
     }
     
-    
-    static public func publishEvent(productIdOrSlug: ProductID? = nil, eventName: EventName, data: String?, isPrivate: Bool? = nil, ttl: Int? = nil, token: PCAccessToken, completion: @escaping (Result<Bool, PCError>) -> Void)  {
+    ///Causes the device to publish a product event.
+    public func publishProductEvent(_ eventName: EventName, data: String?, isPrivate: Bool? = nil, ttl: Int? = nil) async throws -> Bool  {
         
-        PCEvent.publishEvent(productIdOrSlug: productIdOrSlug, eventName: eventName, data: data, isPrivate: isPrivate, ttl: ttl, token: token, completion: completion)
+        guard let token = self.token
+        else {
+            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.\n")
+        }
         
+        if self.productID.rawValue.count != 5 {
+            throw PCError(code: .invalidArguments, description: "The device \(self.id) is not claimed by a product. You cannot publish a product event through a device not associated with a product. Use PCEvent.publishEvent instead.\n")
+        }
+        
+        return try await PCNetwork.shared.cloudRequest(.publishEvent(eventName: eventName, productIDorSlug: self.productID, data: data, private: isPrivate, ttl: ttl, token: token), type: PCEvent.PublishResponse.self).ok
     }
-    
+
     
     //MARK: Async
+    
+    ///Publishes a device event.
     public func publishEvent(eventName: EventName, data: String?, isPrivate: Bool? = nil, ttl: Int? = nil) async throws -> Bool {
         
         guard let token = self.token
@@ -626,12 +706,14 @@ extension PCDevice {
             
         }
         
-        return try await PCEvent.publishEvent(productIdOrSlug: self.productID, eventName: eventName, data: data, isPrivate: isPrivate, ttl: ttl, token: token)
+        return try await PCNetwork.shared.cloudRequest(.publishEvent(eventName: eventName, productIDorSlug: nil, data: data, private: isPrivate, ttl: ttl, token: token), type: PCEvent.PublishResponse.self).ok
     }
     
     
     //MARK: Completion Handlers
-    public func publishEvent(eventName: EventName, data: String?, isPrivate: Bool? = nil, ttl: Int? = nil, completion: @escaping (Result<Bool, PCError>) -> Void)  {
+    
+    ///Publishes a device event.
+    public func publishEvent(_ eventName: EventName, data: String?, isPrivate: Bool? = nil, ttl: Int? = nil, completion: @escaping (Result<Bool, PCError>) -> Void)  {
         
         guard let token = self.token
         else {
@@ -639,7 +721,14 @@ extension PCDevice {
             return
         }
         
-        return PCEvent.publishEvent(productIdOrSlug: self.productID, eventName: eventName, data: data, isPrivate: isPrivate, ttl: ttl, token: token, completion: completion)
+        PCNetwork.shared.cloudRequest(.publishEvent(eventName: eventName, productIDorSlug: nil, data: data, private: isPrivate, ttl: ttl, token: token), type: PCEvent.PublishResponse.self) { response in
+            do {
+                let result = try response.get().ok
+                completion(.success(result))
+            } catch {
+                completion(.failure(error as! PCError))
+            }
+        }
     }
 }
 
@@ -647,6 +736,7 @@ extension PCDevice {
 //MARK: - Functions
 extension PCDevice {
     
+    ///Used to provide arguments to the server when making a function call on the physical devices firmware.
     public struct FunctionArguments {
         
         ///Human readable description of the instance.
@@ -879,6 +969,7 @@ ListResponse: {
         // MARK: MetaData
         public struct MetaData: Decodable, CustomDebugStringConvertible, CustomStringConvertible {
             
+            ///Human readable description.
             public var description: String {
 """
 MetaData: {
@@ -887,11 +978,17 @@ MetaData: {
 }
 """
             }
+            
+            ///Human readable debug description.
             public var debugDescription: String {
                 "MetaData:\ntotalPages: \(String(describing: totalPages))\ntotalRecords: \(String(describing: totalRecords))\n"
             }
             
-            public let totalPages, totalRecords: Int?
+            ///The total number of pages of records provided by the server.
+            public let totalPages: Int?
+            
+            ///The total number of records returned by the server.
+            public let totalRecords: Int?
             
             //Made private for security reasons. Shielding from public abuse.
             private init() {
@@ -957,6 +1054,7 @@ ListArguments: {
 """
         }
         
+        ///Human readable debug description.
         public var debugDescription: String {
             "deviceID:\(String(describing: deviceID))\ngroups:\(String(describing: groups))\ndeviceName:\(String(describing: deviceName))\nserialNumber:\(String(describing: serialNumber))\nsortAttr:\(String(describing: sortAttr))\nsortDir:\(String(describing: sortDir))\nquarantined:\(String(describing: quarantined))\npage:\(String(describing: page))\nperPage:\(String(describing: perPage))\n"
         }
@@ -2170,10 +2268,13 @@ extension PCDevice {
 //MARK: - Signalling
 
 //MARK: Enums
+
+///Enum representing the rainbow L.E.D.  on the particle device. This indicates if the device is being signaled.
 public enum RainbowState: Int {
+    
     case on = 1, off = 0
     
-    public var stringValue: String {
+    public var description: String {
         return self == .on ? "On" : "Off"
     }
     
@@ -2193,11 +2294,20 @@ public enum RainbowState: Int {
 extension PCDevice {
     
     //MARK: Responses
+    
+    ///Signal response sent by the server.
     public struct SignalResponse: Decodable {
+        
+        ///The id of the device being signaled.
         public let deviceId: DeviceID
+        
+        ///Bool indicating if the device is currently connected to the internet.
         public let isConnected: Bool
+        
+        ///The current state of the signal L.E.D. on the device.
         public let signalState: RainbowState
         
+        ///Bool indicating if the device is currently in a signal state.
         public var isSignaling: Bool {
             return signalState == .on
         }
