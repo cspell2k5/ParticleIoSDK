@@ -10,11 +10,13 @@ import Foundation
 import Combine
 
 
+///Representation of the platform id of the physical device.
 public enum PlatformID: Int, Codable {
     
     case Core = 0, Photon = 6, P1 = 8, Electron = 10, RaspberryPi = 31, RedBearDuo = 88, Bluz = 103, DigistumpOak = 82, ESP32 = 11, Argon = 12, Boron = 13, Xenon = 14, ASeries = 22, BSeries = 23, XSeries = 24, B5SoM = 25
     case Unknown = -1
     
+    ///Human readable description.
     public var description: String {
         switch self {
             case .ASeries: return "A-Series"
@@ -37,10 +39,8 @@ public enum PlatformID: Int, Codable {
         }
     }
     
-    public init?(_ rawValue: ProductID?) {
-        self.init(rawValue?.rawValue)
-    }
     
+    //used internally to convert json int string into int value then send to designated init.
     private init?(_ rawValue: String?) {
         if let str = rawValue,
            let id = Int(str) {
@@ -271,11 +271,6 @@ PCDevice: {
     ///Bool indiacting if the device denied leaving quarantine.
     public let denied: Bool?
     
-    ///The type of particle product represented by the instance.
-    public var type: PlatformID {
-        PlatformID(productID) ?? PlatformID(rawValue: -1)!
-    }
-    
     ///Used to share properties for easy iteration. The keys can be used with func value(forKey key: PropertyKey) -> Any?.
     public var propertyKeys: [PropertyKey] {
         PropertyKey.allCases
@@ -486,7 +481,7 @@ PCDevice: {
             hasher.combine(variables)
             hasher.combine(events)
             hasher.combine(token)
-            hasher.combine(type)
+        
         return hasher.finalize()
     }
     
