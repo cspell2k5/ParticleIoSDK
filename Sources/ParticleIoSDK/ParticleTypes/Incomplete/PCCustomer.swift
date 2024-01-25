@@ -6,7 +6,6 @@
     //
 
 import Foundation
-import Combine
 
 
 ///Reprentation of a particleio customer.
@@ -294,20 +293,6 @@ extension PCCustomer {
     /// - Requires: Scope of customers:create
     public static func createCustomer(with client: PCClient,
                                       productID: ProductID,
-                                      username: String,
-                                      password: String) -> CurrentValueSubject<PCAccessToken?, PCError> {
-        PCNetwork.shared.cloudRequest(
-            .createCustomerWithClient(
-                productIDorSlug: productID,
-                client: client,
-                username: username,
-                password: password
-            ),
-            type: PCAccessToken.self)
-    }
-    
-    public static func createCustomer(with client: PCClient,
-                                      productID: ProductID,
                                                 username: String,
                                                 password: String) async throws -> PCAccessToken {
         try await PCNetwork.shared.cloudRequest(
@@ -336,21 +321,7 @@ extension PCCustomer {
             completion: completion)
     }
     
-    
-    public static func createCustomer(with token: PCAccessToken,
-                                      productID: ProductID,
-                                      clientCredentials: PCClient)
-    -> CurrentValueSubject<PCAccessToken?, PCError> {
         
-        PCNetwork.shared.cloudRequest(
-            .createCustomerWithToken(
-                productIDorSlug: productID,
-                clientCredentials: clientCredentials,
-                token: token
-            ),
-            type: PCAccessToken.self)
-    }
-    
     public static func createCustomer(with token: PCAccessToken,
                                       productID: ProductID,
                                       clientCredentials: PCClient) async throws -> PCAccessToken {
@@ -377,19 +348,7 @@ extension PCCustomer {
             completion: completion)
     }
     
-    
-    public static func createCustomerImplicit(productID: ProductID,
-                                              client: PCClient,
-                                              customerCredentials: PCCredentials) -> CurrentValueSubject<PCAccessToken?, PCError> {
-        PCNetwork.shared.cloudRequest(
-            .createCustomerImplicit(
-                productIDorSlug: productID,
-                                    client: client,
-                                    customerCredentials: customerCredentials 
-            ),
-            type: PCAccessToken.self)
-    }
-    
+        
     public static func createCustomerImplicit(productID: ProductID,
                                               client: PCClient,
                                               customerCredentials: PCCredentials) async throws -> PCAccessToken {
@@ -420,16 +379,6 @@ extension PCCustomer {
 extension PCCustomer {
     //MARK: List
     public static func listCustomers(for productID: ProductID,
-                                     token: PCAccessToken) -> CurrentValueSubject<PCCustomer.CustomerListResponse?, PCError> {
-        PCNetwork.shared.cloudRequest(
-            .listCustomersForProduct(
-                productIdOrSlug: productID,
-                token: token
-            ),
-            type: PCCustomer.CustomerListResponse.self)
-    }
-    
-    public static func listCustomers(for productID: ProductID,
                                      token: PCAccessToken) async throws -> PCCustomer.CustomerListResponse {
         try await PCNetwork.shared.cloudRequest(
             .listCustomersForProduct(
@@ -454,12 +403,6 @@ extension PCCustomer {
 
 extension PCCustomer {
     //MARK: Generation
-    public static func createCustomerWithScopedAccessToken(arguments: PCCustomer.AccessTokenArguments) -> CurrentValueSubject<PCAccessToken?, PCError> {
-        PCNetwork.shared.cloudRequest(
-            .generateCustomerWithScopedAccessToken(arguments: arguments)
-            , type: PCAccessToken.self)
-    }
-    
     public static func createCustomerWithScopedAccessToken(arguments: PCCustomer.AccessTokenArguments) async throws -> PCAccessToken {
         try await PCNetwork.shared.cloudRequest(
             .generateCustomerWithScopedAccessToken(arguments: arguments)
@@ -476,17 +419,6 @@ extension PCCustomer {
 
 extension PCCustomer {
     //MARK: Update Password
-    public static func updateCustomerPassword(productID: ProductID,
-                                              customerCredentials: PCCredentials,
-                                              token: PCAccessToken) -> CurrentValueSubject<ServerResponses.BoolResponse?, PCError> {
-        PCNetwork.shared.cloudRequest(
-            .updateCustomerPassword(
-                productIDorSlug: productID,
-                customerCredentials: customerCredentials,
-                token: token),
-            type: ServerResponses.BoolResponse.self)
-    }
-    
     public static func updateCustomerPassword(productID: ProductID,
                                               customerCredentials: PCCredentials,
                                               token: PCAccessToken) async throws -> ServerResponses.BoolResponse {
@@ -516,17 +448,6 @@ extension PCCustomer {
 
 extension PCCustomer {
     //MARK: Deletion
-    public static func deleteCustomer(_ customer: PCCustomer, token: PCAccessToken) -> CurrentValueSubject<ServerResponses.BoolResponse?, PCError> {
-        PCNetwork.shared.cloudRequest(
-            .deleteA_Customer(
-                productIDorSlug: customer.productID,
-                username: customer.username,
-                token: token
-            ),
-            type: ServerResponses.BoolResponse.self
-        )
-    }
-    
     public static func deleteCustomer(productIDorSlug: ProductID, username: String, token: PCAccessToken) async throws -> ServerResponses.BoolResponse {
         try await PCNetwork.shared.cloudRequest(
             .deleteA_Customer(
@@ -551,20 +472,7 @@ extension PCCustomer {
 }
 
 extension PCCustomer {
-    //MARK: Password Reset
-    public static func resetPassword(productID: ProductID,
-                                     customerEmail: String,
-                                     token: PCAccessToken) -> CurrentValueSubject<ServerResponses.BoolResponse?, PCError> {
-        PCNetwork.shared.cloudRequest(
-            .resetPassword(
-                productIDorSlug: productID,
-                customerEmail: customerEmail,
-                token: token
-            ),
-            type: ServerResponses.BoolResponse.self
-        )
-    }
-    
+    //MARK: Password Reset    
     public static func resetPassword(productID: ProductID,
                                            customerEmail: String,
                                            token: PCAccessToken) async throws -> ServerResponses.BoolResponse {

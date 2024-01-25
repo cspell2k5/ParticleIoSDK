@@ -10,7 +10,7 @@ import Foundation
 
 
 public enum HTTPMethodType: String {
-    case GET, POST, PUT, DELETE, PATCH
+    case GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH
 }
 
 
@@ -29,45 +29,9 @@ extension CloudResource {
         internal let accessToken = "access_token"
         
                 
-            //MARK: - ParticlePaths
+            //MARK: - EndPoints
 #warning("needs to be changed back to private after all cases have been made and brought in")
-        internal enum ParticlePaths: String {
-               
-            //MARK: Tokens
-            case v1tokens = "/v1/access_tokens"
-                //MARK: API User
-            case v1orgs = "/v1/orgs"
-                //MARK: Devices
-            case v1devices = "/v1/devices"
-            case v1deviceClaims = "/v1/device_claims"
-            case v1serialNumbers = "/v1/serial_numbers/"
-            
-                //MARK: Events
-            case v1events = "/v1/events"
-            
-                //MARK: Integrations
-            
-                //MARK: Special Events
-            
-                //MARK: Asset Tracking Events
-            
-                //MARK: Firmware
-            case v1binaries = "/v1/binaries"
-            case v1buildTargets = "/v1/build_targets"
-            
-                //MARK: Product Firmware
-            
-                //MARK: Library
-            case libraries = "/v1/libraries"
-                //MARK: Device Group
-            
-                //MARK: Asset Tracking
-            
-                //MARK: Customer
-            
-                //MARK: Service Agreements
-            
-                //MARK: Shared
+        internal enum EndPoint: String {
             case v1oAuth = "/oauth/token"
             case v1sims = "/v1/sims"
             case v1users = "/v1/user"
@@ -76,9 +40,17 @@ extension CloudResource {
             case preV1Products = "/products"
             case v1Diagnostics = "/v1/diagnostics"
             case v1ServiceAgreements = "/v1/orgs/particle/service_agreements"
-            
+            case v1tokens = "/v1/access_tokens"
+            case v1orgs = "/v1/orgs"
+            case v1devices = "/v1/devices"
+            case v1deviceClaims = "/v1/device_claims"
+            case v1serialNumbers = "/v1/serial_numbers/"
+            case v1events = "/v1/events"
+            case v1binaries = "/v1/binaries"
+            case v1buildTargets = "/v1/build_targets"
+            case libraries = "/v1/libraries"
         }
-        
+
             //MARK: - URL Forming
         internal func basicParticleUrlComponents() -> URLComponents {
             
@@ -165,25 +137,25 @@ extension CloudResource {
             }
         }
         
-        internal func contentTypeforResource(_ resource: CloudResource) -> String {
+        internal func contentTypeforResource(_ resource: CloudResource) -> HTTPContentType {
             switch resource.type {
-                case .accessToken: return tokenContentType(resource).rawValue
-                case .client: return clientContentType(resource).rawValue
-                case .apiUser: return APiUserContentType(resource).rawValue
-                case .device: return deviceContentType(resource).rawValue
-                case .remoteDiagnostics: return remoteDiagnosticsContentType(resource).rawValue
-                case .user: return userContentType(resource).rawValue
-                case .quranatine: return quarantineContentType(resource).rawValue
-                case .simCard: return simCardContentType(resource).rawValue
-                case .event: return eventContentType(resource).rawValue
+                case .accessToken: return tokenContentType(resource)
+                case .client: return clientContentType(resource)
+                case .apiUser: return APiUserContentType(resource) 
+                case .device: return deviceContentType(resource) 
+                case .remoteDiagnostics: return remoteDiagnosticsContentType(resource) 
+                case .user: return userContentType(resource) 
+                case .quranatine: return quarantineContentType(resource) 
+                case .simCard: return simCardContentType(resource) 
+                case .event: return eventContentType(resource) 
                     
-                case .products: return productContentType(resource).rawValue
+                case .products: return productContentType(resource) 
                     
-                case .customers: return customerContentType(resource).rawValue
+                case .customers: return customerContentType(resource) 
                     
-                case .serviceAgreements: return serviceAgreementsContentType(resource).rawValue
+                case .serviceAgreements: return serviceAgreementsContentType(resource) 
 
-                case .libraries: return libraryContentType(resource).rawValue
+                case .libraries: return libraryContentType(resource) 
 
                     
                 default: abort()
@@ -215,24 +187,24 @@ extension CloudResource {
             }
         }
         
-        internal func acceptHeaderForResource(_ resource: CloudResource) -> HTTPContentType? {
+        internal func acceptHeaderForResource(_ resource: CloudResource) -> HTTPContentType {
             
             switch resource.type {
-                case .accessToken: return nil
-                case .client: return nil
-                case .apiUser: return nil
-                case .device: return nil
-                case .remoteDiagnostics: return nil
-                case .user: return nil
-                case .quranatine: return nil
-                case .simCard: return nil
+                case .accessToken: return HTTPContentType.jSon
+                case .client: return HTTPContentType.jSon
+                case .apiUser: return HTTPContentType.jSon
+                case .device: return HTTPContentType.jSon
+                case .remoteDiagnostics: return HTTPContentType.jSon
+                case .user: return HTTPContentType.jSon
+                case .quranatine: return HTTPContentType.jSon
+                case .simCard: return HTTPContentType.jSon
                 case .event: return eventsAcceptType(resource)
                     
-                case .products: return nil
+                case .products: return HTTPContentType.jSon
                     
-                case .customers: return nil
+                case .customers: return HTTPContentType.jSon
                     
-                case .serviceAgreements: return nil
+                case .serviceAgreements: return HTTPContentType.jSon
                 case .assetTracking: return assetTrackingAcceptType(resource)
                     
                 case .libraries: return libraryAcceptType(resource)

@@ -5,12 +5,11 @@
 //  Created by Craig Spell on 9/5/23.
 //
 
-import Combine
 import Foundation
 
 
 public extension Notification.Name {
-    static let pc_token_available = Notification.Name("particle_token_has_become_available")
+    static let pc_token_available   = Notification.Name("particle_token_has_become_available")
     static let pc_token_unavailable = Notification.Name("particle_token_no_longer_valid")
 }
 
@@ -41,7 +40,7 @@ final public class PCAuthenticationManager: ObservableObject {
                 
         Task {
             
-            await self.load()
+            await self.loadSavedToken()
             
             self.decrementProgress()
             
@@ -49,7 +48,7 @@ final public class PCAuthenticationManager: ObservableObject {
     }
     
     
-    private func load() async {
+    private func loadSavedToken() async {
         
         do {
             if let token = try cryptoManager.fetchSavedToken() {

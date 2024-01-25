@@ -7,12 +7,11 @@
 //
 
 import Foundation
-import Combine
 
 
 
 public struct PCProduct : Decodable, Hashable, CustomDebugStringConvertible {
-
+    
     public var debugDescription: String {
         "\n   PCProduct:\n      id: \(id)\n      name: \(name)\n      slug: \(slug)\n      description: \(description)\n      groups: [\(groups.joined(separator:",\n      "))]\n      deviceCount: \(deviceCount)\n      settings: \(settings.debugDescription)\n      type: \(type ?? "nil")\n      hardwareVersion: \(hardwareVersion ?? "nil")\n      configId: \(configId ?? "nil")\n      organization:   \(organization ?? "nil")\n      platformId: \(String(describing: platformId))\n      requiresActivationCodes: \(String(describing: requiresActivationCodes))\n"
     }
@@ -33,7 +32,7 @@ public struct PCProduct : Decodable, Hashable, CustomDebugStringConvertible {
     
     enum CodingKeys: String, CodingKey {
         case id
-//        case /*product_id*/
+        //        case /*product_id*/
         case name
         case slug
         case description
@@ -79,7 +78,7 @@ extension PCProduct {
             self.ok = ok; self.invited = invited
         }
     }
-
+    
     
     public struct ListResponse: Decodable, CustomStringConvertible, CustomDebugStringConvertible {
         
@@ -93,7 +92,7 @@ extension PCProduct {
         
         public let products: [PCProduct]
     }
-
+    
     public struct DeleteTeamMemberResponse: Decodable {
         public let ok: String
         
@@ -106,30 +105,9 @@ extension PCProduct {
 }
 
 
-//MARK: - Static Functions
-extension PCProduct {
-    
-        //MARK: CurrentValueSubjects
-    public static func listProducts(token: PCAccessToken) -> CurrentValueSubject<PCProduct.ListResponse?, PCError> {
-        PCNetwork.shared.cloudRequest(.listProducts(token: token), type: PCProduct.ListResponse.self)
-    }
-    
-    public static func getProduct(productIdOrSlug: ProductID, token: PCAccessToken) -> CurrentValueSubject<PCProduct?, PCError> {
-        
-        let subject = CurrentValueSubject<PCProduct?, PCError>(nil)
-        
-        PCNetwork.shared.cloudRequest(.retrieveProduct(productIDorSlug: productIdOrSlug, token: token), type: ProductGetResponse.self)
-            .sink { completion in
-                subject.send(completion: completion)
-            } receiveValue: { response in
-                subject.send(response?.product)
-            }.store(in: &PCNetwork.shared.cancellables)
-       
-        return subject
-    }
-}
 
-    //MARK: Async
+//MARK: - Static Functions
+//MARK: Async
 extension PCProduct {
     public static func listProducts(token: PCAccessToken) async throws -> PCProduct.ListResponse {
         try await PCNetwork.shared.cloudRequest(.listProducts(token: token), type: PCProduct.ListResponse.self)
@@ -140,27 +118,25 @@ extension PCProduct {
     }
 }
 
-    //MARK: Completion Handlers
+//MARK: Completion Handlers
 extension PCProduct {
     
-    
-    
     public static func listProducts(token: PCAccessToken, completion: @escaping (Result<PCProduct.ListResponse, PCError>) -> Void) {
-       
+        
         PCNetwork.shared.cloudRequest(.listProducts(token: token), type: PCProduct.ListResponse.self, completion: completion)
     }
     
     
     
     public static func getProduct(productIdOrSlug: ProductID, token: PCAccessToken, completion: @escaping (Result<PCProduct, PCError>) -> Void) {
-       
-        PCNetwork.shared.cloudRequest(.retrieveProduct(productIDorSlug: productIdOrSlug, token: token), type: ProductGetResponse.self) { result in
         
+        PCNetwork.shared.cloudRequest(.retrieveProduct(productIDorSlug: productIdOrSlug, token: token), type: ProductGetResponse.self) { result in
+            
             switch result {
-                case .success(let response):
-                    completion(.success(response.product))
-                case .failure(let error):
-                    completion(.failure(error))
+            case .success(let response):
+                completion(.success(response.product))
+            case .failure(let error):
+                completion(.failure(error))
             }
         }
     }

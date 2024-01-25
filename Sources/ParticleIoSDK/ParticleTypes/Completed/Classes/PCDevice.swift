@@ -314,6 +314,7 @@ PCDevice: {
         NotificationCenter.default.addObserver(self, selector: #selector(tokenAvailable), name: .pc_token_available, object: nil)
     }
     
+    //Stay in sync with token availability.
     @objc private func tokenAvailable() {
         self.token = PCAuthenticationManager.shared.token
     }

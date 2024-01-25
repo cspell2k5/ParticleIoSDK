@@ -8,7 +8,7 @@
 import Foundation
 
 
-enum ResourceType {
+enum ResourceType { //Helper enum to keep track of all sorts of nonsense
     case accessToken, client, apiUser, device, remoteDiagnostics, user, event, webhooks, quranatine, simCard, assetTrackingEvent, firmware, productFirmware, libraries, products, deviceGroups, assetTracking, customers, serviceAgreements
 }
 
@@ -160,7 +160,7 @@ internal enum CloudResource {
         /// - Parameter expireAt: An ISO8601 formatted date string indicatiing when the token will expire.
         /// - Returns: An PCAccessToken json carrying the new token information.
     case generateAccessToken(client: PCClient?, credentials: PCCredentials, grantType: PCAccessToken.GrantType = .password, expiresIn: Int?, expireAt: String?)
-
+//FIXME: - Definitely need to get ahold of particle on this one.
 #warning("otp parameter missing from call. Documentation is unclear of how to use it. Call Particle.")
         /// List access tokens issued to your account.
         ///
@@ -4859,22 +4859,17 @@ extension CloudResource {
         components.queryItems = helper.queryItemsFor( resource )
         
         var request        = URLRequest(url: components.url!)
-        request.httpMethod = helper.methodForResource( resource )
-        request.httpBody   = helper.payloadForResource( resource )
+        request.httpMethod = helper.methodForResource ( resource ) //String
+        request.httpBody   = helper.payloadForResource( resource ) //Data
         
-        request.addValue(helper.contentTypeforResource(resource), forHTTPHeaderField: "Content-Type")
+        request.addValue(helper.contentTypeforResource(resource).rawValue,  forHTTPHeaderField: "Content-Type") //HTTPContentType enum
+        request.addValue(helper.acceptHeaderForResource(resource).rawValue, forHTTPHeaderField: "Accept") //HTTPContentType enum default is always json
         
-        if let contentType = helper.acceptHeaderForResource(resource)?.rawValue {
-            request.addValue(contentType, forHTTPHeaderField: "Accept")
-        } else {
-            request.addValue("application/json", forHTTPHeaderField: "Accept")
-        }
-        
-        if let data = helper.authHeaderForResource(resource) {
+        if let data = helper.authHeaderForResource(resource) { //If auth is in header
             request.addValue(data, forHTTPHeaderField: "Authorization")
         }
 
-        request.assumesHTTP3Capable = false
+        request.assumesHTTP3Capable = false //Actually not always and likely not the case so lets not assume
         
         return request
     }

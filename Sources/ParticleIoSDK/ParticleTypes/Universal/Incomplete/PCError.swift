@@ -7,7 +7,6 @@
     //
 
 import Foundation
-import Combine
 
 public let PCErrorDomain = "Spell_Software_Particle_Error_Domain"
 

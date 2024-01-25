@@ -6,8 +6,6 @@
 //
 
 import Foundation
-import Combine
-
 
 
     /// - Important: Firmware API limits : While compiling source code using the cloud compiler, or flashing a device with source code, there are limits: Maximum time to compile: 120 seconds, Maximum source code size: 50 MB. This affects the following endpoints: POST /v1/binaries and PUT /v1/devices/:deviceId

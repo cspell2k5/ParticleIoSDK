@@ -1,13 +1,11 @@
-    //
-    //  ParticleUser.swift
-    //  ParticleIO
-    //
-    //  Created by Craig Spell on 11/22/19.
-    //
+//
+//  ParticleUser.swift
+//  ParticleIO
+//
+//  Created by Craig Spell on 11/22/19.
+//
 
 import Foundation
-import Combine
-
 
 
 public struct PCUser: Decodable, CustomStringConvertible {
@@ -18,14 +16,14 @@ public struct PCUser: Decodable, CustomStringConvertible {
     
     ///Email address for current user.
     public let username : String
-
+    
     ///Subscriptions for SIM cards and products/
     public let subscriptionIds : [Int]
-
+    
     ///An object that contains a first_name, last_name, and business_account.
     public let accountInfo : Info
     
-        ///Includes whether or not MFA is enabled
+    ///Includes whether or not MFA is enabled
     public let mfa : [String : Bool]
     
     ///Number of devices that count against the Wi-Fi device cap.
@@ -49,7 +47,7 @@ public struct PCUser: Decodable, CustomStringConvertible {
         self.username = username; self.subscriptionIds = subscriptionIds; self.accountInfo = accountInfo; self.mfa = mfa; self.wifiDeviceCount = wifiDeviceCount; self.cellularDeviceCount = cellularDeviceCount; self.memberships = memberships; self.role = role; self.enabled = enabled; self.accepted = accepted; self.date = date; self.version = version
     }
     
-        //MARK: - AccountInfo
+    //MARK: - AccountInfo
     public struct Info : Decodable {
         public let firstName : String?
         public let lastName : String?
@@ -76,12 +74,12 @@ public struct PCUser: Decodable, CustomStringConvertible {
     }
 }
 
-    // MARK: - PCUserPassWordResetRequestResponse
+// MARK: - PCUserPassWordResetRequestResponse
 extension PCUser {
     public struct RequestResponse: Decodable {
-       
+        
         public var debugDescription: String {
-        "RequestResponse:\nok:\(ok)\nmessage\(message)\n"
+            "RequestResponse:\nok:\(ok)\nmessage\(message)\n"
         }
         
         public let ok: Bool
@@ -93,73 +91,8 @@ extension PCUser {
     }
 }
 
-//MARK: CurrentValueSubjects
-public extension PCUser {
-    
-    ///Get user.
-    ///
-    ///Return the user resource for the currently authenticated user.
-    ///
-    /// - calls: GET /user
-    ///
-    ///
-    ///
-    /// - Parameter token: A currently active access token.
-    /// - Returns: Current value subject containing the optional PCUser or a PCError indicating the failure.
-    static func getCurrentUser(token: PCAccessToken) -> CurrentValueSubject<PCUser?,PCError> {
-        PCNetwork.shared.cloudRequest(.getUser(token: token), type: PCUser.self)
-    }
 
-    
-    ///Update user.
-    ///
-    ///Update the logged-in user. Allows changing email, password and other account information.
-    ///
-    /// - calls: PUT /user
-    ///
-    ///
-    /// - Parameter username: The new account email address to be assigned to the user to be updated.
-    /// - Parameter password: The new password to assign to the user to be updated.
-    /// - Parameter accountInfo: An PCUser.Info containing the acount info.
-    /// - Parameter currentPassword: The current password for the user to be updated.
-    /// - Parameter token: A currently active access token.
-    /// - Returns: Current value subject containing the optional PCUser.RequestResponse or an PCError indicating the failure.
-    static func updateUser(username: String, password: String? = nil, accountInfo: PCUser.Info, currentPassword: String ,token: PCAccessToken) -> CurrentValueSubject<PCUser.RequestResponse?,PCError> {
-        PCNetwork.shared.cloudRequest(.updateUser(username: username, password: password, accountInfo: accountInfo, currentPassword: currentPassword, token: token), type: PCUser.RequestResponse.self)
-    }
-
-    
-    ///Delete user.
-    ///
-    ///Delete the logged-in user. Allows removing user account and artifacts from Particle system.
-    ///
-    /// - calls: PUT /user
-    ///
-    /// - Parameter password: The new password to assign to the user to be updated.
-    /// - Parameter token: A currently active access token.
-    /// - Returns: Current value subject containing the optional PCUser.DeleteUserResponse or an PCError indicating the response.
-    static func deleteUser(password: String, token: PCAccessToken) -> CurrentValueSubject<PCUser.RequestResponse?,PCError> {
-        PCNetwork.shared.cloudRequest(.deleteUser(password: password, token: token), type: PCUser.RequestResponse.self)
-    }
-
-    
-    ///Forgot password.
-    ///
-    /// Create a new password reset token and send the user an email with the token. Client doesn't need to be authenticated.
-    ///
-    /// - calls: POST /user/password-reset
-    ///
-
-    /// - note: This function will generate an email to the email address passed to username. This call is rate limited to prevent abuse.
-    /// - Parameter username: The email address for the users account.
-    /// - Parameter token: A currently active access token.
-    /// - Returns: PCUser.PassWordResetRequestResponse
-    static func forgotPassword(username: String) -> CurrentValueSubject<PCUser.RequestResponse?,PCError> {
-        PCNetwork.shared.cloudRequest(.forgotPassword(username: username), type: PCUser.RequestResponse.self)
-    }
-}
-
-    //MARK: Futures
+//MARK: Futures
 public extension PCUser {
     
     
@@ -217,7 +150,7 @@ public extension PCUser {
     ///
     /// - calls: POST /user/password-reset
     ///
-
+    
     /// - note: This function will generate an email to the email address passed to username. This call is rate limited to prevent abuse.
     /// - throws: PCError indicating the failure.
     /// - Parameter username: The email address for the users account.
@@ -228,7 +161,7 @@ public extension PCUser {
     }
 }
 
-    //MARK: Completion Handlers
+//MARK: Completion Handlers
 public extension PCUser {
     
     
@@ -283,7 +216,7 @@ public extension PCUser {
     ///
     /// - calls: POST /user/password-reset
     ///
-
+    
     /// - note: This function will generate an email to the email address passed to username. This call is rate limited to prevent abuse.
     /// - Parameter username: The email address for the users account.
     /// - Parameter token: A currently active access token.

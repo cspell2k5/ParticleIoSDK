@@ -10,29 +10,30 @@ import Foundation
 //MARK: - Access Tokens - Done
 extension CloudResource.RequestHelper {
 #warning("Contact paticle about how to send the otp.")
+   
     //MARK: Paths
     internal func pathForTokenResource(_ resource: CloudResource) -> String {
         
         switch resource {
         case .generateAccessToken:
             //POST /oauth/token
-            return ParticlePaths.v1oAuth.rawValue
+            return EndPoint.v1oAuth.rawValue
         case .listAccessTokens:
             //GET /v1/access_tokens
-            return ParticlePaths.v1tokens.rawValue
+            return EndPoint.v1tokens.rawValue
         case .deleteAnAccessToken(let access_token ,_):
             //DELETE /v1/access_tokens/:token
-            return ParticlePaths.v1tokens.rawValue.appending(separator).appending(access_token)
+            return EndPoint.v1tokens.rawValue.appending(separator).appending(access_token)
             
         case .deleteAllAccessTokens:
             //DELETE /v1/access_tokens
-            return ParticlePaths.v1tokens.rawValue
+            return EndPoint.v1tokens.rawValue
             
         case .deleteCurrentAccessToken,
                 .getCurrentAccessTokenInfo:
             //DELETE /v1/access_tokens/current
             //GET /v1/access_tokens/current
-            return ParticlePaths.v1tokens.rawValue.appending("/current")
+            return EndPoint.v1tokens.rawValue.appending("/current")
             
         default: abort()
         }
@@ -169,14 +170,14 @@ extension CloudResource.RequestHelper {
         case .listClients(let productId,_),
                 .createClient(_,let productId,_,_,_):
             
-            if productId == nil { return ParticlePaths.v1clients.rawValue }
-            return "\(ParticlePaths.v1products.rawValue)/\(productId!.rawValue)/clients"
+            if productId == nil { return EndPoint.v1clients.rawValue }
+            return "\(EndPoint.v1products.rawValue)/\(productId!.rawValue)/clients"
             
         case .updateClient(let client,_,_,let productId,_),
                 .deleteClient(let client, let productId,_):
             
-            if productId == nil { return "\(ParticlePaths.v1clients.rawValue)/\(client.id)" }
-            return "\(ParticlePaths.v1products.rawValue)/\(productId!.rawValue)/clients/\(client.id)"
+            if productId == nil { return "\(EndPoint.v1clients.rawValue)/\(client.id)" }
+            return "\(EndPoint.v1products.rawValue)/\(productId!.rawValue)/clients/\(client.id)"
             
         default: abort()
         }
@@ -286,17 +287,17 @@ extension CloudResource.RequestHelper {
         case .createAPiUser(let type,_,_):
             switch type {
             case .organization(let organizationID):
-                return "\(ParticlePaths.v1orgs.rawValue)/\(organizationID.rawValue)/team"
+                return "\(EndPoint.v1orgs.rawValue)/\(organizationID.rawValue)/team"
             case .product(let productID):
-                return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/team"
+                return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/team"
             }
             
         case .updateAPiUser(let type, let parameters,_):
             switch type {
             case .organization(let organizationID):
-                return "\(ParticlePaths.v1orgs.rawValue)/\(organizationID.rawValue)/team/\(parameters.friendlyName)"
+                return "\(EndPoint.v1orgs.rawValue)/\(organizationID.rawValue)/team/\(parameters.friendlyName)"
             case .product(let productID):
-                return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/team/\(parameters.friendlyName)"
+                return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/team/\(parameters.friendlyName)"
             }
             
             
@@ -304,15 +305,15 @@ extension CloudResource.RequestHelper {
             switch type {
                 
             case .organization(let organizationID):
-                return "\(ParticlePaths.v1orgs.rawValue)/\(organizationID.rawValue)/team"
+                return "\(EndPoint.v1orgs.rawValue)/\(organizationID.rawValue)/team"
             case .product(let productID):
-                return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/team/"
+                return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/team/"
             }
             
         case .deleteAPiUser(let type, let username,_):
             
             ///v1/products/23748/team/friend+2vmicc5v9k@api.particle.io
-            return "\(ParticlePaths.v1products.rawValue)/\(type.carriedValue)/team/\(username)"
+            return "\(EndPoint.v1products.rawValue)/\(type.carriedValue)/team/\(username)"
             
         default: abort()
         }
@@ -433,79 +434,79 @@ extension CloudResource.RequestHelper {
             
         case .listDevices:
             
-            return ParticlePaths.v1devices.rawValue
+            return EndPoint.v1devices.rawValue
             
         case .listProductDevices(let productId,_,_):
             
             //GET /v1/products/:productIdOrSlug/devices
-            return "\(ParticlePaths.v1products.rawValue)/\(productId.rawValue)/devices"
+            return "\(EndPoint.v1products.rawValue)/\(productId.rawValue)/devices"
             
         case .importDevices(_,let productID,_,_):
             
-            return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/devices"
+            return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/devices"
             
             
         case .getDeviceInfo(let deviceID,_):
             
-            return "\(ParticlePaths.v1devices.rawValue)/\(deviceID.rawValue)"
+            return "\(EndPoint.v1devices.rawValue)/\(deviceID.rawValue)"
             
         case .getProductDeviceInfo(_, let productID,_):
             
-            return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/devices/"
+            return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/devices/"
             
         case .getVariableValue(let name, let deviceID,let productID,_):
             
             if let id = productID {
                 ///v1/products/:productIdOrSlug/devices/:deviceID/:variableName
-                return "\(ParticlePaths.v1products.rawValue)/\(id.rawValue)/devices/\(deviceID.rawValue)/\(name.rawValue)"
+                return "\(EndPoint.v1products.rawValue)/\(id.rawValue)/devices/\(deviceID.rawValue)/\(name.rawValue)"
             }
             ///v1/devices/:deviceId/:variableName
-            return "\(ParticlePaths.v1devices.rawValue)/\(deviceID.rawValue)/\(name.rawValue)"
+            return "\(EndPoint.v1devices.rawValue)/\(deviceID.rawValue)/\(name.rawValue)"
             
         case .callFunction(let deviceID, let arguments,_):
             if let productID = arguments.productIdOrSlug {
                 ///v1/products/:productIdOrSlug/devices/:deviceID/:functionName
-                return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/devices/\(deviceID.rawValue)/\(arguments.functionName.rawValue)"
+                return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/devices/\(deviceID.rawValue)/\(arguments.functionName.rawValue)"
             }
-            return "\(ParticlePaths.v1devices.rawValue)/\(deviceID.rawValue)/\(arguments.functionName.rawValue)"
+            return "\(EndPoint.v1devices.rawValue)/\(deviceID.rawValue)/\(arguments.functionName.rawValue)"
             
         case .pingDevice( let deviceID, let productID,_):
             
-            if productID == nil { return "\(ParticlePaths.v1devices.rawValue)/\(deviceID.rawValue)/ping" }
-            return "\(ParticlePaths.v1products.rawValue)/\(productID!.rawValue)/devices/\(deviceID.rawValue)/ping"
+            if productID == nil { return "\(EndPoint.v1devices.rawValue)/\(deviceID.rawValue)/ping" }
+            return "\(EndPoint.v1products.rawValue)/\(productID!.rawValue)/devices/\(deviceID.rawValue)/ping"
             
         case .renameDevice(let deviceID, let productID,_,_),
                 .addDeviceNotes(let deviceID,let productID,_,_):
             
-            if productID == nil { return "\(ParticlePaths.v1devices.rawValue)/\(deviceID.rawValue)" }
-            return "\(ParticlePaths.v1products.rawValue)/\(productID!.rawValue)/devices/\(deviceID.rawValue)"
+            if productID == nil { return "\(EndPoint.v1devices.rawValue)/\(deviceID.rawValue)" }
+            return "\(EndPoint.v1products.rawValue)/\(productID!.rawValue)/devices/\(deviceID.rawValue)"
             
         case .createClaimCode(let arguments,_):
             if let productID = arguments?.productIdOrSlug {
-                return "\(ParticlePaths.v1products)/\(productID.rawValue)/device_claims"
+                return "\(EndPoint.v1products)/\(productID.rawValue)/device_claims"
             }
-            return ParticlePaths.v1deviceClaims.rawValue
+            return EndPoint.v1deviceClaims.rawValue
             
         case .claimDevice:
-            return ParticlePaths.v1devices.rawValue
+            return EndPoint.v1devices.rawValue
             
             //            case .requestDeviceTransferFromAnotherUser:
             //                return ParticlePaths.v1devices.rawValue
             //
         case .removeDeviceFromProduct(let productID, let deviceID,_):
-            return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/devices/\(deviceID.rawValue)"
+            return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/devices/\(deviceID.rawValue)"
             
         case .unclaimDevice(let deviceID, let productID,_):
-            if productID == nil { return "\(ParticlePaths.v1devices.rawValue)/\(deviceID.rawValue)" }
-            return "\(ParticlePaths.v1products.rawValue)/\(productID!.rawValue)/devices/\(deviceID.rawValue)"
+            if productID == nil { return "\(EndPoint.v1devices.rawValue)/\(deviceID.rawValue)" }
+            return "\(EndPoint.v1products.rawValue)/\(productID!.rawValue)/devices/\(deviceID.rawValue)"
             
         case .signalDevice(let deviceID,_,_),
                 .forceOverTheAirUpdates(let deviceID,_,_):
             
-            return "\(ParticlePaths.v1devices.rawValue)/\(deviceID.rawValue)"
+            return "\(EndPoint.v1devices.rawValue)/\(deviceID.rawValue)"
             
         case .lookUpDeviceInformation(let serialNumber,_):
-            return "\(ParticlePaths.v1serialNumbers.rawValue)/\(serialNumber)"
+            return "\(EndPoint.v1serialNumbers.rawValue)/\(serialNumber)"
             
         default: abort()
         }
@@ -752,29 +753,29 @@ extension CloudResource.RequestHelper {
             
         case .refreshDeviceVitals(let deviceID, let productID,_):
             if let id = productID {
-                return "\(ParticlePaths.v1products.rawValue)/\(id.rawValue)/diagnostics/\(deviceID.rawValue)/update"
+                return "\(EndPoint.v1products.rawValue)/\(id.rawValue)/diagnostics/\(deviceID.rawValue)/update"
             }
-            return "\(ParticlePaths.v1Diagnostics.rawValue)/\(deviceID.rawValue)/update"
+            return "\(EndPoint.v1Diagnostics.rawValue)/\(deviceID.rawValue)/update"
             
         case .getLastKnownDeviceVitals(let deviceID, let productID,_):
-            if let id = productID { return "\(ParticlePaths.v1products.rawValue)/\(id.rawValue)/diagnostics/\(deviceID.rawValue)"}
-            return "\(ParticlePaths.v1Diagnostics.rawValue)/\(deviceID.rawValue)"
+            if let id = productID { return "\(EndPoint.v1products.rawValue)/\(id.rawValue)/diagnostics/\(deviceID.rawValue)"}
+            return "\(EndPoint.v1Diagnostics.rawValue)/\(deviceID.rawValue)"
             
         case .getAllHistoricalDeviceVitals(let deviceID, let productID,_,_,_):
-            if let id = productID { return "\(ParticlePaths.v1products.rawValue)/\(id.rawValue)/diagnostics/\(deviceID.rawValue)/last"}
-            return "\(ParticlePaths.v1Diagnostics.rawValue)/\(deviceID.rawValue)/last"
+            if let id = productID { return "\(EndPoint.v1products.rawValue)/\(id.rawValue)/diagnostics/\(deviceID.rawValue)/last"}
+            return "\(EndPoint.v1Diagnostics.rawValue)/\(deviceID.rawValue)/last"
             
         case .getDeviceVitalsMetadata(let deviceID, let productID,_):
             if let id = productID?.rawValue {
                 //GET /v1/products/:productIdOrSlug/diagnostics/0123456789abcdef01234567/metadata
-                return ParticlePaths.v1products.rawValue.appending(separator).appending(id).appending("/diagnostics/").appending(deviceID.rawValue).appending("/metadata")
+                return EndPoint.v1products.rawValue.appending(separator).appending(id).appending("/diagnostics/").appending(deviceID.rawValue).appending("/metadata")
             }
             //GET /v1/diagnostics/:deviceId/metadata
-            return ParticlePaths.v1Diagnostics.rawValue.appending(separator).appending(deviceID.rawValue).appending("/metadata")
+            return EndPoint.v1Diagnostics.rawValue.appending(separator).appending(deviceID.rawValue).appending("/metadata")
             
         case .getCellularNetworkStatus(let deviceID, let iccid, let productID,_):
-            if let id = productID { return "\(ParticlePaths.v1products.rawValue)/\(id.rawValue)/sims/\(deviceID.rawValue)/status"}
-            return "\(ParticlePaths.v1sims.rawValue)/\(iccid)/status"
+            if let id = productID { return "\(EndPoint.v1products.rawValue)/\(id.rawValue)/sims/\(deviceID.rawValue)/status"}
+            return "\(EndPoint.v1sims.rawValue)/\(iccid)/status"
             
         default: abort()
         }
@@ -889,10 +890,10 @@ extension CloudResource.RequestHelper {
                 .updateUser,
                 .deleteUser:
             
-            return ParticlePaths.v1users.rawValue
+            return EndPoint.v1users.rawValue
             
         case .forgotPassword:
-            return "\(ParticlePaths.v1users.rawValue)/password-reset"
+            return "\(EndPoint.v1users.rawValue)/password-reset"
             
         default: abort()
         }
@@ -985,10 +986,10 @@ extension CloudResource.RequestHelper {
         
         switch resource {
         case .approveQuarantinedDevice(_, let productID,_):
-            return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/devices"
+            return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/devices"
             
         case .denyQuarantinedDevice(_, let productID,_):
-            return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/devices"
+            return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/devices"
             
         default: abort()
         }
@@ -1077,28 +1078,28 @@ extension CloudResource.RequestHelper {
         switch resource {
             
         case .listSimCards(let arguments,_):
-            if let id = arguments.productId { return "\(ParticlePaths.v1products.rawValue)/\(id)/sims" }
-            return ParticlePaths.v1sims.rawValue
+            if let id = arguments.productId { return "\(EndPoint.v1products.rawValue)/\(id)/sims" }
+            return EndPoint.v1sims.rawValue
             
         case .getDataUsage(let iccid, let productID,_):
-            if let id = productID { return "\(ParticlePaths.v1products.rawValue)/\(id.rawValue)/sims/\(iccid)/data_usage" }
-            return "\(ParticlePaths.v1sims.rawValue)/\(iccid)/data_usage"
+            if let id = productID { return "\(EndPoint.v1products.rawValue)/\(id.rawValue)/sims/\(iccid)/data_usage" }
+            return "\(EndPoint.v1sims.rawValue)/\(iccid)/data_usage"
             
         case .getDataUsageForProductFleet(let productID,_):
-            return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/sims/data_usage"
+            return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/sims/data_usage"
             
         case .activateSIM(let iccid,_):
-            return "\(ParticlePaths.v1sims.rawValue)/\(iccid)"
+            return "\(EndPoint.v1sims.rawValue)/\(iccid)"
             
         case .importAndActivateProductSIMs(let productID,_,_,_):
-            return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/sims"
+            return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/sims"
             
         case .deactivateSIM(let iccid, let productID,_),
                 .reactivateSIM(let iccid, let productID,_),
                 .releaseSimFromAccount(let iccid, let productID,_):
             
-            if let id = productID { return "\(ParticlePaths.v1products.rawValue)/\(id.rawValue)/sims/\(iccid)" }
-            return "\(ParticlePaths.v1sims.rawValue)/\(iccid)"
+            if let id = productID { return "\(EndPoint.v1products.rawValue)/\(id.rawValue)/sims/\(iccid)" }
+            return "\(EndPoint.v1sims.rawValue)/\(iccid)"
             
             
         default: abort()
@@ -1242,32 +1243,32 @@ extension CloudResource.RequestHelper {
             
         case .getEventStream(let eventName,_):
             
-            return "\(ParticlePaths.v1events.rawValue)/\(eventName.rawValue)"
+            return "\(EndPoint.v1events.rawValue)/\(eventName.rawValue)"
             
         case .getDeviceEventStream(let eventName, let deviceId,_):
             
             ///v1/devices/events/:eventName
-            return "\(ParticlePaths.v1devices.rawValue)/\(deviceId.rawValue)/events/\(eventName.rawValue)"
+            return "\(EndPoint.v1devices.rawValue)/\(deviceId.rawValue)/events/\(eventName.rawValue)"
             
             ///Open a stream of Server Sent Events for all public and private events for a product.
             ///requires scope:  events:get
         case .getProductEventStream(let eventName, let productID,_):
             if let name = eventName?.rawValue {
-                return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/events/\(name)"
+                return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/events/\(name)"
             }
-            return "\(ParticlePaths.v1products.rawValue)/\(productID.rawValue)/events"
+            return "\(EndPoint.v1products.rawValue)/\(productID.rawValue)/events"
             
         case .publishEvent(_, let prodID,_,_,_,_):
             //POST https://api.particle.io/v1/products/:productID/events
-            if let prodID = prodID { return "\(ParticlePaths.v1products.rawValue)/\(prodID.rawValue)/events" }
-            return "\(ParticlePaths.v1devices.rawValue)/events"
+            if let prodID = prodID { return "\(EndPoint.v1products.rawValue)/\(prodID.rawValue)/events" }
+            return "\(EndPoint.v1devices.rawValue)/events"
             
         default: abort()
         }
     }
     
     //MARK: Content Type
-    internal func eventsAcceptType(_ resource: CloudResource) -> HTTPContentType? {
+    internal func eventsAcceptType(_ resource: CloudResource) -> HTTPContentType {
         
         switch resource {
         case .getEventStream,
@@ -1425,71 +1426,71 @@ extension CloudResource.RequestHelper {
 }
 
 //    MARK: - Special Events
-extension CloudResource.RequestHelper {
-    
-    //MARK: Paths
-    internal func pathForSpecialEvents(_ resource: CloudResource) -> String {
-        
-        switch resource {
-            
-        default: abort()
-        }
-    }
-    
-    //MARK: Content Type
-    internal func specialEventsContentType(_ resource: CloudResource) -> HTTPContentType {
-        
-        switch resource {
-            
-            
-        default: abort()
-        }
-    }
-    
-    //MARK: AUTH Header
-    internal func specialEventsAuthHeader(_ resource: CloudResource) -> String? {
-        
-        switch resource {
-            
-            
-        default: abort()
-        }
-    }
-    
-    //MARK: HTTP Method
-    internal func specialEventsHTTPMethod(_ resource: CloudResource) -> HTTPMethodType {
-        
-        switch resource {
-            
-            
-        default: abort()
-        }
-    }
-    
-    //MARK: Query Items
-    internal func specialEventsQueryItems(_ resource: CloudResource) -> [URLQueryItem]? {
-        
-        switch resource {
-            
-            
-        default: abort()
-        }
-        
-    }
-    
-    //MARK: Payload
-    internal func specialEventsPayload(_ resource: CloudResource) -> Data? {
-        
-        var payload : [String]? = nil
-        
-        switch resource {
-            
-            
-        default: abort()
-        }
-        return payload?.joined(separator: "&").data(using: .utf8)
-    }
-}
+//extension CloudResource.RequestHelper {
+//    
+//    //MARK: Paths
+//    internal func pathForSpecialEvents(_ resource: CloudResource) -> String {
+//        
+//        switch resource {
+//            
+//        default: abort()
+//        }
+//    }
+//    
+//    //MARK: Content Type
+//    internal func specialEventsContentType(_ resource: CloudResource) -> HTTPContentType {
+//        
+//        switch resource {
+//            
+//            
+//        default: abort()
+//        }
+//    }
+//    
+//    //MARK: AUTH Header
+//    internal func specialEventsAuthHeader(_ resource: CloudResource) -> String? {
+//        
+//        switch resource {
+//            
+//            
+//        default: abort()
+//        }
+//    }
+//    
+//    //MARK: HTTP Method
+//    internal func specialEventsHTTPMethod(_ resource: CloudResource) -> HTTPMethodType {
+//        
+//        switch resource {
+//            
+//            
+//        default: abort()
+//        }
+//    }
+//    
+//    //MARK: Query Items
+//    internal func specialEventsQueryItems(_ resource: CloudResource) -> [URLQueryItem]? {
+//        
+//        switch resource {
+//            
+//            
+//        default: abort()
+//        }
+//        
+//    }
+//    
+//    //MARK: Payload
+//    internal func specialEventsPayload(_ resource: CloudResource) -> Data? {
+//        
+//        var payload : [String]? = nil
+//        
+//        switch resource {
+//            
+//            
+//        default: abort()
+//        }
+//        return payload?.joined(separator: "&").data(using: .utf8)
+//    }
+//}
 
 //MARK: - Asset Tracking Special Events
 extension CloudResource.RequestHelper {
@@ -1569,41 +1570,41 @@ extension CloudResource.RequestHelper {
         case .updateDeviceFirmware(let deviceID,_,_):
             
             //PUT /v1/devices/:deviceId
-            return ParticlePaths.v1devices.rawValue.appending(separator).appending(deviceID.rawValue)
+            return EndPoint.v1devices.rawValue.appending(separator).appending(deviceID.rawValue)
             
         case .flashDeviceWithSourceCode(let deviceID,_,_,_):
             
             //PUT /v1/devices/:deviceID?access_token=1234
-            return ParticlePaths.v1devices.rawValue.appending(separator).appending(deviceID.rawValue)
+            return EndPoint.v1devices.rawValue.appending(separator).appending(deviceID.rawValue)
             
         case .flashDeviceWithPreCompiledBinary(let deviceID,_,_,_):
             
             //PUT /v1/devices/:deviceId
-            return ParticlePaths.v1devices.rawValue.appending(separator).appending(deviceID.rawValue)
+            return EndPoint.v1devices.rawValue.appending(separator).appending(deviceID.rawValue)
             
         case .compileSourceCode:
             
             //POST /v1/binaries
-            return ParticlePaths.v1binaries.rawValue
+            return EndPoint.v1binaries.rawValue
             
         case .listFirmwareBuildTargets:
             
             //GET /v1/build_targets
-            return ParticlePaths.v1buildTargets.rawValue
+            return EndPoint.v1buildTargets.rawValue
             
         case .lockProductDevice(let deviceID, let productId,_,_,_):
             
             //PUT /v1/products/:productIdOrSlug/devices/:deviceId
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue.description).appending("/devices/").appending(deviceID.rawValue)
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue.description).appending("/devices/").appending(deviceID.rawValue)
             
         case .unlockProductDevice(let deviceID, let productId,_):
             //PUT /v1/products/:productIdOrSlug/devices/:deviceId
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue.description).appending("/devices/").appending(deviceID.rawValue)
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue.description).appending("/devices/").appending(deviceID.rawValue)
             
         case .unmarkProductDevelopmentDevice(let deviceID, let productIdOrSlug,_,_):
             
             //PUT /v1/products/:productIdOrSlug/devices/:deviceId
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productIdOrSlug.rawValue.description).appending("/devices/").appending(deviceID.rawValue)
+            return EndPoint.v1products.rawValue.appending(separator).appending(productIdOrSlug.rawValue.description).appending("/devices/").appending(deviceID.rawValue)
             
         default: abort()
         }
@@ -1796,38 +1797,38 @@ extension CloudResource.RequestHelper {
         case .getProductFirmware(let productId, let version,_):
             
             // GET /v1/products/:productIdOrSlug/firmware/:version
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/firmware/").appending(version)
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/firmware/").appending(version)
             
         case .listAllProductFirmwares(let productId,_):
             
             //                GET /v1/products/:productIdOrSlug/firmware
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/firmware")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/firmware")
             
         case .uploadProductFirmware(let productID,_,_,_):
             
             //POST /v1/products/:productIdOrSlug/firmware
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/firmware")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/firmware")
             
         case .editProductFirmware(let productID, let arguments,_):
             
             //PUT /v1/products/:productIdOrSlug/firmware/:version
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/firmware/").appending(String(describing: arguments.version))
+            return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/firmware/").appending(String(describing: arguments.version))
             
             
         case .downloadFirmwareBinary(let productId, let version,_):
             
             //GET /v1/products/:productIdOrSlug/firmware/:version/binary
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/firmware/").appending(String(version)).appending("/binary")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/firmware/").appending(String(version)).appending("/binary")
             
         case .releaseProductFirmware(let productID,_,_):
             
             // PUT /v1/products/:productIdOrSlug/firmware/release
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/firmware/release")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/firmware/release")
             
         case .deleteUnreleasedFirmwareBinary(let productId, let version,_):
             
             //DELETE /v1/products/:productIdOrSlug/firmware/:version
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/firmware/").appending(String(version))
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/firmware/").appending(String(version))
             
         default: abort()
         }
@@ -2010,24 +2011,24 @@ extension CloudResource.RequestHelper {
         switch resource {
         case .listLibraries:
             // GET /v1/libraries?scope=official&sort=name&access_token=1234
-            return ParticlePaths.libraries.rawValue
+            return EndPoint.libraries.rawValue
             
         case .getLibraryDetails(let arguments,_):
             //GET /v1/libraries/:libraryName:
-            return ParticlePaths.libraries.rawValue.appending(separator).appending(arguments.libraryName)
+            return EndPoint.libraries.rawValue.appending(separator).appending(arguments.libraryName)
             
         case .getLibraryVersions(let libraryName,_,_):
             //GET /v1/libraries/:libraryName:/versions
-            return ParticlePaths.libraries.rawValue.appending(separator).appending(libraryName).appending("/versions")
+            return EndPoint.libraries.rawValue.appending(separator).appending(libraryName).appending("/versions")
             
         case .uploadLibraryVersion(let name,_,_):
             //POST /v1/libraries/:libraryName:
-            return ParticlePaths.libraries.rawValue.appending(separator).appending(name)
+            return EndPoint.libraries.rawValue.appending(separator).appending(name)
             
             
         case .makeLibraryVersionPublic(let libraryName,_,_):
             //PATCH /v1/libraries/:libraryName:
-            return ParticlePaths.libraries.rawValue.appending(separator).appending(libraryName)
+            return EndPoint.libraries.rawValue.appending(separator).appending(libraryName)
             
             
         default: abort()
@@ -2184,31 +2185,31 @@ extension CloudResource.RequestHelper {
             
         case .listProducts:
             //GET /v1/user/products
-            return ParticlePaths.v1users.rawValue.appending("/products")
+            return EndPoint.v1users.rawValue.appending("/products")
             
         case .retrieveProduct(let productID,_):
             //GET /v1/products/:productIdOrSlug
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue)
+            return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue)
             
         case .listTeamMembers(let productID,_):
             //GET /v1/products/:productIdOrSlug/team
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/team")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/team")
             
         case .inviteTeamMember(let productID,_,_,_):
             //POST /v1/products/:productIdOrSlug/team
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/team")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/team")
             
         case .createAnAPIuser(let productID,_,_,_):
             //POST /v1/products/:productIdOrSlug/team
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/team")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/team")
             
         case .updateTeamMember(let productID, let username,_):
             //POST /v1/products/:productIdOrSlug/team/:username
-            return ParticlePaths.v1products.rawValue.appending("/").appending(productID.rawValue).appending("/team/").appending(username)
+            return EndPoint.v1products.rawValue.appending("/").appending(productID.rawValue).appending("/team/").appending(username)
             
         case .removeTeamMember(let productID, let username,_):
             //DELETE /v1/products/:productIdOrSlug/team/:username
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/team/").appending(username)
+            return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/team/").appending(username)
             
         default: abort()
         }
@@ -2338,44 +2339,44 @@ extension CloudResource.RequestHelper {
         case .getDeviceGroup(let productId, let groupName,_):
             
             // GET /v1/products/:productIdOrSlug/groups/:groupName
-            return ParticlePaths.v1products.rawValue.appending(separator) // /v1/products/
+            return EndPoint.v1products.rawValue.appending(separator) // /v1/products/
                 .appending(productId.rawValue) //:productIdOrSlug
                 .appending("/groups/") // /groups/
                 .appending(groupName.rawValue) //:groupName
             
         case .listDeviceGroups(let productId,_,_):
             //GET /v1/products/:productIdOrSlug/groups
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/groups")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/groups")
             
         case .createDeviceGroup(let productId,_,_,_,_):
             
             //POST /v1/products/:productIdOrSlug/groups
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/groups")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/groups")
             
         case .editDeviceGroup(let productId, let groupName,_,_,_,_):
             
             //PUT /v1/products/:productIdOrSlug/groups/:groupName
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/groups/").appending(groupName.rawValue)
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/groups/").appending(groupName.rawValue)
             
         case .deleteDeviceGroup(let productId, let groupName,_):
             
             // DELETE /v1/products/:productIdOrSlug/groups/:groupName
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/groups/").appending(groupName.rawValue)
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/groups/").appending(groupName.rawValue)
             
         case .assignGroupsToDevice(let deviceId, let productId,_,_):
             
             //PUT /v1/products/:productIdOrSlug/devices/:deviceId
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/devices/").appending(deviceId.rawValue)
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/devices/").appending(deviceId.rawValue)
             
         case .batchAssignGroupsToDevices(let productId,_):
             
             //PUT /v1/products/:productIdOrSlug/devices
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/devices")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/devices")
             
         case .impactOfTakingAction(let productId,_,_):
             
             //GET /v1/products/:productIdOrSlug/impact
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/impact")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/impact")
             
         default: abort()
         }
@@ -2569,41 +2570,41 @@ extension CloudResource.RequestHelper {
         case .queryLocationForDevicesWithinProduct(let arguments,_):
             //v1/products/:productIdOrSlug/location
             // note singular `location` endpoint
-            return ParticlePaths.v1products.rawValue.appending("/").appending(String(arguments.productIDorSlug.rawValue)).appending("/location")
+            return EndPoint.v1products.rawValue.appending("/").appending(String(arguments.productIDorSlug.rawValue)).appending("/location")
             
         case .queryLocationForOneDeviceWithinProduct(let productID, let deviceID,_,_,_,_):
             //v1/products/:productIdOrSlug/location/:deviceId
             // note plural `locations` endpoint
-            return ParticlePaths.v1products.rawValue.appending("/").appending(productID.rawValue).appending("/locations/").appending(deviceID.rawValue)
+            return EndPoint.v1products.rawValue.appending("/").appending(productID.rawValue).appending("/locations/").appending(deviceID.rawValue)
             
         case .getProductConfiguration(let productID,_):
             //GET /v1/products/:productIdOrSlug/config
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/config")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/config")
             
         case .getDeviceConfiguration(let deviceID, let productID,_):
             //GET /v1/products/:productIdOrSlug/config/:deviceId
-            return ParticlePaths.v1products.rawValue.appending(productID.rawValue).appending("/config/").appending(deviceID.rawValue)
+            return EndPoint.v1products.rawValue.appending(productID.rawValue).appending("/config/").appending(deviceID.rawValue)
             
         case .getSchema(let productID, let deviceID,_):
             if let id = deviceID?.rawValue {
                 //GET /v1/products/:productIdOrSlug/config/:deviceId
-                return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/config/").appending(id)
+                return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/config/").appending(id)
             }
             //GET /v1/products/:productIdOrSlug/config
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/config")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/config")
             
-#warning("Fix this mess.")
+#warning("Fix this mess. Probably need to separate reset and delete instead of nested ifs")
         case .deleteOrResetConfigurationSchema(let productID, let deviceID, let reset,_):
             //delete or reset device
             //DELETE /v1/products/:productIdOrSlug/config/:deviceID
             if reset == false {
                 if let id = deviceID?.rawValue {
                     //DELETE /v1/products/:productIdOrSlug/config/:deviceId
-                    return ParticlePaths.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/config/").appending(id)
+                    return EndPoint.v1products.rawValue.appending(separator).appending(productID.rawValue).appending("/config/").appending(id)
                 } else {
                     //
                     //PUT /v1/products/:productIdOrSlug/config
-                    return ParticlePaths.v1products.rawValue.appending(separator).appending("/config")
+                    return EndPoint.v1products.rawValue.appending(separator).appending("/config")
                 }
             } else {
                 if let id = deviceID?.rawValue {
@@ -2616,10 +2617,10 @@ extension CloudResource.RequestHelper {
         case .setConfiguration(let productId, let deviceID,_):
             if let id = deviceID?.rawValue {
                 //PUT /v1/products/:productIdOrSlug/config/:deviceId
-                return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/config/").appending(id)
+                return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/config/").appending(id)
             }
             //PUT /v1/products/:productIdOrSlug/config
-            return ParticlePaths.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/config")
+            return EndPoint.v1products.rawValue.appending(separator).appending(productId.rawValue).appending("/config")
             
             
         default: abort()
@@ -2758,19 +2759,19 @@ extension CloudResource.RequestHelper {
                 .createCustomerWithClient(let productID,_,_,_),
                 .createCustomerImplicit(let productID,_,_),
                 .listCustomersForProduct(let productID,_):
-            return ParticlePaths.v1products.rawValue + "/\(productID.rawValue)/customers"
+            return EndPoint.v1products.rawValue + "/\(productID.rawValue)/customers"
             
         case .generateCustomerWithScopedAccessToken:
-            return ParticlePaths.v1oAuth.rawValue
+            return EndPoint.v1oAuth.rawValue
             
         case .updateCustomerPassword(let productID, let credentials,_):
-            return ParticlePaths.v1products.rawValue + "/\(productID.rawValue)/customers\(credentials.username)"
+            return EndPoint.v1products.rawValue + "/\(productID.rawValue)/customers\(credentials.username)"
             
         case .deleteA_Customer(let productID, let username,_):
-            return ParticlePaths.v1products.rawValue + "/\(productID.rawValue)/customers/\(username)"
+            return EndPoint.v1products.rawValue + "/\(productID.rawValue)/customers/\(username)"
             
         case .resetPassword(let productID, let email,_):
-            return ParticlePaths.v1products.rawValue + "/\(productID.rawValue)/customers/\(email)"
+            return EndPoint.v1products.rawValue + "/\(productID.rawValue)/customers/\(email)"
             
         default:
             abort()
@@ -2946,37 +2947,37 @@ extension CloudResource.RequestHelper {
             
         case .getUserServiceAgreements(let user,_):
             //GET /v1/orgs/:user/service_agreements
-            return ParticlePaths.v1orgs.rawValue.appending(separator).appending(user).appending("/service_agreements")
+            return EndPoint.v1orgs.rawValue.appending(separator).appending(user).appending("/service_agreements")
             
         case .getOrganizationServiceAgreements(let productID,_):
             //GET /v1/orgs/:orgIdOrSlug/service_agreements
-            return ParticlePaths.v1orgs.rawValue.appending(separator).appending(productID.rawValue).appending("/service_agreements")
+            return EndPoint.v1orgs.rawValue.appending(separator).appending(productID.rawValue).appending("/service_agreements")
             
         case .getUserUsageReport(let usageReportId,_):
             
             //GET /v1/user/usage_reports/:usageReportId
-            return ParticlePaths.v1users.rawValue.appending("/usage_reports/").appending(usageReportId)
+            return EndPoint.v1users.rawValue.appending("/usage_reports/").appending(usageReportId)
             
         case .getOrgUsageReport(_,let orgSlugOrId,_):
             // GET /v1/orgs/:orgSlugOrId/usage_reports/:usageReportId
-            return ParticlePaths.v1orgs.rawValue.appending(separator).appending(orgSlugOrId).appending("/usage_reports/")
+            return EndPoint.v1orgs.rawValue.appending(separator).appending(orgSlugOrId).appending("/usage_reports/")
             
         case .createUserUsageReport(let arguments,_):
             
             //POST /v1/user/service_agreements/:serviceAgreementId/usage_reports
-            return ParticlePaths.v1users.rawValue.appending("/service_agreements/").appending("\(arguments.service_agreement_id)").appending("/usage_reports")
+            return EndPoint.v1users.rawValue.appending("/service_agreements/").appending("\(arguments.service_agreement_id)").appending("/usage_reports")
             
         case .createOrgUsageReport(let arguments,_):
             //POST /v1/orgs/:orgSlugOrId/service_agreements/:serviceAgreementId/usage_reports
-            return ParticlePaths.v1orgs.rawValue.appending(separator).appending(arguments.orgSlugOrId).appending("/service_agreements/").appending(String(arguments.service_agreement_id)).appending("/usage_reports")
+            return EndPoint.v1orgs.rawValue.appending(separator).appending(arguments.orgSlugOrId).appending("/service_agreements/").appending(String(arguments.service_agreement_id)).appending("/usage_reports")
             
         case .getUserNotificationsForCurrentUsagePeriod(let serviceAgreementId,_):
             //GET /v1/user/service_agreements/:serviceAgreementId/notifications
-            return ParticlePaths.v1users.rawValue.appending("/service_agreements/").appending(String(serviceAgreementId)).appending("/notifications")
+            return EndPoint.v1users.rawValue.appending("/service_agreements/").appending(String(serviceAgreementId)).appending("/notifications")
             
         case .getOrganizationNotificationsForCurrentUsagePeriod(let org, let serviceAgreementId,_):
             //GET/v1/orgs/:orgSlugOrId/service_agreements/:serviceAgreementId/notifications?access_token=123abc"
-            return ParticlePaths.v1orgs.rawValue.appending(separator).appending(org).appending("/service_agreements/").appending(String(serviceAgreementId)).appending("/notifications")
+            return EndPoint.v1orgs.rawValue.appending(separator).appending(org).appending("/service_agreements/").appending(String(serviceAgreementId)).appending("/notifications")
             
         default: abort()
         }
