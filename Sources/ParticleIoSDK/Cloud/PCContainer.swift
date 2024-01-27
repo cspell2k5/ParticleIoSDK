@@ -21,7 +21,7 @@ public class PCContainer: ObservableObject {
     ///An encapsulation of all authentication needs of the framework. Your application should use this to determine the authenticated state of the application. If you want to handle login yourself, you must still provide a valid token to the authentication manager. This can be done through the method on PCAuthenticationManager directly or simply call login(token:) on the PCContainer.
     @Published private(set) public var authenticationManager: PCAuthenticationManager
     
-
+    
     ///Initializes the container for immediate use.
     public init(credentials: PCCredentials, client: PCClient? = nil) async throws {
         
@@ -38,7 +38,7 @@ public class PCContainer: ObservableObject {
                                                object: nil)
         
         try await self.authenticationManager.login(credentials: credentials, client: client)
-       
+        
     }
     
     ///Initializes the container for immediate use.
@@ -60,14 +60,14 @@ public class PCContainer: ObservableObject {
     
     @objc private func tokenAvailable(_ note: Notification) {
         DispatchQueue.main.async { [weak self] in
-        
+            
         }
     }
     
     
     @objc private func tokenRevoked(_ note: Notification) {
         DispatchQueue.main.async { [weak self] in
-           
+            
         }
     }
     
@@ -75,7 +75,9 @@ public class PCContainer: ObservableObject {
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
-    
+}
+
+public extension PCContainer {
     
     //MARK: - Login
     //MARK: Token
