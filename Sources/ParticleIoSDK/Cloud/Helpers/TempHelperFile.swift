@@ -253,7 +253,7 @@ extension CloudResource.RequestHelper {
             payload = ["name=\(name)",
                        "type=\(type.rawValue)"]
             
-            if let redirect = redirect {
+            if let redirect {
                 payload?.append("redirect_uri=\(redirect)")
             }
             
@@ -261,17 +261,18 @@ extension CloudResource.RequestHelper {
             
             payload = [String]()
             
-            if newName != nil {
-                payload!.append("name=\(newName!)")
+            if let newName {
+                payload!.append("name=\(newName)")
             }
             
-            if newScope != nil {
-                payload!.append("scope=\(newScope!.rawValue)")
+            if let newScope {
+                payload!.append("scope=\(newScope.rawValue)")
             }
             
         case .deleteClient: return nil
             
         default: abort()
+            
         }
         return payload?.joined(separator: "&").data(using: .utf8)
     }

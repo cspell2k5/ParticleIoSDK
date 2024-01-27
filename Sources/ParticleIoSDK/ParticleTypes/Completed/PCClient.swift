@@ -279,7 +279,7 @@ extension PCClient {
     ///
     /// Create an OAuth client that represents an app.
     ///
-    /// Use type=installed for most web and mobile apps. If you want to have Particle users login to their account on Particle in order to give your app access to their devices, then you can go through the full OAuth authorization code grant flow using type=web. This is the same way you authorize it is similar to the way you give any app access to your Facebook or Twitter account.
+    /// Use type=installed for most web and mobile apps. If you want to have Particle users login to their account on Particle in order to give your app access to their devices, then you can go through the full OAuth authorization code grant flow using type=web. This is the same way you authorize it similar to the way you give any app access to your Facebook or Twitter account.
     ///
     /// - Important: Your client secret will never be displayed again! Save it in a safe place.
     /// - Warning: NEVER expose the client secret to a browser. If, for example, you have a client that controls all your organization's products, and you use the client secret in front-end JavaScript, then a tech-savvy customer using your website can read the secret in her developer console and hack all your customers' devices.
@@ -296,9 +296,9 @@ extension PCClient {
     /// - Parameter token: An PCAccessToken carrying the access token and associated information.
     /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCClientSeverResponse.ServerResponse or a PCError.
     /// This task may be called from any thread and the result should be dispatched to the main queue if User Interface interactions or handling occurs within the closure.
-    public static func createClient(appName: String, productIdorSlug productID: ProductID?, type: PCClient.ClientType, token: PCAccessToken, completion: @escaping (Result<PCClientSeverResponse.ServerResponse, PCError>) -> Void) {
+    public static func createClient(appName: String, productIdorSlug productID: ProductID?, redirectURL: URL, type: PCClient.ClientType, token: PCAccessToken, completion: @escaping (Result<PCClientSeverResponse.ServerResponse, PCError>) -> Void) {
         
-        PCNetwork.shared.cloudRequest(.createClient(appName: appName, productIdorSlug: productID, type: type, token: token), type: PCClientSeverResponse.ServerResponse.self, completion: completion)
+        PCNetwork.shared.cloudRequest(.createClient(appName: appName, productIdorSlug: productID, redirect_uri: redirectURL, type: type, token: token), type: PCClientSeverResponse.ServerResponse.self, completion: completion)
     }
     
     /// Update the name or scope of an existing OAuth client.

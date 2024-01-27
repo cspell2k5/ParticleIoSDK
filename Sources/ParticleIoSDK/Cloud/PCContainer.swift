@@ -19,10 +19,7 @@ public class PCContainer: ObservableObject {
     
     ///An encapsulation of all authentication needs of the framework. Your application should use this to determine the authenticated state of the application. If you want to handle login yourself, you must still provide a valid token to the authentication manager. This can be done through the method on PCAuthenticationManager directly or simply call login(token:) on the PCContainer.
     @Published private(set) public var authenticationManager: PCAuthenticationManager
-    
-//    //private tracking of cancellables to unwrap return types on Combine overloads.
-//    private var cancellables = Set<AnyCancellable>()
-    
+        
     ///Returns the current authentication state of the access token.
     ///
     ///If a token expires this property may still return true until the authmanager catches the token is invalidated. This can happen for many reason, such as deleting a token from a separate webhook or app, or an expiration of the token. Even when loggied in the token is not valid until the server accepts it. You can validate a token, but generally wouldn't since doing so would require a separate network call anyway.
@@ -208,7 +205,7 @@ public class PCContainer: ObservableObject {
     ///
     /// Create an OAuth client that represents an app.
     ///
-    /// Use type=installed for most web and mobile apps. If you want to have Particle users login to their account on Particle in order to give your app access to their devices, then you can go through the full OAuth authorization code grant flow using type=web. This is the same way you authorize it is similar to the way you give any app access to your Facebook or Twitter account.
+    /// Use type=installed for most web and mobile apps. If you want to have Particle users login to their account on Particle in order to give your app access to their devices, then you can go through the full OAuth authorization code grant flow using type=web. This is the same way you authorize it similar to the way you give any app access to your Facebook or Twitter account.
     ///
     /// - Important: Your client secret will never be displayed again! Save it in a safe place.
     /// - Warning: NEVER expose the client secret to a browser. If, for example, you have a client that controls all your organization's products, and you use the client secret in front-end JavaScript, then a tech-savvy customer using your website can read the secret in her developer console and hack all your customers' devices.
