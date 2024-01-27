@@ -6,7 +6,6 @@
     //
 
 import Foundation
-import CryptoKit
 
     /// An error we can throw when something goes wrong.
 internal struct PCKeychainStoreError: Error, CustomStringConvertible {
@@ -33,7 +32,7 @@ internal extension OSStatus {
 internal final class PCKeychainStore {
     
     private let keychainID = "com.spellsoftware.particleiosdk.keychainID.ParticleSDK.\(String(describing: Bundle.main.bundleIdentifier))"
-        /// Stores a CryptoKit key in the keychain as a generic password.
+        /// Stores a keys data in the keychain as a generic password.
         ///
         /// - Parameter data: The token data to store to the keychain.
         /// - throws: PCKeychainStoreError

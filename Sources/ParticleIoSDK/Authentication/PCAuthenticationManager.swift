@@ -25,22 +25,22 @@ public enum PCAuthError: Error {
 final public class PCAuthenticationManager: ObservableObject {
     
     // MARK: Properties
-    private(set) public var token: PCAccessToken?
-    private(set) public var userIsAuthenticated: Bool = false
+    @Published private(set) public var token: PCAccessToken?
+    @Published private(set) public var userIsAuthenticated: Bool = false
 
     public static let shared = PCAuthenticationManager()
     
     private let cryptoManager = PCCryptoManager.shared
         
-    private(set) public var loadingProgress = Progress(totalUnitCount: 1)
+    @Published private(set) public var loadingProgress = Progress(totalUnitCount: 1)
     
-    private(set) public var isLoading: Bool = true
+    @Published private(set) public var isLoading: Bool = true
     
     private init() {
                 
         Task {
             
-            await self.loadSavedToken()
+            await self.fetchSavedToken()
             
             self.decrementProgress()
             
@@ -48,7 +48,13 @@ final public class PCAuthenticationManager: ObservableObject {
     }
     
     
-    private func loadSavedToken() async {
+    internal init(token: PCAccessToken) async throws {
+        try await setToken(token: token)
+        self.decrementProgress()
+    }
+    
+    
+    private func fetchSavedToken() async {
         
         do {
             if let token = try cryptoManager.fetchSavedToken() {
@@ -59,7 +65,6 @@ final public class PCAuthenticationManager: ObservableObject {
                 
                 userIsAuthenticated = false
                 NotificationCenter.default.post(name: .pc_token_unavailable, object: nil)
-                
             }
         } catch {
             
@@ -174,17 +179,17 @@ final public class PCAuthenticationManager: ObservableObject {
         
         if try await token.isValid() {
             
-            let storedToken = try cryptoManager.storeToken(token)
+            try cryptoManager.storeToken(token)
             
             DispatchQueue.main.sync { [weak self] in
                 
                 self?.objectWillChange.send()
                 
-                self?.token = storedToken
+                self?.token = token
                 self?.userIsAuthenticated = true
                 self?.decrementProgress()
                 
-                NotificationCenter.default.post(name: .pc_token_available, object: storedToken)
+                NotificationCenter.default.post(name: .pc_token_available, object: token)
                 
             }
         } else {

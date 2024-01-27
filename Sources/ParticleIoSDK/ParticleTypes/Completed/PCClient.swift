@@ -281,9 +281,8 @@ extension PCClient {
     /// Use type=installed for most web and mobile apps. If you want to have Particle users login to their account on Particle in order to give your app access to their devices, then you can go through the full OAuth authorization code grant flow using type=web. This is the same way you authorize it similar to the way you give any app access to your Facebook or Twitter account.
     ///
     /// - Important: Your client secret will never be displayed again! Save it in a safe place.
+    /// - Important: If you use type=web then you will also need to pass a redirect_uri parameter.
     /// - Warning: NEVER expose the client secret to a browser. If, for example, you have a client that controls all your organization's products, and you use the client secret in front-end JavaScript, then a tech-savvy customer using your website can read the secret in her developer console and hack all your customers' devices.
-    ///
-    /// If you use type=web then you will also need to pass a redirect_uri parameter in the POST body. This is the URL where users will be redirected after telling Particle they are willing to give your app access to their devices.
     ///
     /// The scopes provided only contain the object and action parts, skipping the domain which is being infered from the context.
     ///
@@ -292,10 +291,11 @@ extension PCClient {
     /// - Requires: required scope =  clients:create
     /// - Parameter appName: The app name to associate with the new oauth client.
     /// - Parameter productIdorSlug: The optional product id or slug that the new oAuth client is associated with.
+    /// - Parameter redirectURL: This is the URL where users will be redirected after telling Particle they are willing to give your app access to their devices.
     /// - Parameter token: An PCAccessToken carrying the access token and associated information.
     /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCClientSeverResponse.ServerResponse or a PCError.
     /// This task may be called from any thread and the result should be dispatched to the main queue if User Interface interactions or handling occurs within the closure.
-    public static func createClient(appName: String, productIdorSlug productID: ProductID?, redirectURL: URL, type: PCClient.ClientType, token: PCAccessToken, completion: @escaping (Result<PCClientServerResponse, PCError>) -> Void) {
+    public static func createClient(appName: String, productIdorSlug productID: ProductID?, redirectURL: URL?, type: PCClient.ClientType, token: PCAccessToken, completion: @escaping (Result<PCClientServerResponse, PCError>) -> Void) {
         
         PCNetwork.shared.cloudRequest(.createClient(appName: appName, productIdorSlug: productID, redirect_uri: redirectURL, type: type, token: token), type: PCClientServerResponse.self, completion: completion)
     }
@@ -324,7 +324,7 @@ extension PCClient {
     /// - Parameter productIdorSlug: The optional product id or slug that the oAuth client is or will be associated with.
     /// - Parameter token: An PCAccessToken carrying the access token and associated information.
     /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCClientSeverResponse.ServerResponse or a PCError.
-    /// This task may be called from any thread and the result should be dispatched to the main queue if User Interface interactions or handling occurs within the closure.
+    /// - Note: This task may be called from any thread and the result should be dispatched to the main queue if User Interface interactions or handling occurs within the closure.
     public static func updateClient(client: PCClient, newName: String? = nil, newScope: PCClient.Scope? = nil, productIdorSlug productID: ProductID?, token: PCAccessToken, completion: @escaping (Result<PCClientServerResponse, PCError>) -> Void ){
         PCNetwork.shared.cloudRequest(.updateClient(client: client, newName: newName, newScope: newScope, productIdorSlug: productID, token: token), type: PCClientServerResponse.self, completion: completion)
     }

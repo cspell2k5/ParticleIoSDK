@@ -6,34 +6,45 @@
 //
 
 import Foundation
-//import Combine
+import Combine
 
-@available(*, deprecated, message: "Failed Class: -> Couldn't work out authentication timing.")
+
+
 ///Encapsulation of all available cloud exposed particlio APIs
 public class PCContainer: ObservableObject {
     
-//    ///The shared global singleton for the PCContainer class.
-//    static public let shared = PCContainer()
-    
-    @Published public var isAuthenticated = PCAuthenticationManager.shared.userIsAuthenticated
+    ///Returns the current authentication state of the access token.
+    ///
+    ///If a token expires this property may still return true until the authmanager catches that the token was invalidated by the server. This can happen for many reason, such as deleting a token from a separate webhook or app, or an expiration of the token. Even when loggied in the token is not valid until the server accepts it. You can validate a token, but generally wouldn't since doing so would require a separate network call anyway.
+    public let isAuthenticated = PCAuthenticationManager.shared.$userIsAuthenticated
     
     ///An encapsulation of all authentication needs of the framework. Your application should use this to determine the authenticated state of the application. If you want to handle login yourself, you must still provide a valid token to the authentication manager. This can be done through the method on PCAuthenticationManager directly or simply call login(token:) on the PCContainer.
     @Published private(set) public var authenticationManager: PCAuthenticationManager
+    
+
+    ///Initializes the container for immediate use.
+    public init(credentials: PCCredentials, client: PCClient? = nil) async throws {
         
-    ///Returns the current authentication state of the access token.
-    ///
-    ///If a token expires this property may still return true until the authmanager catches the token is invalidated. This can happen for many reason, such as deleting a token from a separate webhook or app, or an expiration of the token. Even when loggied in the token is not valid until the server accepts it. You can validate a token, but generally wouldn't since doing so would require a separate network call anyway.
-    public var userIsAuthenticated: Bool {
-        self.authenticationManager.userIsAuthenticated
+        self.authenticationManager = PCAuthenticationManager.shared
+        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(tokenAvailable(_:)),
+                                               name: .pc_token_available,
+                                               object: nil)
+        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(tokenRevoked(_:)),
+                                               name: .pc_token_unavailable,
+                                               object: nil)
+        
+        try await self.authenticationManager.login(credentials: credentials, client: client)
+       
     }
     
     ///Initializes the container for immediate use.
-    public init(credentials: PCCredentials, client: PCClient? = nil) {
+    public init(token: PCAccessToken) async throws {
         
-        self.authenticationManager = PCAuthenticationManager.shared
-        self.authenticationManager.login(credentials: credentials, client: client) { result in
-            #warning("not finished")
-        }
+        self.authenticationManager = try await PCAuthenticationManager(token: token)
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(tokenAvailable(_:)),
@@ -49,14 +60,14 @@ public class PCContainer: ObservableObject {
     
     @objc private func tokenAvailable(_ note: Notification) {
         DispatchQueue.main.async { [weak self] in
-            self?.isAuthenticated = true
+        
         }
     }
     
     
     @objc private func tokenRevoked(_ note: Notification) {
         DispatchQueue.main.async { [weak self] in
-            self?.isAuthenticated = false
+           
         }
     }
     
@@ -64,7 +75,7 @@ public class PCContainer: ObservableObject {
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
-
+    
     
     //MARK: - Login
     //MARK: Token
@@ -72,19 +83,7 @@ public class PCContainer: ObservableObject {
     func login(token: PCAccessToken) async throws {
         try await self.authenticationManager.login(token: token)
     }
-//    
-//    
-//    ///Short cut to PCAuthenticationManager to login with an access token.
-//    func login(token: PCAccessToken, completion: @escaping (Result<Bool, PCError>) -> Void) {
-//        Task {
-//            do {
-//                try await self.authenticationManager.login(token: token)
-//                completion(.success(true))
-//            } catch {
-//                completion(.failure(error as! PCError))
-//            }
-//        }
-//    }
+    
     
     //MARK: Credentials
     ///Short cut to PCAuthenticationManager to login with an PCCredentials and optionally scope to a client.
@@ -92,39 +91,13 @@ public class PCContainer: ObservableObject {
         try await self.authenticationManager.login(credentials: credentials, client: client)
     }
     
-//    
-//    ///Short cut to PCAuthenticationManager to login with an PCCredentials and optionally scope to a client.
-//    func login(credentials: PCCredentials, client: PCClient? = nil, completion: @escaping (Result<Bool, PCError>) -> Void) {
-//        Task {
-//            do {
-//                try await self.authenticationManager.login(credentials: credentials, client: client)
-//                completion(.success(true))
-//            } catch {
-//                completion(.failure(error as! PCError))
-//            }
-//        }
-//    }
-
-
-//MARK: - Logout
     
+    //MARK: - Logout
     ///Short cut to PCAuthenticationManager to logout.
     func logout() async throws -> Bool {
         try await self.authenticationManager.logout()
     }
     
-//    ///Short cut to PCAuthenticationManager to logout.
-//    func logout(completion: @escaping (Result<Bool, PCError>) -> Void) {
-//        Task {
-//            do {
-//                let success = try await self.authenticationManager.logout()
-//                completion(.success(success))
-//            } catch {
-//                completion(.failure(error as! PCError))
-//            }
-//        }
-//    }
-
     
     //MARK: List Client
     
@@ -139,7 +112,7 @@ public class PCContainer: ObservableObject {
     /// - Throws:  `PCError`
     func listClients(productIdorSlug: ProductID?) async throws -> [PCClient] {
         
-        guard let token = authenticationManager.token else { throw PCError.unauthenticated}
+        let token = try guaranteedToken()
         return try await PCClient.listClients(productId: productIdorSlug, token: token).clients
     }
     
@@ -166,7 +139,11 @@ public class PCContainer: ObservableObject {
             }
         }
     }
-
+    
+    private func guaranteedToken() throws -> PCAccessToken {
+        guard let token = authenticationManager.token else { throw PCError.unauthenticated}
+        return token
+    }
     
     //MARK: Create Client
     
@@ -193,9 +170,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: An `PCClient`.
     /// - throws: `PCError`
     func createClient(appName: String, productIdorSlug: ProductID?, type: PCClient.ClientType) async throws -> PCClient? {
-        
-        guard let token = authenticationManager.token else { throw PCError.unauthenticated}
-        return try await PCClient.createClient(appName: appName, productId: productIdorSlug, type: type, token: token).clients.first
+        try await PCClient.createClient(appName: appName, productId: productIdorSlug, type: type, token: try guaranteedToken()).clients.first
     }
     
     
@@ -208,25 +183,28 @@ public class PCContainer: ObservableObject {
     /// Use type=installed for most web and mobile apps. If you want to have Particle users login to their account on Particle in order to give your app access to their devices, then you can go through the full OAuth authorization code grant flow using type=web. This is the same way you authorize it similar to the way you give any app access to your Facebook or Twitter account.
     ///
     /// - Important: Your client secret will never be displayed again! Save it in a safe place.
+    /// - Important: If you use type=web then you will also need to pass a redirect_uri parameter.
     /// - Warning: NEVER expose the client secret to a browser. If, for example, you have a client that controls all your organization's products, and you use the client secret in front-end JavaScript, then a tech-savvy customer using your website can read the secret in her developer console and hack all your customers' devices.
     ///
-    /// If you use type=web then you will also need to pass a redirect_uri parameter in the POST body. This is the URL where users will be redirected after telling Particle they are willing to give your app access to their devices.
     ///
     /// The scopes provided only contain the object and action parts, skipping the domain which is being infered from the context.
     ///
     /// If you are building a web or mobile application for your Particle product, you should use the product-specific endpoint for creating a client (POST /v1/products/:productIdOrSlug/clients). This will grant this client (and access tokens generated by this client) access to product-specific behaviors like [calling functions](https://docs.particle.io/reference/cloud-apis/api/#call-a-function) and [checking variables](https://docs.particle.io/reference/cloud-apis/api/#get-a-variable-value) on product devices, [creating customers](https://docs.particle.io/reference/cloud-apis/api/#create-a-customer---client-credentials), and [generating customer scoped access tokens](https://docs.particle.io/reference/cloud-apis/api/#generate-a-customer-scoped-access-token).
     ///
-    /// - Requires: required scope =  clients:create
-    /// - Parameter appName: The app name to associate with the new oauth client.
-    /// - Parameter productIdorSlug: The optional product id or slug that the new oAuth client is associated with.
-    /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCClient or a PCError.
-    /// This task may be called from any thread and the result should be dispatched to the main queue if User Interface interactions or handling occurs within the closure.
-    func createClient(appName: String, productIdorSlug: ProductID?, type: PCClient.ClientType, completion: @escaping (Result<PCClient?, PCError>) -> Void) {
+    /// - Requires: required scope =  clients:update
+    /// - Parameter client: The oauth client to update.
+    /// - Parameter newName: Give the OAuth client a new name or pass nil to keep the old name.
+    /// - Parameter newScope: Update the scope of the OAuth client. to only allow customer creation from the client or pass none to remove all scopes (full permissions)
+    /// - Parameter productIdorSlug: The optional product id or slug that the oAuth client is or will be associated with.
+    /// - Parameter token: An PCAccessToken carrying the access token and associated information.
+    /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCClientSeverResponse.ServerResponse or a PCError.
+    /// - Note: This task may be called from any thread and the result should be dispatched to the main queue if User Interface interactions or handling occurs within the closure.
+    func createClient(appName: String, productIdorSlug: ProductID?, redirectURL: URL?, type: PCClient.ClientType, completion: @escaping (Result<PCClient?, PCError>) -> Void) {
         
         guard let token = authenticationManager.token
         else { completion(.failure(PCError.unauthenticated)); return}
         
-        PCClient.createClient(appName: appName, productIdorSlug: productIdorSlug, type: type, token: token, completion: { result in
+        PCClient.createClient(appName: appName, productIdorSlug: productIdorSlug, redirectURL: redirectURL, type: type, token: token, completion: { result in
             
             switch result {
             case .success(let response):
@@ -236,7 +214,7 @@ public class PCContainer: ObservableObject {
             }
         })
     }
-
+    
     
     //MARK: Update Client
     
@@ -253,7 +231,7 @@ public class PCContainer: ObservableObject {
     /// - Throws:  `PCError`
     func updateClient(client: PCClient, newName: String?, newScope: PCClient.Scope?, productIdorSlug: ProductID?) async throws -> PCClient? {
         
-        guard let token = authenticationManager.token else { throw PCError.unauthenticated}
+        let token = try guaranteedToken()
         return try await PCClient.updateClient(client: client, newName: newName, newScope: newScope, productId: productIdorSlug, token: token).clients.first
     }
     
@@ -284,7 +262,7 @@ public class PCContainer: ObservableObject {
             }
         })
     }
-
+    
     
     //MARK: Clients Delete
     
@@ -299,7 +277,7 @@ public class PCContainer: ObservableObject {
     /// - Throws: `PCError`
     func deleteClient(_ client: PCClient, productIdorSlug: ProductID?) async throws -> Bool {
         
-        guard let token = authenticationManager.token else { throw PCError.unauthenticated}
+        let token = try guaranteedToken()
         return try await PCClient.deleteClient(client, productId: productIdorSlug, token: token).ok
     }
     
@@ -328,10 +306,10 @@ public class PCContainer: ObservableObject {
             }
         })
     }
-
+    
     
     //Create API User
-        
+    
     /// Used to create an API User scoped to an organization or a product.
     ///
     ///
@@ -342,11 +320,7 @@ public class PCContainer: ObservableObject {
     /// - Throws: `PCError`
     func createApiUser(scopedTo: PCAPIUser.UserScope, friendlyName: String, permissions: [UserPermissions]) async throws -> PCAPIUser? {
         
-        guard let token = authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        let token = try guaranteedToken()
         return try await PCAPIUser.createAn_API_User(type: scopedTo, parameters: .init(friendlyName: friendlyName, permissions: permissions), token: token).user
     }
     
@@ -376,7 +350,7 @@ public class PCContainer: ObservableObject {
             }
         }
     }
-
+    
     
     //MARK: Update API User
     
@@ -391,11 +365,7 @@ public class PCContainer: ObservableObject {
     /// - Throws: `PCError`
     func updateApiUser(scopedTo: PCAPIUser.UserScope, parameters: PCAPIUser.UserParameters) async throws -> PCAPIUser? {
         
-        guard let token = authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        let token = try guaranteedToken()
         return try await PCAPIUser.updateAn_API_User(type: scopedTo, parameters: parameters, token: token).user
     }
     
@@ -425,7 +395,7 @@ public class PCContainer: ObservableObject {
             }
         }
     }
-
+    
     
     //MARK: List API Users
     
@@ -440,11 +410,7 @@ public class PCContainer: ObservableObject {
     /// - Throws: `PCError`
     func listApiUsers(scopedTo: PCAPIUser.UserScope) async throws -> [PCAPIUser.Team] {
         
-        guard let token = authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        let token = try guaranteedToken()
         return try await PCAPIUser.list_API_Users(type: scopedTo, token: token).team
     }
     
@@ -474,7 +440,7 @@ public class PCContainer: ObservableObject {
             }
         }
     }
-
+    
     
     //MARK: Delete API User
     
@@ -491,11 +457,7 @@ public class PCContainer: ObservableObject {
     /// - Throws: `PCError`
     func deleteApiUser(scopedTo: PCAPIUser.UserScope, username: String) async throws -> Bool {
         
-        guard let token = authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        let token = try guaranteedToken()
         return try await PCAPIUser.deleteAn_API_User(type: scopedTo, username: username, token: token).ok
     }
     
@@ -541,7 +503,7 @@ public class PCContainer: ObservableObject {
             }
         }
     }
-
+    
     
     //MARK: - Devices
     //MARK: List Devices
@@ -555,9 +517,7 @@ public class PCContainer: ObservableObject {
     /// - Throws: PCError
     func listDevices(arguments: PCDevice.ListArguments? = nil) async throws -> [PCDevice] {
         
-        guard let token = self.authenticationManager.token else {
-            throw PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")
-        }
+        let token = try guaranteedToken()
         return try await PCDevice.listDevices(arguments: arguments, token: token)
     }
     
@@ -578,10 +538,10 @@ public class PCContainer: ObservableObject {
         }
         return PCDevice.listDevices(arguments: arguments, token: token, completion: completion)
     }
-
+    
     
     //MARK: List Product Devices
-
+    
     
     /// List Particle devices linked to the current access token.
     ///
@@ -593,10 +553,7 @@ public class PCContainer: ObservableObject {
     public func listProductDevices(productIdOrSlug: ProductID, arguments: PCDevice.ListArguments?)
     async throws -> [PCDevice] {
         
-        guard let token = self.authenticationManager.token else {
-            throw PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")
-        }
-        
+        let token = try guaranteedToken()
         return try await PCDevice.listProductDevices(productIdOrSlug: productIdOrSlug, arguments: arguments, token: token)
     }
     
@@ -617,7 +574,7 @@ public class PCContainer: ObservableObject {
         
         PCDevice.listProductDevices(productIdOrSlug: productIdOrSlug, arguments: arguments, token: token, completion: completion)
     }
-
+    
     
     //MARK: Import Devices
     
@@ -636,10 +593,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: An `PCDevice.ImportResponse`
     public func importDevices(_ devices: DeviceID..., into productId: ProductID, arguments: PCDevice.ImportArguments? = nil) async throws -> PCDevice.ImportResponse {
         
-        guard let token = self.authenticationManager.token else {
-            throw PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")
-        }
-        
+        let token = try guaranteedToken()
         return try await PCDevice.importDevices(devices, into: productId, arguments: arguments, token: token)
     }
     
@@ -664,7 +618,7 @@ public class PCContainer: ObservableObject {
         
         PCDevice.importDevices(devices, into: productId, arguments: arguments, token: token, completion: completion)
     }
-
+    
     
     //MARK: Get Device
     
@@ -677,12 +631,10 @@ public class PCContainer: ObservableObject {
     /// - Returns: PCDevice representing the actual particle device.
     func getDevice(deviceID: DeviceID) async throws -> PCDevice {
         
-        guard let token = self.authenticationManager.token else {
-            throw PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")
-        }
+        let token = try guaranteedToken()
         return try await PCDevice.getDevice(deviceID: deviceID, token: token)
     }
-
+    
     
     
     ///Get a particlie io device
@@ -698,7 +650,7 @@ public class PCContainer: ObservableObject {
         }
         return PCDevice.getDevice(deviceID: deviceID, token: token, completion: completion)
     }
-
+    
     
     //MARK: Get Product Device
     
@@ -728,12 +680,10 @@ public class PCContainer: ObservableObject {
     /// - Parameter completion: Closure containing with an PCDevice or an PCError indicating the failure.
     func getProductDevice(deviceID: DeviceID?, productIdOrSlug: ProductID) async throws -> PCDevice {
         
-        guard let token = self.authenticationManager.token else {
-            throw PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")
-        }
+        let token = try guaranteedToken()
         return try await PCDevice.getProductDevice(deviceID: deviceID, productIdOrSlug: productIdOrSlug, token: token)
     }
-
+    
     
     //MARK: Claim Codes
     
@@ -754,9 +704,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: An PCDevice.ClaimCodeResponse.
     func createClaimCode(arguments: PCDevice.ClaimRequestArguments?) async throws  -> PCDevice.ClaimCodeResponse {
         
-        guard let token = self.authenticationManager.token else {
-            throw PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")
-        }
+        let token = try guaranteedToken()
         return try await PCDevice.createClaimCode(arguments: arguments, token: token)
     }
     
@@ -784,11 +732,11 @@ public class PCContainer: ObservableObject {
         }
         return PCDevice.createClaimCode(arguments: arguments, token: token, completion: completion)
     }
-
+    
     
     //MARK: Device Claim
-
-
+    
+    
     ///Claim a device
     ///
     ///Claim a new or unclaimed device to your account or request a transfer from another user.
@@ -802,10 +750,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: An PCDevice.TransferID
     func claimDevice(_ deviceID: DeviceID, isTransfer: Bool = false) async throws -> PCDevice.TransferID {
         
-        guard let token = self.authenticationManager.token else {
-            throw PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")
-        }
-        
+        let token = try guaranteedToken()
         return try await PCDevice.claimDevice(deviceID, isTransfer: isTransfer, token: token)
     }
     
@@ -830,7 +775,7 @@ public class PCContainer: ObservableObject {
         
         PCDevice.claimDevice(deviceID, isTransfer: isTransfer, token: token, completion: completion)
     }
-
+    
     
     //MARK: Remove Device from Product
     
@@ -851,10 +796,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: Bool indicating the success of the API call.
     func remove(_ device: DeviceID, from product: ProductID) async throws -> Bool {
         
-        guard let token = self.authenticationManager.token else {
-            throw PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")
-        }
-        
+        let token = try guaranteedToken()
         return try await PCDevice.removeDeviceFromProduct(deviceID: device, productIdorSlug: product, token: token)
     }
     
@@ -880,7 +822,7 @@ public class PCContainer: ObservableObject {
         
         PCDevice.removeDeviceFromProduct(deviceID: device, productIdorSlug: product, token: token, completion: completion)
     }
-
+    
     
     //MARK: Unclaim Device
     
@@ -900,10 +842,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: A bool representing the succes of the call.
     func unclaim(_ deviceID: DeviceID, in product: ProductID?) async throws -> Bool {
         
-        guard let token = self.authenticationManager.token else {
-            throw PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")
-        }
-        
+        let token = try guaranteedToken()
         return try await PCDevice.unclaimDevice(deviceID, productIdorSlug: product, token: token).ok
     }
     
@@ -934,7 +873,7 @@ public class PCContainer: ObservableObject {
             }
         }
     }
-
+    
     
     //MARK: Signale a device
     
@@ -965,9 +904,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: `DeviceID.SignalResponse`
     func signalDevice(_ deviceID: DeviceID, rainbowState: RainbowState) async throws -> PCDevice.SignalResponse {
         
-        guard let token = self.authenticationManager.token else {
-            throw PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")
-        }
+        let token = try guaranteedToken()
         return try await PCDevice.signalDevice(deviceID, rainbowState: rainbowState, token: token)
     }
     
@@ -1010,7 +947,7 @@ public class PCContainer: ObservableObject {
         
         PCDevice.signalDevice(deviceID, rainbowState: rainbowState, token: token, completion: completion)
     }
-
+    
     
     //MARK: Force OTA Updates
     
@@ -1034,8 +971,10 @@ public class PCContainer: ObservableObject {
     /// - Parameter deviceID: The device identifier of the device to be affected.
     /// - Parameter enabled: Boolean to indicate whether ota updates will be fored or not.
     /// - Returns: `PCDevice.ForceOTAUpdateResponse` indicating the servers response.
-    func forceEnable_OTA_Updates(on deviceID: DeviceID, enabled: Bool, token: PCAccessToken) async throws -> PCDevice.ForceOTAUpdateResponse {
-        try await PCNetwork.shared.cloudRequest(.forceOverTheAirUpdates(deviceID: deviceID, enabled: enabled, token: token), type: PCDevice.ForceOTAUpdateResponse.self)
+    func forceEnable_OTA_Updates(on deviceID: DeviceID, enabled: Bool) async throws -> PCDevice.ForceOTAUpdateResponse {
+        
+        let token = try guaranteedToken()
+        return try await PCNetwork.shared.cloudRequest(.forceOverTheAirUpdates(deviceID: deviceID, enabled: enabled, token: token), type: PCDevice.ForceOTAUpdateResponse.self)
     }
     
     
@@ -1066,10 +1005,14 @@ public class PCContainer: ObservableObject {
     /// - Parameter enabled: Boolean to indicate whether ota updates will be fored or not.
     /// - Parameter token: The representation of a particle access token with appropriate permissions.
     /// - Parameter completion: Result indicating the servers response. Or an PCError indicating the failure.
-    func forceEnable_OTA_Updates(on deviceID: DeviceID, enabled: Bool, token: PCAccessToken, completion: @escaping (Result<PCDevice.ForceOTAUpdateResponse, PCError>) -> Void) {
+    func forceEnable_OTA_Updates(on deviceID: DeviceID, enabled: Bool, completion: @escaping (Result<PCDevice.ForceOTAUpdateResponse, PCError>) -> Void) {
+        
+        guard let token = self.authenticationManager.token
+        else { completion(.failure(.unauthenticated)); return }
+        
         PCNetwork.shared.cloudRequest(.forceOverTheAirUpdates(deviceID: deviceID, enabled: enabled, token: token), type: PCDevice.ForceOTAUpdateResponse.self, completion: completion)
     }
-
+    
     
     //MARK: Lookup Device Info
     
@@ -1095,8 +1038,10 @@ public class PCContainer: ObservableObject {
     /// - Parameter serialNumber: The serial number printed on the barcode of the device packaging.
     /// - Parameter token: The representation of a particle access token with appropriate permissions.
     /// - Returns: SerialNumberLookupResponse indicating the servers response.
-    func lookUpDeviceInformation(from serialNumber: String, token: PCAccessToken) async throws-> PCDevice.SerialNumberLookupResponse {
-        try await PCNetwork.shared.cloudRequest(.lookUpDeviceInformation(serialNumber: serialNumber, token: token), type: PCDevice.SerialNumberLookupResponse.self)
+    func lookUpDeviceInformation(from serialNumber: String) async throws-> PCDevice.SerialNumberLookupResponse
+    {
+        let token = try guaranteedToken()
+        return try await PCNetwork.shared.cloudRequest(.lookUpDeviceInformation(serialNumber: serialNumber, token: token), type: PCDevice.SerialNumberLookupResponse.self)
     }
     
     
@@ -1122,10 +1067,13 @@ public class PCContainer: ObservableObject {
     /// - Parameter serialNumber: The serial number printed on the barcode of the device packaging.
     /// - Parameter token: The representation of a particle access token with appropriate permissions.
     /// - Parameter completion: Result indicating the servers response. Or an PCError indicating the failure.
-    func lookUpDeviceInformation(from serialNumber: String, token: PCAccessToken, completion: @escaping (Result<PCDevice.SerialNumberLookupResponse, PCError>) -> Void) {
+    func lookUpDeviceInformation(from serialNumber: String, completion: @escaping (Result<PCDevice.SerialNumberLookupResponse, PCError>) -> Void) {
+        
+        guard let token = self.authenticationManager.token
+        else { completion(.failure(.unauthenticated)); return}
         PCNetwork.shared.cloudRequest(.lookUpDeviceInformation(serialNumber: serialNumber, token: token), type: PCDevice.SerialNumberLookupResponse.self, completion: completion)
     }
-
+    
     
     //MARK: Refresh Device Vitals
     
@@ -1156,11 +1104,7 @@ public class PCContainer: ObservableObject {
     /// - Returns A discardable bool response indicating success on the server.
     @discardableResult func refreshVitals(for device: DeviceID, in product: ProductID? = nil) async throws -> Bool {
         
-        guard let token = authenticationManager.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
+        let token = try guaranteedToken()
         return try await PCNetwork.shared.cloudRequest(.refreshDeviceVitals(deviceID: device, productIDorSlug: product, token: token), type: ServerResponses.BoolResponse.self).ok
     }
     
@@ -1206,7 +1150,7 @@ public class PCContainer: ObservableObject {
             }
         }
     }
-
+    
     
     //MARK: Last Known Vitals
     
@@ -1226,11 +1170,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: LastKnownDiagnosticsResponse
     func getLastKnownVitals(for deviceID: DeviceID, in product: ProductID) async throws -> LastKnownDiagnosticsResponse {
         
-        guard let token = authenticationManager.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
+        let token = try guaranteedToken()
         return try await PCDevice.getLastKnownVitals(for: deviceID, in: product, token: token)
     }
     
@@ -1257,7 +1197,7 @@ public class PCContainer: ObservableObject {
         
         return PCDevice.getLastKnownVitals(for: deviceID, in: product, token: token, completion: completion)
     }
-
+    
     
     //MARK: Historical Vitals
     
@@ -1279,11 +1219,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: Current value subject containing the optional HistoricalDiagnosticsResponse or a PCError indicating the failure.
     func getHistoricalVitals(for deviceID: DeviceID, in product: ProductID, startDate: Date? = nil, endDate: Date? = nil) async throws -> HistoricalDiagnosticsResponse {
         
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        let token = try guaranteedToken()
         return try await PCDevice.getHistoricalVitals(for: deviceID, in: product, startDate: startDate, endDate: endDate, token: token)
     }
     
@@ -1312,7 +1248,7 @@ public class PCContainer: ObservableObject {
         
         return PCDevice.getHistoricalVitals(for: device, in: product, startDate: startDate, endDate: endDate, token: token, completion: completion)
     }
-
+    
     
     //MARK: Vital Metadata
     
@@ -1340,11 +1276,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: An PCRemoteDiagnosticsMetaDataResponse.
     func getVitalMetadata(for device: DeviceID, in product: ProductID) async throws -> PCRemoteDiagnosticsMetaDataResponse {
         
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        let token = try guaranteedToken()
         return try await PCNetwork.shared.cloudRequest(.getDeviceVitalsMetadata(deviceID: device, productIDorSlug: product, token: token), type: PCRemoteDiagnosticsMetaDataResponse.self)
     }
     
@@ -1381,7 +1313,7 @@ public class PCContainer: ObservableObject {
         
         return PCDevice.getVitalMetadata(for: device, in: product, token: token, completion: completion)
     }
-
+    
     
     
     //MARK: Cellular Network Status
@@ -1403,10 +1335,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: An PCRemoteDiagnosticsCellularNetworkStatusResponse.
     func getCellularNetworkStatus(for device: DeviceID, iccid: ICCIDNumber, in product: ProductID) async throws -> PCRemoteDiagnosticsCellularNetworkStatusResponse {
         
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
+        let token = try guaranteedToken()
         return try await PCDevice.getCellularNetworkStatus(for: device, iccid: iccid, in: product, token: token)
     }
     
@@ -1434,12 +1363,12 @@ public class PCContainer: ObservableObject {
         
         return PCDevice.getCellularNetworkStatus(for: device, iccid: iccid, in: product, token: token, completion: completion)
     }
-
     
-
-//MARK: - User
-
-
+    
+    
+    //MARK: - User
+    
+    
     //MARK: Get User
     
     
@@ -1453,10 +1382,7 @@ public class PCContainer: ObservableObject {
     /// - throws: PCError indicating the failure.
     /// - Returns: PCUser
     func getCurrentUser() async throws -> PCUser {
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
+        let token = try guaranteedToken()
         return try await PCUser.getCurrentUser(token: token)
     }
     
@@ -1480,7 +1406,7 @@ public class PCContainer: ObservableObject {
         PCUser.getCurrentUser(token: token, completion: completion)
     }
     
-
+    
     ///Update user.
     ///
     ///Update the logged-in user. Allows changing email, password and other account information.
@@ -1494,11 +1420,8 @@ public class PCContainer: ObservableObject {
     /// - Parameter currentPassword: The current password for the user to be updated.
     /// - Returns: Current value subject containing the optional PCUser.RequestResponse or an PCError indicating the failure.
     func updateCurrentUser(username: String, password: String?, accountInfo: PCUser.Info, currentPassword: String) async throws -> PCUser.RequestResponse {
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
         
+        let token = try guaranteedToken()
         return try await PCUser.updateUser(username: username, password: password, accountInfo: accountInfo, currentPassword: currentPassword, token: token)
     }
     
@@ -1523,8 +1446,8 @@ public class PCContainer: ObservableObject {
         
         PCUser.updateUser(username: username, password: password, accountInfo: accountInfo, currentPassword: currentPassword, token: token, completion: completion)
     }
-
-
+    
+    
     //MARK: Delete User
     
     ///Delete user.
@@ -1537,10 +1460,8 @@ public class PCContainer: ObservableObject {
     /// - Parameter password: The new password to assign to the user to be updated.
     /// - Returns: PCUser.DeleteUserResponse.
     func deleteUser(password: String) async throws -> PCUser.RequestResponse {
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
+
+        let token = try guaranteedToken()
         return try await PCUser.deleteUser(password: password, token: token)
     }
     
@@ -1561,10 +1482,10 @@ public class PCContainer: ObservableObject {
         
         PCUser.deleteUser(password: password, token: token, completion: completion)
     }
-
+    
     
     //MARK: Forgot Password
-
+    
     ///Forgot password.
     ///
     /// Create a new password reset token and send the user an email with the token. Client doesn't need to be authenticated.
@@ -1577,7 +1498,7 @@ public class PCContainer: ObservableObject {
     /// - Parameter username: The email address for the users account.
     /// - Returns: PCUser.PassWordResetRequestResponse
     func forgotPassword(username: String) async throws -> PCUser.RequestResponse {
-                
+        
         try await PCUser.forgotPassword(username: username)
     }
     
@@ -1593,13 +1514,13 @@ public class PCContainer: ObservableObject {
     /// - Parameter username: The email address for the users account.
     /// - Parameter completion: Closure containing a result of  PCUser.PassWordResetRequestResponse or an PCError indicating the failure.
     func forgotPassword(username: String, completion: @escaping (Result<PCUser.RequestResponse,PCError>) -> Void) {
-            
+        
         PCUser.forgotPassword(username: username, completion: completion)
     }
-
+    
     
     //MARK: - Quarantine
-   ///Approve or deny a quarantined device.
+    ///Approve or deny a quarantined device.
     ///
     ///Approval will immediately release the device from quarantine and allow it to publish events, receive firmware updates, etc.
     ///
@@ -1614,11 +1535,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: PCQuarantine.QuarantineActionResponse
     func handleQuarantine(for device: DeviceID, in product: ProductID, action: PCQuarantine.QuarantineAction) async throws -> PCQuarantine.QuarantineActionResponse {
         
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        let token = try guaranteedToken()
         return try await PCDevice.handleQuarantine(for: device, in: product, action: action, token: token)
     }
     
@@ -1644,7 +1561,7 @@ public class PCContainer: ObservableObject {
         
         PCDevice.handleQuarantine(for: device, in: product, action: action, token: token, completion: completion)
     }
-
+    
     
     //MARK: - Sim Cards
     //MARK: List SIM cards
@@ -1664,11 +1581,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: PCSimCard.ListRequestArgument
     func listSimCards(arguments: PCSimCard.ListRequestArgument) async throws -> PCSimCard.ListResponse {
         
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        let token = try guaranteedToken()
         return try await PCSimCard.listSimCards(arguments: arguments, token: token)
     }
     
@@ -1694,7 +1607,7 @@ public class PCContainer: ObservableObject {
         
         return PCSimCard.listSimCards(arguments: arguments, token: token, completion: completion)
     }
-
+    
     
     //MARK: Get Sim Info
     
@@ -1714,14 +1627,10 @@ public class PCContainer: ObservableObject {
     /// - Returns: `PCSimCard.GetSimInfoResponse`
     func getSimInformation(iccid: ICCIDNumber, productIDorSlug: ProductID) async throws -> PCSimCard.GetSimInfoResponse {
         
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        let token = try guaranteedToken()
         return try await  PCSimCard.getSimInformation(iccid: iccid, productIDorSlug: productIDorSlug, token: token)
     }
-
+    
     
     
     ///Get SIM information.
@@ -1745,8 +1654,8 @@ public class PCContainer: ObservableObject {
         
         PCSimCard.getSimInformation(iccid: iccid, productIDorSlug: productIDorSlug, token: token, completion: completion)
     }
-
-
+    
+    
     //MARK: Get Sim Data Usage
     
     
@@ -1763,14 +1672,10 @@ public class PCContainer: ObservableObject {
     /// - Returns: `PCSimCard.IccidDataUsageResponse`
     func getSimDataUsage(iccid: ICCIDNumber, productIDorSlug: ProductID, token: PCAccessToken) async throws -> PCSimCard.IccidDataUsageResponse {
         
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        let token = try guaranteedToken()
         return try await PCSimCard.getDataUsage(iccid: iccid, productIDorSlug: productIDorSlug, token: token)
     }
-
+    
     
     
     ///Get data usage.
@@ -1793,8 +1698,8 @@ public class PCContainer: ObservableObject {
         
         PCSimCard.getDataUsage(iccid: iccid, productIDorSlug: productIDorSlug, token: token, completion: completion)
     }
-
-
+    
+    
     //MARK: Fleet Data Usage
     
     
@@ -1812,13 +1717,10 @@ public class PCContainer: ObservableObject {
     /// - Returns: `PCSimCard.FleetDataUsageResponse`
     func getFleetDataUsage(productIDorSlug: ProductID) async throws -> PCSimCard.FleetDataUsageResponse {
         
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
+        let token = try guaranteedToken()
         return try await PCSimCard.getFleetDataUsage(productIDorSlug: productIDorSlug, token: token)
     }
-
+    
     
     
     ///Get data usage for product fleet.
@@ -1840,11 +1742,11 @@ public class PCContainer: ObservableObject {
         }
         PCSimCard.getFleetDataUsage(productIDorSlug: productIDorSlug, token: token, completion: completion)
     }
-
-
+    
+    
     //MARK: Activate Sim
     
-       
+    
     ///Activate SIM.
     ///
     ///Activates a SIM card for the first time.
@@ -1871,7 +1773,7 @@ public class PCContainer: ObservableObject {
             }
         }
     }
-
+    
     
     //MARK: Import and Activate Sims
     
@@ -1891,15 +1793,11 @@ public class PCContainer: ObservableObject {
     /// - Parameter sims: An array of SIM ICCIDs to import.
     /// - Returns:Bool indicating success.
     func importAndActivateProductSim(productIdOrSlug: ProductID, iccids: [ICCIDNumber]?, filePath: String?) async throws -> Bool {
-                
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
         
-       return try await PCSimCard.importAndActivateProductSim(productIdOrSlug: productIdOrSlug, iccids: iccids, filePath: filePath, token: token)
+        let token = try guaranteedToken()
+        return try await PCSimCard.importAndActivateProductSim(productIdOrSlug: productIdOrSlug, iccids: iccids, filePath: filePath, token: token)
     }
-
+    
     
     
     ///Import and activate product SIMs.
@@ -1916,7 +1814,7 @@ public class PCContainer: ObservableObject {
     /// - Parameter sims: An array of SIM ICCIDs to import.
     /// - Parameter completion: Closure containing `Result<Bool, PCError>`
     func importAndActivateProductSim(productIdOrSlug: ProductID, iccids: [ICCIDNumber]?, filePath: String?, completion: @escaping (Result<Bool, PCError>) -> Void) {
-                
+        
         guard let token = self.authenticationManager.token
         else {
             completion(.failure(PCError.unauthenticated)); return
@@ -1931,7 +1829,7 @@ public class PCContainer: ObservableObject {
             }
         }
     }
-
+    
     
     //MARK: Deactivate Sim
     
@@ -1950,14 +1848,11 @@ public class PCContainer: ObservableObject {
     /// - Parameter productIDorSlug: String representing the product id or slug.
     /// - Returns: Bool indicating success.
     func deActivateSIM(productIdOrSlug: ProductID?, iccid: ICCIDNumber) async throws -> Bool {
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+
+        let token = try guaranteedToken()
         return try await PCSimCard.deActivateSIM(productIdOrSlug: productIdOrSlug, iccid: iccid, token: token)
     }
-
+    
     
     
     ///Deactivate SIM.
@@ -1982,10 +1877,10 @@ public class PCContainer: ObservableObject {
         
         PCSimCard.deActivateSIM(productIdOrSlug: productIdOrSlug, iccid: iccid, token: token, completion: completion)
     }
-
+    
     
     //MARK: Reactivate Sim
-        
+    
     
     ///Reactivate SIM.
     ///
@@ -2002,14 +1897,10 @@ public class PCContainer: ObservableObject {
     /// - Returns: Bool
     func reActivateSIM(productIdOrSlug: ProductID?, iccid: ICCIDNumber) async throws -> Bool {
         
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        let token = try guaranteedToken()
         return try await PCSimCard.reActivateSIM(productIdOrSlug: productIdOrSlug, iccid: iccid, token: token)
     }
-
+    
     
     
     ///Reactivate SIM.
@@ -2033,7 +1924,7 @@ public class PCContainer: ObservableObject {
         
         PCSimCard.reActivateSIM(productIdOrSlug: productIdOrSlug, iccid: iccid, token: token, completion: completion)
     }
-
+    
     
     //MARK: Release Sim
     ///Release SIM from account.
@@ -2053,15 +1944,11 @@ public class PCContainer: ObservableObject {
     /// - Returns: Bool indicating success.
     func releaseSimFromAccount(productIdOrSlug: ProductID?, iccid: ICCIDNumber) async throws -> Bool {
         
-
-        guard let token = self.authenticationManager.token
-        else {
-            throw PCError.unauthenticated
-        }
         
+        let token = try guaranteedToken()
         return try await PCSimCard.releaseSimFromAccount(productIdOrSlug: productIdOrSlug, iccid: iccid, token: token)
     }
-
+    
     
     
     ///Release SIM from account.
@@ -2085,11 +1972,11 @@ public class PCContainer: ObservableObject {
             completion(.failure(PCError.unauthenticated)); return
         }
         
-        PCSimCard.releaseSimFromAccount(productIdOrSlug: productIdOrSlug, iccid: iccid, token: token, completion: completion) 
+        PCSimCard.releaseSimFromAccount(productIdOrSlug: productIdOrSlug, iccid: iccid, token: token, completion: completion)
     }
-
-
-//MARK: - Events
+    
+    
+    //MARK: - Events
     
     ///Subscribe to Events
     ///
@@ -2129,10 +2016,10 @@ public class PCContainer: ObservableObject {
         
         PCEvent.publishEvent(eventName: eventName, data: data, isPrivate: isPrivate, ttl: ttl, token: token, completion: completion)
     }
-
     
-
-//MARK: - Libraries
+    
+    
+    //MARK: - Libraries
     
     ///List Libraries
     ///
@@ -2145,10 +2032,7 @@ public class PCContainer: ObservableObject {
     /// - Returns: A `PCLibrary.ListResponse` The list response contains an array of libraries filtered by the arguments or an empty array if a suitable match could not be found.
     public func listLibraries(arguments: PCLibrary.LibraryListArguments) async throws -> [PCLibrary] {
         
-        guard let token = authenticationManager.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
+        let token = try guaranteedToken()
         return try await PCLibrary.listLibraries(arguments: arguments, token: token).libraries
     }
     

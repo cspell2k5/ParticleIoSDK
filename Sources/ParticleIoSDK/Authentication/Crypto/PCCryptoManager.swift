@@ -46,7 +46,7 @@ public class PCCryptoManager {
         try PCKeychainStore().deleteStoredTokenData()
     }
     
-    public func storeToken(_ token: PCAccessToken) throws -> PCAccessToken? {
+    @discardableResult public func storeToken(_ token: PCAccessToken) throws -> PCAccessToken {
                 
             let data = try JSONEncoder().encode(token)
             let encryptedData = try encryptData(data)
