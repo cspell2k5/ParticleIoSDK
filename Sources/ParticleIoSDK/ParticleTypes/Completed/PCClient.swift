@@ -10,38 +10,37 @@ import Foundation
 
 
 ///Encapsulation of PCClient specific server responses.
-public struct PCClientSeverResponse {
+///Servers request response with one or more clients.
+public struct PCClientServerResponse: Decodable {
     
+    ///Server request success.
+    public let ok : Bool
+    ///An array of one or more clients affected by the request.
+    public let clients : [PCClient]
     
-    ///Servers request response with one or more clients.
-    public struct ServerResponse : Decodable {
+    /// Private to keep init from being accessed outside of decoder.
+    private init(ok: Bool, clients: [PCClient]) {
+        fatalError("This initializer cannot be accessed directly. You must make a cloud request using a static method.")
+    }
+    
+    /// Private enum for decoding.
+    private enum CodingKeys: CodingKey {
+        case ok, client, clients
+    }
+    
+    /// Public init created so that the response can be shared on all callls. Some Responses return a single client some return multiples.
+    public init(from decoder: Decoder) throws {
         
-        ///Server request success.
-        public let ok : Bool
-        ///An array of one or more clients affected by the request.
-        public let clients : [PCClient]
+        let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        /// Private to keep init from being accessed outside of decoder.
-        private init(ok: Bool, clients: [PCClient]) {
-            fatalError("This initializer cannot be accessed directly. You must make a cloud request using a static method.")
+        self.ok = try container.decode(Bool.self, forKey: .ok)
+        var clients = (try? container.decodeIfPresent([PCClient].self, forKey: .clients)) ?? []
+        
+        if let client = try? container.decodeIfPresent(PCClient.self, forKey: .client) {
+            clients.append(client)
         }
         
-        /// Private enum for decoding.
-        private enum CodingKeys: CodingKey {
-            case ok, client, clients
-        }
-        
-        /// Public init created so that the response can be shared on all callls. Some Responses return a single client some return multiples.
-        public init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            
-            self.ok = try container.decode(Bool.self, forKey: PCClientSeverResponse.ServerResponse.CodingKeys.ok)
-            var clients = (try? container.decodeIfPresent([PCClient].self, forKey: .clients)) ?? []
-            if let client = try? container.decodeIfPresent(PCClient.self, forKey: .client) {
-                clients.append(client)
-            }
-            self.clients = clients
-        }
+        self.clients = clients
     }
 }
 
@@ -135,8 +134,8 @@ extension PCClient {
     /// - Parameter token: An PCAccessToken carrying the access token and associated information.
     /// - Returns: `PCClientSeverResponse.ServerResponse`
     /// - Throws:  `PCError`
-    public static func listClients(productId: ProductID?, token: PCAccessToken) async throws -> PCClientSeverResponse.ServerResponse {
-        try await PCNetwork.shared.cloudRequest(.listClients(productIdorSlug: productId, token: token), type: PCClientSeverResponse.ServerResponse.self)
+    public static func listClients(productId: ProductID?, token: PCAccessToken) async throws -> PCClientServerResponse {
+        try await PCNetwork.shared.cloudRequest(.listClients(productIdorSlug: productId, token: token), type: PCClientServerResponse.self)
     }
     /// Create an oAuth client
     ///
@@ -170,8 +169,8 @@ extension PCClient {
     /// - Parameter token: An PCAccessToken carrying the access token and associated information.
     /// - Returns: `PCClientSeverResponse.ServerResponse`
     /// - throws: `PCError`
-    public static func createClient(appName: String, productId: ProductID?, type: PCClient.ClientType, token: PCAccessToken) async throws -> PCClientSeverResponse.ServerResponse {
-        try await PCNetwork.shared.cloudRequest(.createClient(appName: appName, productIdorSlug: productId, type: type, token: token), type: PCClientSeverResponse.ServerResponse.self)
+    public static func createClient(appName: String, productId: ProductID?, type: PCClient.ClientType, token: PCAccessToken) async throws -> PCClientServerResponse {
+        try await PCNetwork.shared.cloudRequest(.createClient(appName: appName, productIdorSlug: productId, type: type, token: token), type: PCClientServerResponse.self)
     }
     
     /// Update the name or scope of an existing OAuth client.
@@ -195,8 +194,8 @@ extension PCClient {
     /// - Parameter token: An PCAccessToken carrying the access token and associated information.
     /// - Returns: `PCClientSeverResponse.ServerResponse`
     /// - Throws:  `PCError`
-    public static func updateClient(client: PCClient, newName: String?, newScope: PCClient.Scope?, productId: ProductID?, token: PCAccessToken) async  throws -> PCClientSeverResponse.ServerResponse{
-        try await PCNetwork.shared.cloudRequest(.updateClient(client: client, newName: newName, newScope: newScope, productIdorSlug: productId, token: token), type: PCClientSeverResponse.ServerResponse.self)
+    public static func updateClient(client: PCClient, newName: String?, newScope: PCClient.Scope?, productId: ProductID?, token: PCAccessToken) async  throws -> PCClientServerResponse{
+        try await PCNetwork.shared.cloudRequest(.updateClient(client: client, newName: newName, newScope: newScope, productIdorSlug: productId, token: token), type: PCClientServerResponse.self)
     }
     
     ///Delete the client from the server database.
@@ -251,8 +250,8 @@ extension PCClient {
     /// - Parameter token: An PCAccessToken carrying the access token and associated information.
     /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCClientSeverResponse.ServerResponse or a PCError.
     /// This task may be called from any thread and the result should be dispatched to the main queue if User Interface interactions or handling occurs within the closure.
-    public static func listClients(productIdorSlug productID: ProductID?, token: PCAccessToken, completion: @escaping (Result<PCClientSeverResponse.ServerResponse, PCError>) -> Void) {
-        PCNetwork.shared.cloudRequest(.listClients(productIdorSlug: productID, token: token), type: PCClientSeverResponse.ServerResponse.self, completion: completion)
+    public static func listClients(productIdorSlug productID: ProductID?, token: PCAccessToken, completion: @escaping (Result<PCClientServerResponse, PCError>) -> Void) {
+        PCNetwork.shared.cloudRequest(.listClients(productIdorSlug: productID, token: token), type: PCClientServerResponse.self, completion: completion)
     }
     
     /// Create an oAuth client
@@ -296,9 +295,9 @@ extension PCClient {
     /// - Parameter token: An PCAccessToken carrying the access token and associated information.
     /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCClientSeverResponse.ServerResponse or a PCError.
     /// This task may be called from any thread and the result should be dispatched to the main queue if User Interface interactions or handling occurs within the closure.
-    public static func createClient(appName: String, productIdorSlug productID: ProductID?, redirectURL: URL, type: PCClient.ClientType, token: PCAccessToken, completion: @escaping (Result<PCClientSeverResponse.ServerResponse, PCError>) -> Void) {
+    public static func createClient(appName: String, productIdorSlug productID: ProductID?, redirectURL: URL, type: PCClient.ClientType, token: PCAccessToken, completion: @escaping (Result<PCClientServerResponse, PCError>) -> Void) {
         
-        PCNetwork.shared.cloudRequest(.createClient(appName: appName, productIdorSlug: productID, redirect_uri: redirectURL, type: type, token: token), type: PCClientSeverResponse.ServerResponse.self, completion: completion)
+        PCNetwork.shared.cloudRequest(.createClient(appName: appName, productIdorSlug: productID, redirect_uri: redirectURL, type: type, token: token), type: PCClientServerResponse.self, completion: completion)
     }
     
     /// Update the name or scope of an existing OAuth client.
@@ -326,8 +325,8 @@ extension PCClient {
     /// - Parameter token: An PCAccessToken carrying the access token and associated information.
     /// - Parameter completion: A completion handler for the request The completion will contain a result of either an PCClientSeverResponse.ServerResponse or a PCError.
     /// This task may be called from any thread and the result should be dispatched to the main queue if User Interface interactions or handling occurs within the closure.
-    public static func updateClient(client: PCClient, newName: String? = nil, newScope: PCClient.Scope? = nil, productIdorSlug productID: ProductID?, token: PCAccessToken, completion: @escaping (Result<PCClientSeverResponse.ServerResponse, PCError>) -> Void ){
-        PCNetwork.shared.cloudRequest(.updateClient(client: client, newName: newName, newScope: newScope, productIdorSlug: productID, token: token), type: PCClientSeverResponse.ServerResponse.self, completion: completion)
+    public static func updateClient(client: PCClient, newName: String? = nil, newScope: PCClient.Scope? = nil, productIdorSlug productID: ProductID?, token: PCAccessToken, completion: @escaping (Result<PCClientServerResponse, PCError>) -> Void ){
+        PCNetwork.shared.cloudRequest(.updateClient(client: client, newName: newName, newScope: newScope, productIdorSlug: productID, token: token), type: PCClientServerResponse.self, completion: completion)
     }
     
     ///Delete the client from the server database.
