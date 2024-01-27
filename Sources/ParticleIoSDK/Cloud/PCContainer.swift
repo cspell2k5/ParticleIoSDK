@@ -552,7 +552,7 @@ public extension PCContainer {
     /// - Parameter arguments: Arguments used to filter the list of devices by. Passing nil to this parameter will list all devices accessible with the token provided.
     /// - Returns: An array of PCDevice.
     /// - Throws: PCError
-    public func listProductDevices(productIdOrSlug: ProductID, arguments: PCDevice.ListArguments?)
+    func listProductDevices(productIdOrSlug: ProductID, arguments: PCDevice.ListArguments?)
     async throws -> [PCDevice] {
         
         let token = try guaranteedToken()
@@ -567,7 +567,7 @@ public extension PCContainer {
     ///
     ///  - Parameter arguments: Arguments used to filter the list of devices by. Passing nil to this parameter will list all devices accessible with the token provided.
     ///  - Parameter completion: Completion closure delivering either an [PCDevice] or a PCError.
-    public func listProductDevices(productIdOrSlug: ProductID, arguments: PCDevice.ListArguments?, completion: @escaping (Result<[PCDevice], PCError>) -> Void) {
+    func listProductDevices(productIdOrSlug: ProductID, arguments: PCDevice.ListArguments?, completion: @escaping (Result<[PCDevice], PCError>) -> Void) {
         
         guard let token = self.authenticationManager.token else {
             completion(.failure(PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")))
@@ -593,7 +593,7 @@ public extension PCContainer {
     /// - throws: PCError indicating the failure.
     /// - Parameter arguments: Optional arguments to be included in the request.
     /// - Returns: An `PCDevice.ImportResponse`
-    public func importDevices(_ devices: DeviceID..., into productId: ProductID, arguments: PCDevice.ImportArguments? = nil) async throws -> PCDevice.ImportResponse {
+    func importDevices(_ devices: DeviceID..., into productId: ProductID, arguments: PCDevice.ImportArguments? = nil) async throws -> PCDevice.ImportResponse {
         
         let token = try guaranteedToken()
         return try await PCDevice.importDevices(devices, into: productId, arguments: arguments, token: token)
@@ -611,7 +611,7 @@ public extension PCContainer {
     /// - Requires: Scope of devices:import
     /// - Parameter arguments: Optional arguments to be included in the request.
     /// - Parameter completion: Closure containing a result of PCDevice.ImportResponse of an PCError indicating the failure.
-    public func importDevices(_ devices: DeviceID..., into productId: ProductID, arguments: PCDevice.ImportArguments? = nil, completion: @escaping (Result<PCDevice.ImportResponse, PCError>) -> Void) {
+    func importDevices(_ devices: DeviceID..., into productId: ProductID, arguments: PCDevice.ImportArguments? = nil, completion: @escaping (Result<PCDevice.ImportResponse, PCError>) -> Void) {
         
         guard let token = self.authenticationManager.token else {
             completion(.failure(PCError(code: .unauthenticated, description: "You are not currently authenticated. You must be authenticated to access this resource.")))
@@ -2032,7 +2032,7 @@ public extension PCContainer {
     /// - Throws: PCError
     /// - Parameter arguments: The arguments used to filter the libraries.
     /// - Returns: A `PCLibrary.ListResponse` The list response contains an array of libraries filtered by the arguments or an empty array if a suitable match could not be found.
-    public func listLibraries(arguments: PCLibrary.LibraryListArguments) async throws -> [PCLibrary] {
+    func listLibraries(arguments: PCLibrary.LibraryListArguments) async throws -> [PCLibrary] {
         
         let token = try guaranteedToken()
         return try await PCLibrary.listLibraries(arguments: arguments, token: token).libraries
@@ -2048,7 +2048,7 @@ public extension PCContainer {
     ///
     /// - Parameter arguments: The arguments used to filter the libraries.
     /// - Parameter completion: A completion closure supplying an Result with containing a list response or a PCError
-    public func listLibraries(arguments: PCLibrary.LibraryListArguments, completion: @escaping (Result<[PCLibrary], PCError>) -> Void) {
+    func listLibraries(arguments: PCLibrary.LibraryListArguments, completion: @escaping (Result<[PCLibrary], PCError>) -> Void) {
         
         guard let token = authenticationManager.token
         else {
