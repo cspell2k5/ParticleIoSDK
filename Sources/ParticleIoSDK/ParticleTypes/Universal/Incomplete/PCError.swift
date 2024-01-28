@@ -41,6 +41,8 @@ public enum PCErrorCode: Int, CustomStringConvertible {
     case deinitializedObject = -1000
     case networkConnectionLost = -1005
     case unknown = -9999
+    
+    case particleAPIChange
 
     
     public init?(rawValue: String) {
@@ -104,6 +106,8 @@ public enum PCErrorCode: Int, CustomStringConvertible {
                 return "The network connection was closed.\n"
             case .notAvailableOnPlatform:
                 return "The requested resource is not allowed on the current platform."
+        case .particleAPIChange:
+            return "Particle has changed the available attributes, or the attribute otherwise could not be found."
         }
     }
 }
@@ -116,6 +120,9 @@ public struct PCError: Error, CustomDebugStringConvertible {
     
     
     public static let unauthenticated = PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
+    
+    public static let apiChange = PCError(code: .particleAPIChange, description: "The selected atttribute was not found")
+
     
     public let code: PCErrorCode
     public let description: String?

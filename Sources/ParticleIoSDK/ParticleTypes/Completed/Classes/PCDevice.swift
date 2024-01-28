@@ -10,6 +10,16 @@ import Foundation
 import Combine
 
 
+// MARK: - DeviceProtection
+public struct DeviceProtection: Codable, Hashable, CustomStringConvertible {
+    public let status: String?
+    
+    public var description: String {
+        "status: \(String(describing: status))"
+    }
+}
+
+
 ///Representation of the platform id of the physical device.
 public enum PlatformID: Int, Codable {
     
@@ -66,10 +76,10 @@ public final class PCDevice: NSObject, Decodable, ObservableObject, Identifiable
     ///Human readable description of the instance.
     public override var description: String {
 """
-    id: \(id.rawValue),
-    name: \(name.rawValue),
+    id: \(String(describing: id?.rawValue)),
+    name: \(String(describing: name?.rawValue)),
     status:\(String(describing: status)),
-    productID:\(String(describing: productID.rawValue)),
+    productID:\(String(describing: productID?.rawValue)),
     notes:\(String(describing: notes)),
     functions: \(functionsDescription),
     variables: \(variablesDescription),
@@ -77,9 +87,9 @@ public final class PCDevice: NSObject, Decodable, ObservableObject, Identifiable
     cellular:\(String(describing: cellular)),
     online:\(String(describing: online)),
     connected:\(String(describing: connected)),
-    lastIPAddress:\(lastIPAddress),
-    lastHeard:\(lastHeard),
-    lastHandshakeAt\(lastHandshakeAt),
+    lastIPAddress:\(String(describing: lastIPAddress)),
+    lastHeard:\(String(describing: lastHeard)),
+    lastHandshakeAt\(String(describing: lastHandshakeAt)),
     platformID:\(String(describing: platformID)),
     firmwareUpdatesEnabled:\(String(describing: firmwareUpdatesEnabled)),
     firmwareUpdatesForced:\(String(describing: firmwareUpdatesForced)),
@@ -96,8 +106,8 @@ public final class PCDevice: NSObject, Decodable, ObservableObject, Identifiable
     public override var debugDescription: String {
 """
 PCDevice: {
-    id: \(id),
-    name: \(name),
+    id: \(String(describing: id)),
+    name: \(String(describing: name)),
     status:\(String(describing: status)),
     productID:\(String(describing: productID)),
     notes:\(String(describing: notes)),
@@ -107,9 +117,9 @@ PCDevice: {
     cellular:\(String(describing: cellular)),
     online:\(String(describing: online)),
     connected:\(String(describing: connected)),
-    lastIPAddress:\(lastIPAddress),
-    lastHeard:\(lastHeard),
-    lastHandshakeAt\(lastHandshakeAt),
+    lastIPAddress:\(String(describing: lastIPAddress)),
+    lastHeard:\(String(describing: lastHeard)),
+    lastHandshakeAt\(String(describing: lastHandshakeAt)),
     platformID:\(String(describing: platformID)),
     firmwareUpdatesEnabled:\(String(describing: firmwareUpdatesEnabled)),
     firmwareUpdatesForced:\(String(describing: firmwareUpdatesForced)),
@@ -125,26 +135,26 @@ PCDevice: {
     
     //Description helper
     private var functionsDescription: String {
-        if functions.isEmpty {
+        if (functions ?? []).isEmpty {
             return "[]"
         }
         return
 """
 [
-        \(functions.map({$0.rawValue}).joined(separator: ",\n        "))
+        \(String(describing: functions?.map({$0.rawValue}).joined(separator: ",\n        ")))
     ]
 """
     }
     
     //Description helper
     private var variablesDescription: String {
-        if variables.isEmpty {
+        if (variables ?? [:]).isEmpty {
             return "[]"
         }
         return
 """
 [
-        \(variables.map({"key: \($0.key), value: \($0.value)"}).joined(separator: ",\n        "))
+        \(String(describing: variables?.map({"key: \($0.key), value: \($0.value)"}).joined(separator: ",\n        ")))
     ]
 """
     }
@@ -154,15 +164,15 @@ PCDevice: {
     
     ///Keys for the device properties that can be used to get values for those devices. For example if you want to iterate through the cases and get the values. This is actually an internal function left public for giggles.
     public enum PropertyKey: String, CaseIterable {
-        case id, name, lastIPAddress, lastHeard, lastHandshakeAt, productID, online, connected, platformID, cellular, notes, functions, variables, status, serialNumber, systemFirmwareVersion, currentBuildTarget, firmwareProductID, groups, targetedFirmwareReleaseVersion, development, quarantined, denied, owner, firmwareUpdatesEnabled, firmwareUpdatesForced, defaultBuildTarget, events
+        case id, name, lastIPAddress, lastHeard, lastHandshakeAt, productID, online, connected, platformID, cellular, notes, functions, variables, status, serialNumber, systemFirmwareVersion, currentBuildTarget, firmwareProductID, groups, targetedFirmwareReleaseVersion, development, quarantined, denied, owner, firmwareUpdatesEnabled, firmwareUpdatesForced, defaultBuildTarget, events, deviceProtection, iccid, lastIccid, imei, mobileSecret, macWifi, pinnedBuildTarget, customerID, userID
     }
     
     private enum CodingKeys: String, CodingKey, CaseIterable {
         
         case id, name, online, connected, cellular, notes, functions, variables, status, groups, development, quarantined, denied, owner
         
-        //        case customerID = "customer_id"
-        //        case userID = "user_id"
+        case customerID = "customer_id"
+        case userID = "user_id"
         case lastIPAddress = "last_ip_address"
         case lastHeard = "last_heard"
         case lastHandshakeAt = "last_handshake_at"
@@ -177,45 +187,53 @@ PCDevice: {
         case firmwareUpdatesForced = "firmware_updates_forced"
         case defaultBuildTarget = "default_build_target"
         case events
+        case deviceProtection = "device_protection"
+        case iccid
+        case lastIccid = "last_iccid"
+        case imei
+        case mobileSecret = "mobile_secret"
+        case macWifi = "mac_wifi"
+        case pinnedBuildTarget = "pinned_build_target"
+
     }
         
     ///The id of the physical particle device.
-    public let id: DeviceID
+    public let id: DeviceID?
     
     ///The currently assigned name of of the physical device.
-    private(set) public var name: DeviceName
+    private(set) public var name: DeviceName?
     
     ///The last detected ip address of the physical device.
-    public let lastIPAddress: String
+    public let lastIPAddress: String?
     
     ///The last time the cloud heard from the physical device.
-    public let lastHeard: String
+    public let lastHeard: String?
     
     ///The last successful handshake with the phsyical device.
-    public let lastHandshakeAt: String
+    public let lastHandshakeAt: String?
     
     ///The id of the product that the physical device is assigned to.
     /// - note: If the productID has a length of 5 it is a productID otherwise it is a value assigned by particle.
-    public let productID: ProductID
+    public let productID: ProductID?
     
     ///The platform id of the physical device.
     /// - note: A best effort was made to account for all possible device types, but the enum also contains an unknown case if the product is not found.
-    public let platformID: PlatformID
+    public let platformID: PlatformID?
     
     ///The id of the firmware currently assigned to the product that the device is associated with. Returns nil if firmware is not assigned or if the physical device is not associated with a product.
     public let firmwareProductID: Int?
     
     ///Bool indicating if the phsyical device was online when the 'internal or application'  instance was created.
-    public let online: Bool
+    public let online: Bool?
     
     ///Bool indicating if the phsyical device was connected to the cloud when the 'internal or application'  instance was created.
-    public let connected: Bool
+    public let connected: Bool?
     
     ///Bool indicating if the physical device connects to a cellular network.
-    public let cellular: Bool
+    public let cellular: Bool?
     
     ///Bool indicating whether automatic firmware updates are enabled.
-    public let firmwareUpdatesEnabled: Bool
+    public let firmwareUpdatesEnabled: Bool?
     
     ///Bool indicating whether automatic firmware updates are forced on the physical device.
     public let firmwareUpdatesForced: Bool?
@@ -225,19 +243,19 @@ PCDevice: {
     
     ///The last known status pf the physical device.
     /// - Important: This status can change over time and is not automatically updated.
-    public let status: String
+    public let status: String?
     
     ///The serial number of the physical particle device.
-    public let serialNumber: String
+    public let serialNumber: String?
     
     ///Current system firmware version on the physical device.
-    public let systemFirmwareVersion: String
+    public let systemFirmwareVersion: String?
     
     ///The current build target for the device firmware.
-    public let currentBuildTarget: String
+    public let currentBuildTarget: String?
     
     ///The default build target for the device firmware.
-    public let defaultBuildTarget: String
+    public let defaultBuildTarget: String?
     
     ///Targeted firmware release verion..?
     public let targetedFirmwareReleaseVersion: String?
@@ -247,11 +265,11 @@ PCDevice: {
     
     ///The names of the functions the device has exposed to the cloud.
     /// - note: If you update these function names in the actual device firmware you must replace the device representation in memory. ie: get the device again.
-    public let functions: [FunctionName]
+    public let functions: [FunctionName]?
     
     ///The names of the variables the device has exposed to the cloud and type of that variable.
     /// - note: If you update these variable in the actual device firmware you must replace the device representation in memory. ie: get the device again.
-    public let variables: [String : String]
+    public let variables: [String : String]?
     
     ///Names of the groups the device is associated with.
     public let groups: [String]?
@@ -271,36 +289,42 @@ PCDevice: {
     ///Bool indiacting if the device denied leaving quarantine.
     public let denied: Bool?
     
+    let deviceProtection: DeviceProtection?
+    let iccid, lastIccid, imei, mobileSecret: String?
+    let macWifi, pinnedBuildTarget, customerID, userID: String?
+
     ///Used to share properties for easy iteration. The keys can be used with func value(forKey key: PropertyKey) -> Any?.
     public var propertyKeys: [PropertyKey] {
         PropertyKey.allCases
     }
     
+
+    
     //Made required for security reasons. Shielding from public abuse.
     required public init(from decoder: Decoder) throws {
         
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = DeviceID(try container.decode(String.self, forKey: .id))
-        self.name = DeviceName(try container.decode(String.self, forKey: .name))
-        self.functions = try container.decode([String].self, forKey: .functions).map({FunctionName($0)})
-        self.variables = try container.decode([String : String].self, forKey: .variables)
-        self.status = try container.decode(String.self, forKey: .status)
+        self.id = DeviceID(try container.decodeIfPresent(String.self, forKey: .id))
+        self.name = DeviceName(try container.decodeIfPresent(String.self, forKey: .name))
+        self.functions = try container.decodeIfPresent([String].self, forKey: .functions)?.compactMap({FunctionName($0)})
+        self.variables = try container.decodeIfPresent([String : String].self, forKey: .variables)
+        self.status = try container.decodeIfPresent(String.self, forKey: .status)
         self.owner = try container.decodeIfPresent(String.self, forKey: .owner)
-        self.cellular = try container.decode(Bool.self, forKey: .cellular)
+        self.cellular = try container.decodeIfPresent(Bool.self, forKey: .cellular)
         self.notes = try container.decodeIfPresent(String.self, forKey: .notes)
-        self.online = try container.decode(Bool.self, forKey: .online)
-        self.connected = try container.decode(Bool.self, forKey: .connected)
-        self.lastIPAddress = try container.decode(String.self, forKey: .lastIPAddress)
-        self.lastHeard = try container.decode(String.self, forKey: .lastHeard)
-        self.lastHandshakeAt = try container.decode(String.self, forKey: .lastHandshakeAt)
-        self.productID = ProductID(try container.decode(Int.self, forKey: .productID)) ?? ProductID("0") //Fault value
+        self.online = try container.decodeIfPresent(Bool.self, forKey: .online)
+        self.connected = try container.decodeIfPresent(Bool.self, forKey: .connected)
+        self.lastIPAddress = try container.decodeIfPresent(String.self, forKey: .lastIPAddress)
+        self.lastHeard = try container.decodeIfPresent(String.self, forKey: .lastHeard)
+        self.lastHandshakeAt = try container.decodeIfPresent(String.self, forKey: .lastHandshakeAt)
+        self.productID = ProductID(try container.decodeIfPresent(Int.self, forKey: .productID)) ?? ProductID("0") //Fault value
         self.platformID = PlatformID(rawValue: try container.decode(Int.self, forKey: .platformID)) ?? PlatformID.Unknown
-        self.firmwareUpdatesEnabled = try container.decode(Bool.self, forKey: .firmwareUpdatesEnabled)
+        self.firmwareUpdatesEnabled = try container.decodeIfPresent(Bool.self, forKey: .firmwareUpdatesEnabled)
         self.firmwareUpdatesForced = try container.decodeIfPresent(Bool.self, forKey: .firmwareUpdatesForced)
-        self.serialNumber = try container.decode(String.self, forKey: .serialNumber)
-        self.systemFirmwareVersion = try container.decode(String.self, forKey: .systemFirmwareVersion)
-        self.currentBuildTarget = try container.decode(String.self, forKey: .currentBuildTarget)
-        self.defaultBuildTarget = try container.decode(String.self, forKey: .defaultBuildTarget)
+        self.serialNumber = try container.decodeIfPresent(String.self, forKey: .serialNumber)
+        self.systemFirmwareVersion = try container.decodeIfPresent(String.self, forKey: .systemFirmwareVersion)
+        self.currentBuildTarget = try container.decodeIfPresent(String.self, forKey: .currentBuildTarget)
+        self.defaultBuildTarget = try container.decodeIfPresent(String.self, forKey: .defaultBuildTarget)
         self.groups = try container.decodeIfPresent([String].self, forKey: .groups)
         self.development = try container.decodeIfPresent(Bool.self, forKey: .development)
         self.quarantined = try container.decodeIfPresent(Bool.self, forKey: .quarantined)
@@ -308,6 +332,18 @@ PCDevice: {
         self.targetedFirmwareReleaseVersion = try container.decodeIfPresent(String.self, forKey: .targetedFirmwareReleaseVersion)
         self.firmwareProductID = try container.decodeIfPresent(Int.self, forKey: .firmwareProductID)
         
+        self.customerID = try container.decodeIfPresent(String.self, forKey: .customerID)
+        self.userID = try container.decodeIfPresent(String.self, forKey: .userID)
+        
+        self.deviceProtection = try container.decodeIfPresent(DeviceProtection.self, forKey: .deviceProtection)
+        self.iccid = try container.decodeIfPresent(String.self, forKey: .iccid)
+        self.lastIccid = try container.decodeIfPresent(String.self, forKey: .lastIccid)
+        self.imei = try container.decodeIfPresent(String.self, forKey: .imei)
+        self.mobileSecret = try container.decodeIfPresent(String.self, forKey: .mobileSecret)
+        self.macWifi = try container.decodeIfPresent(String.self, forKey: .macWifi)
+        self.pinnedBuildTarget = try container.decodeIfPresent(String.self, forKey: .pinnedBuildTarget)
+
+
         super.init()
         
         NotificationCenter.default.addObserver(self, selector: #selector(tokenUnavailable) , name: .pc_token_unavailable, object: nil)
@@ -329,61 +365,79 @@ PCDevice: {
         switch key {
                 
             case .id:
-                return self.id.rawValue
+            return String(describing: self.id?.rawValue)
             case .name:
-                return self.name.rawValue
+            return String(describing: self.name?.rawValue)
             case .lastIPAddress:
-                return self.lastIPAddress.description
+                return String(describing: self.lastIPAddress?.description)
             case .lastHeard:
-                return self.lastHeard.description
+                return String(describing: self.lastHeard?.description)
             case .lastHandshakeAt:
-                return self.lastHandshakeAt.description
+                return String(describing: self.lastHandshakeAt?.description)
             case .productID:
-                return self.productID.rawValue
+                return String(describing: self.productID?.rawValue)
             case .online:
-            return self.online.description
+            return String(describing: self.online?.description)
             case .connected:
-                return self.connected.description
+                return String(describing: self.connected?.description)
             case .platformID:
-                return self.platformID.description
+                return String(describing: self.platformID?.description)
             case .cellular:
-                return self.cellular.description
+                return String(describing: self.cellular?.description)
             case .notes:
-                return self.notes?.description ?? "nil"
+                return String(describing: self.notes?.description)
             case .functions:
-                return "[\n\(self.functions.map({"  \($0.rawValue)"}).joined(separator: ",\n"))\n]"
+                return "[\n\((self.functions ?? []).map({"  \($0.rawValue)"}).joined(separator: ",\n"))\n]"
             case .variables:
-                return "[\n\(self.variables.map({"  \($0):\($1)"}).joined(separator: ",\n"))\n]"
+            return "[\n\((self.variables ?? [:]).map({"  \($0):\($1)"}).joined(separator: ",\n"))\n]"
             case .status:
-                return self.status.description
+                return String(describing: self.status?.description)
             case .serialNumber:
-                return self.serialNumber.description
+                return String(describing: self.serialNumber?.description)
             case .systemFirmwareVersion:
-                return self.systemFirmwareVersion.description
+                return String(describing: self.systemFirmwareVersion?.description)
             case .currentBuildTarget:
-                return self.currentBuildTarget.description
+                return String(describing: self.currentBuildTarget?.description)
             case .firmwareProductID:
-                return self.firmwareProductID?.description ?? "nil"
+                return String(describing: self.firmwareProductID?.description)
             case .groups:
-                return self.groups?.description ?? "nil"
+                return String(describing: self.groups?.description)
             case .targetedFirmwareReleaseVersion:
-                return self.targetedFirmwareReleaseVersion?.description ?? "nil"
+                return String(describing: self.targetedFirmwareReleaseVersion?.description)
             case .development:
-                return self.development?.description ?? "nil"
+                return String(describing: self.development?.description)
             case .quarantined:
-                return self.quarantined?.description ?? "nil"
+                return String(describing: self.quarantined?.description)
             case .denied:
-                return self.denied?.description ?? "nil"
+                return String(describing: self.denied?.description)
             case .owner:
-                return self.owner?.description ?? "nil"
+                return String(describing: self.owner?.description)
             case .firmwareUpdatesEnabled:
-                return self.firmwareUpdatesEnabled.description
+                return String(describing: self.firmwareUpdatesEnabled?.description)
             case .firmwareUpdatesForced:
-                return self.firmwareUpdatesForced?.description ?? "nil"
+                return String(describing: self.firmwareUpdatesForced?.description)
             case .defaultBuildTarget:
-                return self.defaultBuildTarget.description
+                return String(describing: self.defaultBuildTarget?.description)
             case .events:
                 return self.events.description
+        case .deviceProtection:
+            return String(describing: self.deviceProtection?.description)
+        case .iccid:
+            return String(describing: self.iccid?.description)
+        case .lastIccid:
+            return String(describing: self.lastIccid?.description)
+        case .imei:
+            return String(describing: self.imei?.description)
+        case .mobileSecret:
+            return String(describing: self.mobileSecret?.description)
+        case .macWifi:
+            return String(describing: self.macWifi?.description)
+        case .pinnedBuildTarget:
+            return String(describing: self.pinnedBuildTarget?.description)
+        case .customerID:
+            return String(describing: self.customerID?.description)
+        case .userID:
+            return String(describing: self.userID?.description)
         }
     }
     
@@ -448,6 +502,24 @@ PCDevice: {
                 return self.defaultBuildTarget
             case .events:
                 return self.events
+        case .deviceProtection:
+            return self.deviceProtection
+        case .iccid:
+            return self.iccid
+        case .lastIccid:
+            return self.lastIccid
+        case .imei:
+            return self.imei
+        case .mobileSecret:
+            return self.mobileSecret
+        case .macWifi:
+            return self.macWifi
+        case .pinnedBuildTarget:
+            return self.pinnedBuildTarget
+        case .customerID:
+            return self.customerID
+        case .userID:
+            return self.userID
         }
     }
 
@@ -460,12 +532,12 @@ PCDevice: {
     ///Hash function for Hashable protocol.
     public override var hash: Int {
         var hasher = Hasher()
-            hasher.combine(id.rawValue)
-            hasher.combine(name.rawValue)
+        hasher.combine(id?.rawValue)
+        hasher.combine(name?.rawValue)
             hasher.combine(lastIPAddress)
             hasher.combine(lastHeard)
             hasher.combine(lastHandshakeAt)
-            hasher.combine(productID.rawValue)
+        hasher.combine(productID?.rawValue)
             hasher.combine(platformID)
             hasher.combine(online)
             hasher.combine(connected)
@@ -482,12 +554,24 @@ PCDevice: {
             hasher.combine(variables)
             hasher.combine(events)
             hasher.combine(token)
-        
+        hasher.combine(deviceProtection)
+
+        hasher.combine(iccid)
+        hasher.combine(lastIccid)
+        hasher.combine(imei)
+        hasher.combine(mobileSecret)
+        hasher.combine(macWifi)
+        hasher.combine(pinnedBuildTarget)
+
+
+        hasher.combine(customerID)
+        hasher.combine(userID)
+
         return hasher.finalize()
     }
     
     deinit {
-        print("deinit of device \(id)")
+        print("deinit of device \(String(describing: self.id))")
         NotificationCenter.default.removeObserver(self)
     }
 }
@@ -502,12 +586,18 @@ extension PCDevice {
             
             guard let token = PCAuthenticationManager.shared.token
             else {
-                promise(.failure( PCError(code: .unauthenticated, description: "Could not complete the operation because you are not currently authenticated.")))
+                promise( .failure(PCError.unauthenticated) )
                 return
             }
             
+            guard let id = self.id
+            else {
+                promise(.failure(PCError.apiChange))
+                return
+            }
+
             Task {
-                let device = try await PCDevice.getDevice(deviceID: self.id, token: token)
+                let device = try await PCDevice.getDevice(deviceID: id, token: token)
                 
                 for propertyKey in device.propertyKeys {
                     if propertyKey != .events {
@@ -530,7 +620,14 @@ extension PCDevice {
             completion?(.failure(PCError(code: .unauthenticated, description: "Could not complete the operation because you are not currently authenticated.")))
             return
         }
-        PCDevice.getDevice(deviceID: self.id, token: token) { result in
+        
+        guard let id = self.id
+        else {
+            completion?(.failure(PCError.apiChange))
+            return
+        }
+
+        PCDevice.getDevice(deviceID: id, token: token) { result in
             do {
                 let device = try result.get()
                 
@@ -553,7 +650,12 @@ extension PCDevice {
             throw PCError(code: .unauthenticated, description: "Could not complete the operation because you are not currently authenticated.")
         }
         
-        let device = try await PCDevice.getDevice(deviceID: self.id, token: token)
+        guard let id = self.id
+        else {
+            throw PCError.apiChange
+        }
+        
+        let device = try await PCDevice.getDevice(deviceID: id, token: token)
         
         for propertyKey in device.propertyKeys {
             if propertyKey != .events {
@@ -639,7 +741,13 @@ extension PCDevice {
             return
         }
         
-        PCNetwork.shared.subscribeToDeviceEvents(eventName: eventName, deviceId: self.id, token: token) { event in
+        guard let id = self.id
+        else {
+            completion?(PCError.apiChange)
+            return
+        }
+
+        PCNetwork.shared.subscribeToDeviceEvents(eventName: eventName, deviceId: id, token: token) { event in
             onEvent?(event)
         } completion: { error in
             completion?(error)
@@ -660,8 +768,8 @@ extension PCDevice {
             return
         }
         
-        if self.productID.rawValue.count != 5 {
-            completion(.failure(PCError(code: .invalidArguments, description: "The device \(self.id) is not claimed by a product. You cannot publish a product event through a device not associated with a product. Use PCEvent.publishEvent instead.\n")))
+        if self.productID?.rawValue.count != 5 {
+            completion(.failure(PCError(code: .invalidArguments, description: "The device \(String(describing: self.id)) is not claimed by a product. You cannot publish a product event through a device not associated with a product. Use PCEvent.publishEvent instead.\n")))
             return
         }
         
@@ -683,8 +791,8 @@ extension PCDevice {
             throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.\n")
         }
         
-        if self.productID.rawValue.count != 5 {
-            throw PCError(code: .invalidArguments, description: "The device \(self.id) is not claimed by a product. You cannot publish a product event through a device not associated with a product. Use PCEvent.publishEvent instead.\n")
+        if self.productID?.rawValue.count != 5 {
+            throw PCError(code: .invalidArguments, description: "The device \(String(describing: self.id)) is not claimed by a product. You cannot publish a product event through a device not associated with a product. Use PCEvent.publishEvent instead.\n")
         }
         
         return try await PCNetwork.shared.cloudRequest(.publishEvent(eventName: eventName, productIDorSlug: self.productID, data: data, private: isPrivate, ttl: ttl, token: token), type: PCEvent.PublishResponse.self).ok
@@ -786,52 +894,6 @@ extension PCDevice {
     }
     
     
-    //MARK: CurrentValueSubjects
-    
-    ///Call a cloud function.
-    ///
-    ///Use this instance method to call an exposed function on a prticle device.
-    ///[see docs](https://docs.particle.io/reference/device-os/api/cloud-functions/overview-of-api-field-limits/)
-    ///
-    ///
-    /// Functions can be called on a device you own, or for any device that is part of a product you are a team member of.
-    /// - Important: Each function call request and response uses one Data Operation from your monthly or yearly quota. Setting up function calls does not use Data Operations.
-    /// - Note  Up to 15 cloud functions may be registered and each function name is limited to a maximum of 12 characters (prior to 0.8.0), 64 characters (since 0.8.0).
-    /// - Attention: Only use letters, numbers, underscores and dashes in function names. Spaces and special characters may be escaped by different tools and libraries causing unexpected results. A function callback procedure needs to return as quickly as possible otherwise the cloud call will timeout.
-    /// - Parameter arguments: The arguments to provide to the cloud function. The function name is required.
-    /// - Requires: Scope of devices.function:call
-    /// - Returns: `CurrentValueSubject<PCDevice.FunctionResponse?, PCError>`
-    public func callFunction(_ arguments: FunctionArguments)
-    -> CurrentValueSubject<FunctionResponse?, PCError> {
-        
-        guard let token = self.token
-        else {
-            let sub = CurrentValueSubject<FunctionResponse?, PCError>(nil)
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        return PCNetwork.shared.cloudRequest(.callFunction(deviceID: self.id, arguments: arguments, token: token), type: FunctionResponse.self)
-    }
-    
-    ///Call a cloud function.
-    ///
-    ///Use this type method to call an exposed function on a prticle device.
-    ///[see docs](https://docs.particle.io/reference/device-os/api/cloud-functions/overview-of-api-field-limits/)
-    ///
-    ///
-    /// Functions can be called on a device you own, or for any device that is part of a product you are a team member of.
-    /// - Important: Each function call request and response uses one Data Operation from your monthly or yearly quota. Setting up function calls does not use Data Operations.
-    /// - Note  Up to 15 cloud functions may be registered and each function name is limited to a maximum of 12 characters (prior to 0.8.0), 64 characters (since 0.8.0).
-    /// - Attention: Only use letters, numbers, underscores and dashes in function names. Spaces and special characters may be escaped by different tools and libraries causing unexpected results. A function callback procedure needs to return as quickly as possible otherwise the cloud call will timeout.
-    /// - parameter arguments: The arguments to provide to the cloud function. The function name is required.
-    /// - Requires: Scope of devices.function:call
-    /// - Returns: `CurrentValueSubject<PCDevice.FunctionResponse?, PCError>`
-    public static func callFunction(deviceID: DeviceID, arguments: FunctionArguments, token: PCAccessToken)
-    -> CurrentValueSubject<FunctionResponse?, PCError> {
-        PCNetwork.shared.cloudRequest(.callFunction(deviceID: deviceID, arguments: arguments, token: token), type: FunctionResponse.self)
-    }
-    
     //MARK: Async
     
     ///Call a cloud function.
@@ -855,7 +917,12 @@ extension PCDevice {
             throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
         }
         
-        return try await PCNetwork.shared.cloudRequest(.callFunction(deviceID: self.id, arguments: arguments, token: token), type: FunctionResponse.self)
+        guard let id = self.id
+        else {
+            throw PCError.apiChange
+        }
+
+        return try await PCNetwork.shared.cloudRequest(.callFunction(deviceID: id, arguments: arguments, token: token), type: FunctionResponse.self)
     }
     
     ///Call a cloud function.
@@ -897,7 +964,13 @@ extension PCDevice {
             return
         }
         
-        PCNetwork.shared.cloudRequest(.callFunction(deviceID: self.id, arguments: arguments, token: token), type: FunctionResponse.self, completion: completion)
+        guard let id = self.id
+        else {
+            completion(.failure(PCError.apiChange))
+            return
+        }
+        
+        PCNetwork.shared.cloudRequest(.callFunction(deviceID: id, arguments: arguments, token: token), type: FunctionResponse.self, completion: completion)
     }
     
     ///Call a cloud function.
@@ -1520,20 +1593,6 @@ ImportArguments: {
 //MARK: - Variables
 extension PCDevice {
     
-    //MARK: CurrentValueSubjects
-    public func getVariable(name: VariableName, productIdOrSlug: ProductID? = nil)
-    -> CurrentValueSubject<PCVariable?, PCError> {
-        
-        guard let token = self.token
-        else {
-            let sub = CurrentValueSubject<PCVariable?, PCError>(nil)
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        return PCNetwork.shared.cloudRequest(.getVariableValue(name: name, deviceID: self.id, productIdOrSlug: productIdOrSlug, token: token), type: PCVariable.self )
-    }
-    
     
     //MARK: Async
     public func getVariable(name: VariableName, productIdOrSlug: ProductID? = nil) async throws -> PCVariable {
@@ -1543,7 +1602,13 @@ extension PCDevice {
             throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
         }
         
-        return try await PCNetwork.shared.cloudRequest(.getVariableValue(name: name, deviceID: self.id, productIdOrSlug: productIdOrSlug, token: token), type: PCVariable.self )
+        guard let id = self.id
+        else {
+            throw PCError.apiChange
+        }
+
+        
+        return try await PCNetwork.shared.cloudRequest(.getVariableValue(name: name, deviceID: id, productIdOrSlug: productIdOrSlug, token: token), type: PCVariable.self )
     }
 
     
@@ -1556,7 +1621,14 @@ extension PCDevice {
             return
         }
         
-        PCNetwork.shared.cloudRequest(.getVariableValue(name: name, deviceID: self.id, productIdOrSlug: productIdOrSlug, token: token), type: PCVariable.self, completion: completion)
+        guard let id = self.id
+        else {
+            completion(.failure(PCError.apiChange))
+            return
+        }
+
+        
+        PCNetwork.shared.cloudRequest(.getVariableValue(name: name, deviceID: id, productIdOrSlug: productIdOrSlug, token: token), type: PCVariable.self, completion: completion)
     }
 }
 
@@ -1581,28 +1653,7 @@ extension PCDevice {
         }
     }
     
-    
-    //MARK: CurrentValueSubjects
-    public func ping() -> CurrentValueSubject<PCDevice.PingResponse?, PCError>  {
-        
-        guard let token = self.token
-        else {
-            let sub = CurrentValueSubject<PCDevice.PingResponse?, PCError>(nil)
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        if productID.rawValue.count == 5 {
-            return PCNetwork.shared.cloudRequest(.pingDevice(deviceID: self.id, productIdorSlug: self.productID, token: token), type: PCDevice.PingResponse.self)
-        } else {
-            return PCNetwork.shared.cloudRequest(.pingDevice(deviceID: self.id, productIdorSlug: nil, token: token), type: PCDevice.PingResponse.self)
-        }
-    }
-    
-    public static func pingDevice(deviceID: DeviceID, productIdorSlug: ProductID? = nil, token: PCAccessToken) -> CurrentValueSubject<PCDevice.PingResponse?, PCError>  {
-        PCNetwork.shared.cloudRequest(.pingDevice(deviceID: deviceID, productIdorSlug: productIdorSlug, token: token), type: PCDevice.PingResponse.self)
-    }
-    
+
     //MARK: Async
     public func ping() async throws -> PCDevice.PingResponse {
         
@@ -1611,7 +1662,12 @@ extension PCDevice {
             throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
         }
         
-        return try await PCNetwork.shared.cloudRequest(.pingDevice(deviceID: self.id, productIdorSlug: productID, token: token), type: PCDevice.PingResponse.self)
+        guard let id = self.id
+        else {
+            throw PCError.apiChange
+        }
+
+        return try await PCNetwork.shared.cloudRequest(.pingDevice(deviceID: id, productIdorSlug: productID, token: token), type: PCDevice.PingResponse.self)
     }
     
     public static func pingDevice(deviceID: DeviceID, productIdorSlug: ProductID? = nil, token: PCAccessToken) async throws
@@ -1624,11 +1680,17 @@ extension PCDevice {
         
         guard let token = self.token
         else {
-            completion( .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
+            completion( .failure(PCError.unauthenticated) )
             return
         }
         
-        return PCNetwork.shared.cloudRequest(.pingDevice(deviceID: self.id, productIdorSlug: self.productID, token: token), type: PCDevice.PingResponse.self, completion: completion)
+        guard let id = self.id
+        else {
+            completion(.failure(PCError.apiChange))
+            return
+        }
+
+        return PCNetwork.shared.cloudRequest(.pingDevice(deviceID: id, productIdorSlug: self.productID, token: token), type: PCDevice.PingResponse.self, completion: completion)
     }
     
     public static func pingDevice(deviceID: DeviceID, productIdorSlug: ProductID? = nil, token: PCAccessToken, completion: @escaping (Result<PCDevice.PingResponse, PCError>) -> Void) {
@@ -1657,45 +1719,15 @@ extension PCDevice {
         }
     }
     
-    //MARK: CurrentValueSubjects
-    public func rename(newName: String) -> CurrentValueSubject<PCDevice.NameUpdateResponse?, PCError> {
-        
-        let sub = CurrentValueSubject<PCDevice.NameUpdateResponse?, PCError>(nil)
-        
-        guard let token = self.token
-        else {
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        PCNetwork.shared.cloudRequest(.renameDevice(deviceID: self.id, productIdorSlug: self.productID, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self)
-            .sink { completion in
-                sub.send(completion: completion)
-            } receiveValue: { response in
-                if let name = response?.name {
-                    self.name = DeviceName(name)
-                }
-                sub.send(response)
-            }.store(in: &cancellables)
-        
-        return sub
-    }
-    
-    public static func renameDevice(deviceID: DeviceID, productIdorSlug: ProductID? = nil, newName: String, token: PCAccessToken)
-    -> CurrentValueSubject<PCDevice.NameUpdateResponse?, PCError>  {
-        PCNetwork.shared.cloudRequest(.renameDevice(deviceID: deviceID, productIdorSlug: productIdorSlug, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self)
-    }
     
     //MARK: Async
     public func rename(_ productIdorSlug: ProductID? = nil, newName: String) async throws
     -> PCDevice.NameUpdateResponse {
         
-        guard let token = self.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
-        let response =  try await PCNetwork.shared.cloudRequest(.renameDevice(deviceID: self.id, productIdorSlug: self.productID, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self)
+        guard let token = self.token else { throw PCError.unauthenticated }
+        guard let id = self.id else { throw PCError.apiChange }
+
+        let response = try await PCNetwork.shared.cloudRequest(.renameDevice(deviceID: id, productIdorSlug: self.productID, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self)
         
         self.name = DeviceName(response.name)
         
@@ -1709,13 +1741,10 @@ extension PCDevice {
     //MARK: Completion Handlers
     public func rename(newName: String, completion: @escaping (Result<PCDevice.NameUpdateResponse, PCError>) -> Void)  {
         
-        guard let token = self.token
-        else {
-            completion(.failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return
-        }
-        
-        PCNetwork.shared.cloudRequest(.renameDevice(deviceID: self.id, productIdorSlug: self.productID, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self) { response in
+        guard let token = self.token else { completion(.failure(.unauthenticated)); return }
+        guard let id = self.id else { completion(.failure(.apiChange)); return  }
+
+        PCNetwork.shared.cloudRequest(.renameDevice(deviceID: id, productIdorSlug: self.productID, newName: newName, token: token), type: PCDevice.NameUpdateResponse.self) { response in
             
             if let result = try? response.get() {
                 self.name = DeviceName(result.name)
@@ -1757,43 +1786,14 @@ extension PCDevice {
         }
     }
     
-    //MARK: CurrentValueSubjects
-    public func addNote(_ note: String)
-    -> CurrentValueSubject<PCDevice.AddNoteResponse?, PCError>  {
-        
-        let sub = CurrentValueSubject<PCDevice.AddNoteResponse?, PCError>(nil)
 
-        guard let token = self.token
-        else {
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-          PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: self.id, productIdorSlug: self.productID, note: note, token: token), type: PCDevice.AddNoteResponse.self)
-            .sink { completion in
-                sub.send(completion: completion)
-            } receiveValue: { response in
-                sub.send(response)
-                self.notes = response?.notes
-            }.store(in: &cancellables)
-        
-        return sub
-    }
-    
-    public static func addDeviceNote(deviceID: DeviceID, productIdorSlug: ProductID? = nil, note: String, token: PCAccessToken)
-    -> CurrentValueSubject<PCDevice.AddNoteResponse?, PCError>  {
-        PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: deviceID, productIdorSlug: productIdorSlug, note: note, token: token), type: PCDevice.AddNoteResponse.self)
-    }
-    
     //MARK: Async
     public func addNote(_ note: String) async throws-> PCDevice.AddNoteResponse {
         
-        guard let token = self.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
-        let response = try await PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: self.id, productIdorSlug: self.productID, note: note, token: token), type: PCDevice.AddNoteResponse.self)
+        guard let token = self.token else { throw PCError.unauthenticated }
+        guard let id = self.id else { throw PCError.apiChange }
+
+        let response = try await PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: id, productIdorSlug: self.productID, note: note, token: token), type: PCDevice.AddNoteResponse.self)
         
         self.notes = response.notes
         
@@ -1807,13 +1807,10 @@ extension PCDevice {
     //MARK: Completion Handlers
     public func addNote(_ note: String, completion: @escaping (Result<PCDevice.AddNoteResponse, PCError>) -> Void) {
         
-        guard let token = self.token
-        else {
-            completion(.failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return
-        }
-        
-        PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: self.id, productIdorSlug: self.productID, note: note, token: token), type: PCDevice.AddNoteResponse.self) { result in
+        guard let token = self.token else { completion(.failure(.unauthenticated)); return }
+        guard let id = self.id else { completion(.failure(.apiChange)); return  }
+
+        PCNetwork.shared.cloudRequest(.addDeviceNotes(deviceID: id, productIdorSlug: self.productID, note: note, token: token), type: PCDevice.AddNoteResponse.self) { result in
            
             if let response = try? result.get() {
                 self.notes = response.notes
@@ -2114,52 +2111,7 @@ extension PCDevice {
 
 //MARK: - Product Interactions
 extension PCDevice {
-    
-    //MARK: CurrentValueSubjects
-    ///Remove device from product
-    ///
-    ///Remove a device from a product and re-assign to a generic Particle product.
-    ///
-    /// - calls: DELETE /v1/products/:productIdOrSlug/devices/:deviceID
-    ///
-    ///
-    /// - Requires: Scope of devices:remove
-    /// - Important: This endpoint will unclaim the device if it is owned by a customer.
-    /// - Parameter deviceID: The device identifier of the device to be removed.
-    /// - Parameter productIdorSlug: The product identifier of the product the device is assigned to.
-    /// - Parameter token: The representation of a particle access token with appropriate permissions.
-    /// - Returns: CurrentValueSubject<ServerResponses.NoResponse?, PCError>
-    public func removeFromProduct() -> CurrentValueSubject<ServerResponses.NoResponse?, PCError> {
-        
-        let sub = CurrentValueSubject<ServerResponses.NoResponse?, PCError>(nil)
-        guard let token = self.token
-        else {
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        
-        return PCNetwork.shared.cloudRequest(.removeDeviceFromProduct(deviceID: self.id, productIdorSlug: self.productID, token: token), type: ServerResponses.NoResponse.self)
-    }
-    
-    ///Remove device from product
-    ///
-    ///Remove a device from a product and re-assign to a generic Particle product.
-    ///
-    /// - calls: DELETE /v1/products/:productIdOrSlug/devices/:deviceID
-    ///
-    ///
-    /// - Requires: Scope of devices:remove
-    /// - Important: This endpoint will unclaim the device if it is owned by a customer.
-    /// - Parameter deviceID: The device identifier of the device to be removed.
-    /// - Parameter productIdorSlug: The product identifier of the product the device is assigned to.
-    /// - Parameter token: The representation of a particle access token with appropriate permissions.
-    /// - Returns: CurrentValueSubject<ServerResponses.NoResponse?, PCError>
-    static public func removeDeviceFromProduct(deviceID: DeviceID, productIdorSlug: ProductID, token: PCAccessToken)
-    -> CurrentValueSubject<ServerResponses.NoResponse?, PCError> {
-        PCNetwork.shared.cloudRequest(.removeDeviceFromProduct(deviceID: deviceID, productIdorSlug: productIdorSlug, token: token), type: ServerResponses.NoResponse.self)
-    }
-    
+
     //MARK: Async
     ///Remove device from product
     ///
@@ -2176,12 +2128,12 @@ extension PCDevice {
     /// - throws: PCError indicating the failure reason.
     /// - Returns: Bool indicating the success of the API call.
     public func removeFromProduct() async throws-> Bool {
-        guard let token = self.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
-            return try await PCNetwork.shared.cloudRequest(.removeDeviceFromProduct(deviceID: self.id, productIdorSlug: productID, token: token), type: ServerResponses.NoResponse.self).ok
+        guard let token = self.token else { throw PCError.unauthenticated }
+        guard let id = self.id,
+              let productID = self.productID
+        else { throw PCError.apiChange }
+
+        return try await PCNetwork.shared.cloudRequest(.removeDeviceFromProduct(deviceID: id, productIdorSlug: productID, token: token), type: ServerResponses.NoResponse.self).ok
     }
     
     ///Remove device from product
@@ -2217,13 +2169,12 @@ extension PCDevice {
     /// - Parameter completion: Closure containing either a Bool indicating success or an PCError indicating the failure.
     /// - Parameter token: The representation of a particle access token with appropriate permissions.
     public func removeFromProduct(completion: @escaping (Result<Bool, PCError>) -> Void) {
-        guard let token = self.token
-        else {
-            completion(.failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return
-        }
-        
-            PCNetwork.shared.cloudRequest(.removeDeviceFromProduct(deviceID: self.id, productIdorSlug: productID, token: token), type: ServerResponses.NoResponse.self) { response in
+        guard let token = self.token else { completion(.failure(.unauthenticated)); return }
+        guard let id = self.id,
+        let productID = self.productID
+        else { completion(.failure(.apiChange)); return  }
+
+            PCNetwork.shared.cloudRequest(.removeDeviceFromProduct(deviceID: id, productIdorSlug: productID, token: token), type: ServerResponses.NoResponse.self) { response in
                 switch response {
                     case .success(let result):
                         completion(.success(result.ok))
@@ -2295,7 +2246,7 @@ extension PCDevice {
     public struct SignalResponse: Decodable {
         
         ///The id of the device being signaled.
-        public let deviceId: DeviceID
+        public let deviceId: DeviceID?
         
         ///Bool indicating if the device is currently connected to the internet.
         public let isConnected: Bool
@@ -2327,70 +2278,6 @@ extension PCDevice {
         }
     }
     
-    //MARK: CurrentValueSubjects
-    
-    ///Signal a device.
-    ///
-    ///Make the device conspicuous by causing its LED to flash in rainbow patterns.
-    ///
-    /// - calls: PUT /v1/devices/:deviceID
-    ///
-    ///
-    ///````swift
-    ///
-    ///             let subject = device.signal(.on)
-    ///                         .replaceError(with: nil)
-    ///                         .sink { response in
-    ///                              let deviceID = response.deviceID
-    ///                              let connected = response?.isConnected
-    ///                              let state = response?.signalState
-    ///                              print("device with id \(deviceID) is \(connected ? "online" : "offline") and \(state ? "is signaling" : "is not signaling")")
-    ///                          }
-    ///
-    ///````
-    ///
-    /// - Parameter rainbowState: An enum determining whether to turn the signal on or off.
-    /// - Returns: `DeviceID.SignalResponse`
-    public func signal(_ rainbowState: RainbowState)
-    -> CurrentValueSubject<PCDevice.SignalResponse?, PCError> {
-        guard let token = self.token
-        else {
-            let sub = CurrentValueSubject<PCDevice.SignalResponse?, PCError>(nil)
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        return PCNetwork.shared.cloudRequest(.signalDevice(deviceID: self.id, rainbowState: rainbowState, token: token), type: PCDevice.SignalResponse.self)
-    }
-    
-    ///Signal a device.
-    ///
-    ///Make the device conspicuous by causing its LED to flash in rainbow patterns.
-    ///
-    /// - calls: PUT /v1/devices/:deviceID
-    ///
-    ///
-    ///````swift
-    ///
-    ///             let subject = PCDevice.signalDevice(DeviceID("validID", rainbowState: .off, token: token)
-    ///                         .replaceError(with: nil)
-    ///                         .sink { response in
-    ///                              let deviceID = response.deviceID
-    ///                              let connected = response?.isConnected
-    ///                              let state = response?.signalState
-    ///                              print("device with id \(deviceID) is \(connected ? "online" : "offline") and \(state ? "is signaling" : "is not signaling")")
-    ///                          }
-    ///
-    ///````
-    ///
-    /// - Parameter deviceID: The device identifier of the device to be affected.
-    /// - Parameter rainbowState: An enum determining whether to turn the signal on or off.
-    /// - Parameter token: The representation of a particle access token with appropriate permissions.
-    /// - Returns: `DeviceID.SignalResponse`
-    static public func signalDevice(_ deviceID: DeviceID, rainbowState: RainbowState, token: PCAccessToken)
-    -> CurrentValueSubject<PCDevice.SignalResponse?, PCError> {
-        PCNetwork.shared.cloudRequest(.signalDevice(deviceID: deviceID, rainbowState: rainbowState, token: token), type: PCDevice.SignalResponse.self)
-    }
     
     //MARK: Async
     ///Signal a device.
@@ -2417,12 +2304,10 @@ extension PCDevice {
     /// - Returns: `DeviceID.SignalResponse`
     public func signal(rainbowState: RainbowState) async throws -> PCDevice.SignalResponse {
         
-        guard let token = self.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
-        return try await PCNetwork.shared.cloudRequest(.signalDevice(deviceID: self.id, rainbowState: rainbowState, token: token), type: PCDevice.SignalResponse.self)
+        guard let token = self.token else { throw PCError.unauthenticated }
+        guard let id = self.id else { throw PCError.apiChange }
+
+        return try await PCNetwork.shared.cloudRequest(.signalDevice(deviceID: id, rainbowState: rainbowState, token: token), type: PCDevice.SignalResponse.self)
     }
     
     
@@ -2486,13 +2371,11 @@ extension PCDevice {
     /// - Returns: `DeviceID.SignalResponse`
     public func signal(rainbowState: RainbowState, completion: @escaping (Result<PCDevice.SignalResponse, PCError>) -> Void) {
         
-        guard let token = self.token
-        else {
-            completion( .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return
-        }
+        guard let token = self.token else { completion(.failure(.unauthenticated)); return }
+        guard let id = self.id else { completion(.failure(.apiChange)); return  }
+
         
-        PCNetwork.shared.cloudRequest(.signalDevice(deviceID: self.id, rainbowState: rainbowState, token: token), type: PCDevice.SignalResponse.self, completion: completion)
+        PCNetwork.shared.cloudRequest(.signalDevice(deviceID: id, rainbowState: rainbowState, token: token), type: PCDevice.SignalResponse.self, completion: completion)
     }
     
     
@@ -2561,95 +2444,7 @@ extension PCDevice {
         }
     }
     
-    
-    //MARK: CurrentValueSubjects
-    
-    ///Force enable OTA updates
-    ///
-    ///[Force enable](https://docs.particle.io/getting-started/cloud/ota-updates/) OTA updates on this device.
-    ///
-    /// - calls: PUT /v1/devices/:deviceID
-    ///
-    ///
-    ///````swift
-    ///
-    ///     let subject = device.forceOverTheAirUpdates(true)
-    ///            .replaceError(with: nil)
-    ///            .sink { response in
-    ///                print(response?.id, response?.firmwareUpdatesForced)
-    ///            }.store(in: &cancellables)
-    ///
-    ///````
-    ///
-    /// - Requires: Scope of devices:update
-    /// - Parameter forceEnabled: Boolean to indicate whether ota updates will be fored or not.
-    /// - Returns: `CurrentValueSubject` carrying the `PCDevice.ForceOTAUpdateResponse` or an PCError indicating the failure.
-    public func forceOverTheAirUpdates(_ enabled: Bool)
-    -> CurrentValueSubject<PCDevice.ForceOTAUpdateResponse?, PCError> {
-        
-        guard let token = self.token
-        else {
-            let sub = CurrentValueSubject<PCDevice.ForceOTAUpdateResponse?, PCError>(nil)
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        return PCNetwork.shared.cloudRequest(.forceOverTheAirUpdates(deviceID: self.id, enabled: enabled, token: token), type: PCDevice.ForceOTAUpdateResponse.self)
-    }
-    
-    
-    ///Force enable OTA updates
-    ///
-    ///[Force enable](https://docs.particle.io/getting-started/cloud/ota-updates/) OTA updates on this device.
-    ///
-    /// - calls: PUT /v1/devices/:deviceID
-    ///
-    ///
-    ///````swift
-    ///
-    ///     let subject = PCDevice.forceEnable_OTA_Updates(on: deviceID, enabled: true, token: token)
-    ///            .replaceError(with: nil)
-    ///            .sink { response in
-    ///                print(response?.id, response?.firmwareUpdatesForced)
-    ///            }.store(in: &cancellables)
-    ///
-    ///````
-    ///
-    /// - Requires: Scope of devices:update
-    /// - Parameter deviceID: The device identifier of the device to be affected.
-    /// - Parameter enabled: Boolean to indicate whether ota updates will be fored or not.
-    /// - Parameter token: The representation of a particle access token with appropriate permissions.
-    /// - Returns: `CurrentValueSubject` carrying the `PCDevice.ForceOTAUpdateResponse` or an PCError indicating the failure.
-    static public func forceEnable_OTA_Updates(on deviceID: DeviceID, enabled: Bool, token: PCAccessToken)
-    -> CurrentValueSubject<PCDevice.ForceOTAUpdateResponse?, PCError> {
-        PCNetwork.shared.cloudRequest(.forceOverTheAirUpdates(deviceID: deviceID, enabled: enabled, token: token), type: PCDevice.ForceOTAUpdateResponse.self)
-    }
-    
-    
-    ///Look up device identification from a serial number.
-    ///
-    ///Return the device ID and SIM card ICCD (if applicable) for a device by serial number. This API can look up devices that you have not yet added to your product and is rate limited to 50 requests per hour. Once you've imported your devices to your product you should instead use the list devices in a product API and filter on serial number. No special rate limits apply to that API.
-    ///
-    /// - calls: GET /v1/serial_numbers/:serial_number
-    ///
-    ///
-    ///````swift
-    ///
-    ///              PCDevice.lookUpDeviceInformation(from: serialNumber, token: token)
-    ///                     .replaceError(wiht: nil)
-    ///                     .sink(recieveValue: { response in
-    ///                        print(response.deviceID, response.iccid)
-    ///                     }.store(in: &cancellables)
-    ///
-    ///````
-    /// - Parameter serialNumber: The serial number printed on the barcode of the device packaging.
-    /// - Parameter token: The representation of a particle access token with appropriate permissions.
-    /// - Returns: CurrentValueSubject with the SerialNumberLookupResponse indicating the servers response. Or an PCError indicating the failure.
-    static public func lookUpDeviceInformation(with serialNumber: String, token: PCAccessToken)
-    -> CurrentValueSubject<PCDevice.SerialNumberLookupResponse?, PCError> {
-        PCNetwork.shared.cloudRequest(.lookUpDeviceInformation(serialNumber: serialNumber, token: token), type: PCDevice.SerialNumberLookupResponse.self)
-    }
-    
+
     //MARK: Async
     
     ///Force enable OTA updates
@@ -2672,12 +2467,10 @@ extension PCDevice {
     /// - Returns: `PCDevice.ForceOTAUpdateResponse` indicating the servers response.
     public func forceEnable_OTA_Updates(_ enabled: Bool) async throws -> PCDevice.ForceOTAUpdateResponse {
         
-        guard let token = self.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
-        return try await PCNetwork.shared.cloudRequest(.forceOverTheAirUpdates(deviceID: self.id, enabled: enabled, token: token), type: PCDevice.ForceOTAUpdateResponse.self)
+        guard let token = self.token else { throw PCError.unauthenticated }
+        guard let id = self.id else { throw PCError.apiChange }
+
+        return try await PCNetwork.shared.cloudRequest(.forceOverTheAirUpdates(deviceID: id, enabled: enabled, token: token), type: PCDevice.ForceOTAUpdateResponse.self)
     }
     
     
@@ -2761,13 +2554,10 @@ extension PCDevice {
     /// - Parameter completion: Result indicating the servers response. Or an PCError indicating the failure.
     public func forceEnable_OTA_Updates(_ enabled: Bool, completion: @escaping (Result<PCDevice.ForceOTAUpdateResponse, PCError>) -> Void) {
         
-        guard let token = self.token
-        else {
-            completion( .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return
-        }
-        
-        PCNetwork.shared.cloudRequest(.forceOverTheAirUpdates(deviceID: self.id, enabled: enabled, token: token), type: PCDevice.ForceOTAUpdateResponse.self, completion: completion)
+        guard let token = self.token else { completion(.failure(.unauthenticated)); return }
+        guard let id = self.id else { completion(.failure(.apiChange)); return  }
+
+        PCNetwork.shared.cloudRequest(.forceOverTheAirUpdates(deviceID: id, enabled: enabled, token: token), type: PCDevice.ForceOTAUpdateResponse.self, completion: completion)
     }
     
     ///Force enable OTA updates
@@ -2833,233 +2623,6 @@ extension PCDevice {
 //MARK: - Remote Diagnostics
 extension PCDevice {
     
-    //MARK: CurrentValueSubjects
-    
-    ///Refresh device vitals.
-    ///
-    ///Refresh diagnostic vitals for a single device. This will instruct the device to publish a new event to the Device Cloud containing a device vitals payload. This is an asynchronous request: the HTTP request returns immediately after the request to the device is sent. In order for the device to respond with a vitals payload, it must be online and connected to the Device Cloud.The device will respond by publishing an event named spark/device/diagnostics/update. See the description of the [device vitals event](https://docs.particle.io/reference/cloud-apis/api/#device-vitals-event).
-    ///
-    /// - calls: PUBLISH spark/device/diagnostics/update
-    ///
-    ///
-    ///````swift
-    ///             device.subscribe(EventName("spark/device/diagnostics/update", onEvent: {
-    ///                 print($0.description)
-    ///             })
-    ///
-    ///             let subject = device.refreshVitals()
-    ///                     .replaceError(...
-    ///
-    ///
-    ///````
-    ///
-    /// - Requires: Scope of devices.diagnostics:update
-    /// - Parameter deviceID: String representing the device id.
-    /// - Parameter productIDorSlug: String representing the product id or slug.
-    /// - Parameter token: A currently active access token.
-    /// - Returns A discardable result containing a CurrentValueSubject containing a bool response indicating success on the server or an PCError indicating the failure.
-    @discardableResult public func refreshVitals() -> CurrentValueSubject<ServerResponses.BoolResponse?, PCError> {
-        guard let token = self.token
-        else {
-            let sub = CurrentValueSubject<ServerResponses.BoolResponse?, PCError>(nil)
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        return PCNetwork.shared.cloudRequest(.refreshDeviceVitals(deviceID: self.id, productIDorSlug: self.productID, token: token), type: ServerResponses.BoolResponse.self)
-    }
-    
-    ///Get last known device vitals.
-    ///
-    ///Returns the last device vitals payload sent by the device to the Device Cloud. See [device vitals event payload](https://docs.particle.io/reference/cloud-apis/api/#device-vitals-event) for more info.
-    ///
-    /// - calls: GET /v1/diagnostics/:deviceId/last
-    ///
-    ///
-    /// - Requires: Scope of devices.diagnostics:get
-    /// - Returns: CurrentValueSubject with  optional LastKnownDiagnosticsResponse or an PCError indicating the failure.
-    public func getLastKnownVitals() -> CurrentValueSubject<LastKnownDiagnosticsResponse?, PCError> {
-        
-        guard let token = self.token
-        else {
-            let sub = CurrentValueSubject<LastKnownDiagnosticsResponse?, PCError>(nil)
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        return PCNetwork.shared.cloudRequest(.getLastKnownDeviceVitals(deviceID: self.id, productIDorSlug: self.productID, token: token), type: LastKnownDiagnosticsResponse.self)
-    }
-    
-    
-    ///Get last known device vitals.
-    ///
-    ///Returns the last device vitals payload sent by the device to the Device Cloud. See [device vitals event payload](https://docs.particle.io/reference/cloud-apis/api/#device-vitals-event) for more info.
-    ///
-    /// - calls: GET /v1/diagnostics/:deviceId/last
-    ///
-    ///
-    /// - Requires: Scope of devices.diagnostics:get
-    /// - Parameter deviceID: The id of the device to query.
-    /// - Parameter productID: The product idthe device is associated with.
-    /// - Parameter token: A currently active access token scoped to devices.diagnostics:get
-    /// - Returns: CurrentValueSubject with  optional LastKnownDiagnosticsResponse or an PCError indicating the failure.
-    static public func getLastKnownVitals(for deviceID: DeviceID, in product: ProductID, token: PCAccessToken) -> CurrentValueSubject<LastKnownDiagnosticsResponse?, PCError> {
-        
-        PCNetwork.shared.cloudRequest(.getLastKnownDeviceVitals(deviceID: deviceID, productIDorSlug: product, token: token), type: LastKnownDiagnosticsResponse.self)
-    }
-
-    
-    ///Get all historical device vitals.
-    ///
-    ///Returns all stored device vital records sent by the device to the Device Cloud. Device vitals records will expire after 1 month.
-    ///
-    /// - calls: GET /v1/diagnostics/:deviceId
-    ///
-    ///
-    ///
-    /// - Requires: Scope of devices.diagnostics:get
-    /// - Parameter startDate: Starting  date for query.
-    /// - Parameter endDate: Ending date for query.
-    /// - Returns: Current value subject containing the optional HistoricalDiagnosticsResponse or a PCError indicating the failure.
-    public func getHistoricalVitals(startDate: Date? = nil, endDate: Date? = nil) -> CurrentValueSubject<HistoricalDiagnosticsResponse?, PCError> {
-        
-        guard let token = self.token
-        else {
-            let sub = CurrentValueSubject<HistoricalDiagnosticsResponse?, PCError>(nil)
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        return PCNetwork.shared.cloudRequest(.getAllHistoricalDeviceVitals(deviceID: self.id, productIDorSlug: self.productID, startDate: try? startDate?.jSonDate(), endDate: try? endDate?.jSonDate(), token: token), type: HistoricalDiagnosticsResponse.self)
-    }
-    
-    ///Get all historical device vitals.
-    ///
-    ///Returns all stored device vital records sent by the device to the Device Cloud. Device vitals records will expire after 1 month.
-    ///
-    /// - calls: GET /v1/diagnostics/:deviceId
-    ///
-    ///
-    ///
-    /// - Requires: Scope of devices.diagnostics:get
-    /// - Parameter deviceID: The id of the device to query.
-    /// - Parameter productIDorSlug: The productID the device is associated with.
-    /// - Parameter startDate: Starting  date for query.
-    /// - Parameter endDate: Ending date for query.
-    /// - Parameter token: A currently active access token scoped to devices.diagnostics:get
-    /// - Returns: Current value subject containing the optional HistoricalDiagnosticsResponse or a PCError indicating the failure.
-    static public func getHistoricalVitals(for device: DeviceID, in product: ProductID, startDate: Date? = nil, endDate: Date? = nil, token: PCAccessToken) -> CurrentValueSubject<HistoricalDiagnosticsResponse?, PCError> {
-        
-        PCNetwork.shared.cloudRequest(.getAllHistoricalDeviceVitals(deviceID: device, productIDorSlug: product, startDate: try? startDate?.jSonDate(), endDate: try? endDate?.jSonDate(), token: token), type: HistoricalDiagnosticsResponse.self)
-    }
-
-    
-    ///Get device vitals metadata.
-    ///
-    ///Contextualizes and allows for interpretation of [device vitals](https://docs.particle.io/reference/cloud-apis/api/#refresh-device-vitals). The objects in the device vitals payload map to the metadata objects returned by this endpoint. Metadata will vary depending on the device type, and is subject to change as more is learned about device health.Each metadata object mapping to a device vital can include:
-    /// - title: A friendly name.
-    /// - type: The data type of the vital returned by the device. Can be set to number or string.
-    /// - units: Information on the specific unit of measurement, including how to convert the raw vital into the preferred unit of measurement.
-    /// - ranges: Establishes healthy vital ranges. If outside the healthy range, the vital will be marked in the "warning" state in the Console. Ranges help assert whether a reported vital is above/below a specified value, or use a ratio between two related vitals as an indicator of health.
-    /// - values: Similar to ranges, but maps reported vitals with a type of string to determine a healthy or warning state.
-    /// - messages: Helpful messages to provide analysis and interpretation of diagnostics test results. Also includes a description of the vital.
-    /// - priority: Used for visual ordering of device vitals on the Console.
-    /// - describes: Creates a relationship between two vitals used for visual arrangement on the Console.
-    ///
-    /// - calls: GET /v1/diagnostics/:deviceId/metadata
-    ///
-    ///
-    /// - Requires: Scope of devices.diagnostics.metadata:get
-    /// - Returns: Current Value subject containg the optional PCRemoteDiagnosticsMetaDataResponse or an PCError indicating the failure.
-    public func getVitalMetadata() -> CurrentValueSubject<PCRemoteDiagnosticsMetaDataResponse?, PCError> {
-        
-        guard let token = self.token
-        else {
-            let sub = CurrentValueSubject<PCRemoteDiagnosticsMetaDataResponse?, PCError>(nil)
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        return PCNetwork.shared.cloudRequest(.getDeviceVitalsMetadata(deviceID: self.id, productIDorSlug: self.productID, token: token), type: PCRemoteDiagnosticsMetaDataResponse.self)
-    }
-    
-    
-    ///Get device vitals metadata.
-    ///
-    ///Contextualizes and allows for interpretation of [device vitals](https://docs.particle.io/reference/cloud-apis/api/#refresh-device-vitals). The objects in the device vitals payload map to the metadata objects returned by this endpoint. Metadata will vary depending on the device type, and is subject to change as more is learned about device health.Each metadata object mapping to a device vital can include:
-    /// - title: A friendly name.
-    /// - type: The data type of the vital returned by the device. Can be set to number or string.
-    /// - units: Information on the specific unit of measurement, including how to convert the raw vital into the preferred unit of measurement.
-    /// - ranges: Establishes healthy vital ranges. If outside the healthy range, the vital will be marked in the "warning" state in the Console. Ranges help assert whether a reported vital is above/below a specified value, or use a ratio between two related vitals as an indicator of health.
-    /// - values: Similar to ranges, but maps reported vitals with a type of string to determine a healthy or warning state.
-    /// - messages: Helpful messages to provide analysis and interpretation of diagnostics test results. Also includes a description of the vital.
-    /// - priority: Used for visual ordering of device vitals on the Console.
-    /// - describes: Creates a relationship between two vitals used for visual arrangement on the Console.
-    ///
-    /// - calls: GET /v1/diagnostics/:deviceId/metadata
-    ///
-    ///
-    /// - Requires: Scope of devices.diagnostics.metadata:get
-    /// - Parameter deviceID: The id of the device to query.
-    /// - Parameter productIDorSlug: The id of the product that the device is associated with.
-    /// - Parameter token: A currently active access token scoped to devices.diagnostics.metadata:get
-    /// - Returns: Current Value subject containg the optional PCRemoteDiagnosticsMetaDataResponse or an PCError indicating the failure.
-    static public func getVitalMetadata(for device: DeviceID, in product: ProductID, token: PCAccessToken) -> CurrentValueSubject<PCRemoteDiagnosticsMetaDataResponse?, PCError> {
-                
-        PCNetwork.shared.cloudRequest(.getDeviceVitalsMetadata(deviceID: device, productIDorSlug: product, token: token), type: PCRemoteDiagnosticsMetaDataResponse.self)
-    }
-
-    
-    
-    ///Get cellular network status.
-    ///
-    ///Get cellular network status for a given device. Kicks off a long running task that checks if the device/SIM has an active data session with a cell tower. Values for keys in the sim_status object will be null until the task has finished. Poll the endpoint until meta.state is complete. At this point, the sim_status object will be populated.Note that responses are cached by the cellular network providers. This means that on occasion, the real-time status of the device/SIM may not align with the results of this test.
-    ///
-    /// - calls: GET /v1/sims/:iccid/status
-    ///
-    ///
-    /// - Requires: Scope of sims.status:get
-    /// - Parameter iccid: The iccid number of the device to query.
-    /// - Returns: Current value subject containing  the optional PCRemoteDiagnosticsCellularNetworkStatusResponse or an PCError indicating the failure.
-    public func getCellularNetworkStatus(iccid: ICCIDNumber) -> CurrentValueSubject<PCRemoteDiagnosticsCellularNetworkStatusResponse?, PCError> {
-        
-        guard let token = self.token
-        else {
-            let sub = CurrentValueSubject<PCRemoteDiagnosticsCellularNetworkStatusResponse?, PCError>(nil)
-            sub.send(completion: .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return sub
-        }
-        
-        guard self.cellular == true else {
-            let subject = CurrentValueSubject<PCRemoteDiagnosticsCellularNetworkStatusResponse?, PCError>(nil)
-            subject.send(completion: .failure(PCError(code: .notAvailableOnPlatform, description: "You cannot get cellular status on a non cellular device.")))
-            return subject
-        }
-        
-        return PCNetwork.shared.cloudRequest(.getCellularNetworkStatus(deviceID: self.id, iccid: iccid, productIDorSlug: self.productID, token: token), type: PCRemoteDiagnosticsCellularNetworkStatusResponse.self)
-    }
-    
-    
-    
-    ///Get cellular network status.
-    ///
-    ///Get cellular network status for a given device. Kicks off a long running task that checks if the device/SIM has an active data session with a cell tower. Values for keys in the sim_status object will be null until the task has finished. Poll the endpoint until meta.state is complete. At this point, the sim_status object will be populated.Note that responses are cached by the cellular network providers. This means that on occasion, the real-time status of the device/SIM may not align with the results of this test.
-    ///
-    /// - calls: GET /v1/sims/:iccid/status
-    ///
-    ///
-    /// - Requires: Scope of sims.status:get
-    /// - Parameter deviceID: The id of the cellular device to query.
-    /// - Parameter iccid: The iccid number of the device to query.
-    /// - Parameter productIDorSlug: The id of the product the device is associated with.
-    /// - Parameter token: A currently active access token with appropriate scopes..
-    /// - Returns: Current value subject containing  the optional PCRemoteDiagnosticsCellularNetworkStatusResponse or an PCError indicating the failure.
-    static public func getCellularNetworkStatus(for device: DeviceID, iccid: ICCIDNumber, in product: ProductID, token: PCAccessToken) -> CurrentValueSubject<PCRemoteDiagnosticsCellularNetworkStatusResponse?, PCError> {
-        
-        return PCNetwork.shared.cloudRequest(.getCellularNetworkStatus(deviceID: device, iccid: iccid, productIDorSlug: product, token: token), type: PCRemoteDiagnosticsCellularNetworkStatusResponse.self)
-    }
-
-    
     
     //MARK: Async
     
@@ -3088,12 +2651,10 @@ extension PCDevice {
     /// - Returns A discardable bool response indicating success on the server.
     @discardableResult public func refreshVitals() async throws -> Bool {
         
-        guard let token = self.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
-        return try await PCNetwork.shared.cloudRequest(.refreshDeviceVitals(deviceID: self.id, productIDorSlug: self.productID, token: token), type: ServerResponses.BoolResponse.self).ok
+        guard let token = self.token else { throw PCError.unauthenticated }
+        guard let id = self.id else { throw PCError.apiChange }
+
+        return try await PCNetwork.shared.cloudRequest(.refreshDeviceVitals(deviceID: id, productIDorSlug: self.productID, token: token), type: ServerResponses.BoolResponse.self).ok
     }
     
     
@@ -3109,12 +2670,10 @@ extension PCDevice {
     /// - Returns: LastKnownDiagnosticsResponse
     public func getLastKnownVitals() async throws -> LastKnownDiagnosticsResponse {
         
-        guard let token = self.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
-        return try await PCNetwork.shared.cloudRequest(.getLastKnownDeviceVitals(deviceID: self.id, productIDorSlug: self.productID, token: token), type: LastKnownDiagnosticsResponse.self)
+        guard let token = self.token else { throw PCError.unauthenticated }
+        guard let id = self.id else { throw PCError.apiChange }
+
+        return try await PCNetwork.shared.cloudRequest(.getLastKnownDeviceVitals(deviceID: id, productIDorSlug: self.productID, token: token), type: LastKnownDiagnosticsResponse.self)
     }
     
     
@@ -3152,12 +2711,10 @@ extension PCDevice {
     /// - Returns: An HistoricalDiagnosticsResponse.
     public func getHistoricalVitals(startDate: Date? = nil, endDate: Date? = nil) async throws -> HistoricalDiagnosticsResponse {
         
-        guard let token = self.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
-        return try await PCNetwork.shared.cloudRequest(.getAllHistoricalDeviceVitals(deviceID: self.id, productIDorSlug: self.productID, startDate: try? startDate?.jSonDate(), endDate: try? endDate?.jSonDate(), token: token), type: HistoricalDiagnosticsResponse.self)
+        guard let token = self.token else { throw PCError.unauthenticated }
+        guard let id = self.id else { throw PCError.apiChange }
+
+        return try await PCNetwork.shared.cloudRequest(.getAllHistoricalDeviceVitals(deviceID: id, productIDorSlug: self.productID, startDate: try? startDate?.jSonDate(), endDate: try? endDate?.jSonDate(), token: token), type: HistoricalDiagnosticsResponse.self)
     }
     
     
@@ -3202,12 +2759,10 @@ extension PCDevice {
     /// - Returns: Current Value subject containg the optional PCRemoteDiagnosticsMetaDataResponse or an PCError indicating the failure.
     public func getVitalMetadata() async throws -> PCRemoteDiagnosticsMetaDataResponse {
         
-        guard let token = self.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
-        return try await PCNetwork.shared.cloudRequest(.getDeviceVitalsMetadata(deviceID: self.id, productIDorSlug: self.productID, token: token), type: PCRemoteDiagnosticsMetaDataResponse.self)
+        guard let token = self.token else { throw PCError.unauthenticated }
+        guard let id = self.id else { throw PCError.apiChange }
+
+        return try await PCNetwork.shared.cloudRequest(.getDeviceVitalsMetadata(deviceID: id, productIDorSlug: self.productID, token: token), type: PCRemoteDiagnosticsMetaDataResponse.self)
     }
     
     
@@ -3250,16 +2805,14 @@ extension PCDevice {
     /// - Returns: An PCRemoteDiagnosticsCellularNetworkStatusResponse.
     public func getCellularNetworkStatus(iccid: ICCIDNumber) async throws-> PCRemoteDiagnosticsCellularNetworkStatusResponse {
         
-        guard let token = self.token
-        else {
-            throw PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")
-        }
-        
+        guard let token = self.token else { throw PCError.unauthenticated }
+        guard let id = self.id else { throw PCError.apiChange }
+
         guard self.cellular == true else {
             throw PCError(code: .notAvailableOnPlatform, description: "You cannot get cellular status on a non cellular device.")
         }
         
-        return try await PCNetwork.shared.cloudRequest(.getCellularNetworkStatus(deviceID: self.id, iccid: iccid , productIDorSlug: self.productID, token: token), type: PCRemoteDiagnosticsCellularNetworkStatusResponse.self)
+        return try await PCNetwork.shared.cloudRequest(.getCellularNetworkStatus(deviceID: id, iccid: iccid , productIDorSlug: self.productID, token: token), type: PCRemoteDiagnosticsCellularNetworkStatusResponse.self)
     }
     
     
@@ -3312,13 +2865,10 @@ extension PCDevice {
     /// - Parameter completion: Closure containing a bool response indicating success on the server or an PCError indicating the failure.
     public func refreshVitals(completion: @escaping (Result<Bool, PCError>) -> Void){
         
-        guard let token = self.token
-        else {
-            completion( .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return
-        }
-        
-        return PCNetwork.shared.cloudRequest(.refreshDeviceVitals(deviceID: self.id, productIDorSlug: self.productID, token: token), type: ServerResponses.BoolResponse.self) { result in
+        guard let token = self.token else { completion(.failure(.unauthenticated)); return }
+        guard let id = self.id else { completion(.failure(.apiChange)); return  }
+
+        return PCNetwork.shared.cloudRequest(.refreshDeviceVitals(deviceID: id, productIDorSlug: self.productID, token: token), type: ServerResponses.BoolResponse.self) { result in
         
             do{
                 completion(.success(try result.get().ok))
@@ -3340,13 +2890,10 @@ extension PCDevice {
     /// - Returns: Closure containg a result of the  LastKnownDiagnosticsResponse or a PCError indicating failure.
     public func getLastKnownVitals(completion: @escaping (Result<LastKnownDiagnosticsResponse, PCError>) -> Void) {
        
-        guard let token = self.token
-        else {
-            completion(.failure(PCError.unauthenticated))
-            return
-        }
-        
-        PCNetwork.shared.cloudRequest(.getLastKnownDeviceVitals(deviceID: self.id, productIDorSlug: self.productID, token: token), type: LastKnownDiagnosticsResponse.self, completion: completion)
+        guard let token = self.token else { completion(.failure(.unauthenticated)); return }
+        guard let id = self.id else { completion(.failure(.apiChange)); return  }
+
+        PCNetwork.shared.cloudRequest(.getLastKnownDeviceVitals(deviceID: id, productIDorSlug: self.productID, token: token), type: LastKnownDiagnosticsResponse.self, completion: completion)
     }
     
     ///Get last known device vitals.
@@ -3381,13 +2928,10 @@ extension PCDevice {
     /// - Parameter completion: Closure containing a result of HistoricalDiagnosticsResponse or a PCError indicating the failure.
     public func getHistoricalVitals(startDate: Date? = nil, endDate: Date? = nil, completion: @escaping (Result<HistoricalDiagnosticsResponse, PCError>) -> Void) {
         
-        guard let token = self.token
-        else {
-            completion( .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return
-        }
-        
-        return PCNetwork.shared.cloudRequest(.getAllHistoricalDeviceVitals(deviceID: self.id, productIDorSlug: self.productID, startDate: try? startDate?.jSonDate(), endDate: try? endDate?.jSonDate(), token: token), type: HistoricalDiagnosticsResponse.self, completion: completion)
+        guard let token = self.token else { completion(.failure(.unauthenticated)); return }
+        guard let id = self.id else { completion(.failure(.apiChange)); return  }
+
+        return PCNetwork.shared.cloudRequest(.getAllHistoricalDeviceVitals(deviceID: id, productIDorSlug: self.productID, startDate: try? startDate?.jSonDate(), endDate: try? endDate?.jSonDate(), token: token), type: HistoricalDiagnosticsResponse.self, completion: completion)
     }
     
     
@@ -3430,13 +2974,10 @@ extension PCDevice {
     /// - Parameter completion: Closure containg the PCRemoteDiagnosticsMetaDataResponse or an PCError indicating the failure.
     public func getVitalMetadata(completion: @escaping (Result<PCRemoteDiagnosticsMetaDataResponse, PCError>) -> Void) {
         
-        guard let token = self.token
-        else {
-            completion( .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return
-        }
-        
-        return PCNetwork.shared.cloudRequest(.getDeviceVitalsMetadata(deviceID: self.id, productIDorSlug: self.productID, token: token), type: PCRemoteDiagnosticsMetaDataResponse.self, completion: completion)
+        guard let token = self.token else { completion(.failure(.unauthenticated)); return }
+        guard let id = self.id else { completion(.failure(.apiChange)); return  }
+
+        return PCNetwork.shared.cloudRequest(.getDeviceVitalsMetadata(deviceID: id, productIDorSlug: self.productID, token: token), type: PCRemoteDiagnosticsMetaDataResponse.self, completion: completion)
     }
     
     
@@ -3482,18 +3023,15 @@ extension PCDevice {
     /// - Returns: An PCRemoteDiagnosticsCellularNetworkStatusResponse.
     public func getCellularNetworkStatus(iccid: ICCIDNumber, completion: @escaping (Result<PCRemoteDiagnosticsCellularNetworkStatusResponse, PCError> ) -> Void) {
         
-        guard let token = self.token
-        else {
-            completion( .failure(PCError(code: .unauthenticated, description: "You must be authenticated to access this resource.")))
-            return
-        }
-        
+        guard let token = self.token else { completion(.failure(.unauthenticated)); return }
+        guard let id = self.id else { completion(.failure(.apiChange)); return  }
+
         guard self.cellular == true else {
             completion(.failure(PCError(code: .notAvailableOnPlatform, description: "You cannot get cellular status on a non cellular device.")))
             return
         }
         
-        PCNetwork.shared.cloudRequest(.getCellularNetworkStatus(deviceID: self.id, iccid: iccid , productIDorSlug: self.productID, token: token), type: PCRemoteDiagnosticsCellularNetworkStatusResponse.self, completion: completion)
+        PCNetwork.shared.cloudRequest(.getCellularNetworkStatus(deviceID: id, iccid: iccid , productIDorSlug: self.productID, token: token), type: PCRemoteDiagnosticsCellularNetworkStatusResponse.self, completion: completion)
     }
     
     
@@ -3531,82 +3069,24 @@ public extension PCDevice {
     ///
     ///
     /// - Requires: Scope of devices:import for approval and devices:remove for denial.
-    /// - Parameter action: The action to take on the quarantined device.
-    /// - Returns: CurrentValueSubject containing the optional QuarantineActionResponse or an PCError indicating the failure.
-    func handleQuarantine(action: PCQuarantine.QuarantineAction) -> CurrentValueSubject<PCQuarantine.QuarantineActionResponse?, PCError> {
-        
-        guard let token = self.token
-        else {
-            let sub = CurrentValueSubject<PCQuarantine.QuarantineActionResponse?, PCError>(nil)
-            sub.send(completion: .failure(PCError.unauthenticated))
-            return sub
-        }
-        
-        switch action {
-        case .approve:
-            
-            return PCNetwork.shared.cloudRequest(.approveQuarantinedDevice(deviceID: self.id, productIDorSlug: self.productID, token: token), type: PCQuarantine.QuarantineActionResponse.self)
-            
-        case .deny:
-            
-            return PCNetwork.shared.cloudRequest(.denyQuarantinedDevice(deviceID: self.id, productIDorSlug: self.productID, token: token), type: PCQuarantine.QuarantineActionResponse.self)
-        }
-    }
-    
-    
-    ///Approve or deny a quarantined device.
-    ///
-    ///Approval will immediately release the device from quarantine and allow it to publish events, receive firmware updates, etc.
-    ///
-    /// - calls: POST /v1/products/:productIdOrSlug/devices
-    ///
-    ///
-    /// - Requires: Scope of devices:import for approval and devices:remove for denial.
-    /// - Parameter deviceID: The id of the quarantined device.
-    /// - Parameter productIDorSlug: The id of the product associated with the device.
-    /// - Parameter action: The action to take on the quarantined device.
-    /// - Parameter token: A currently active access token scoped to devices:import
-    /// - Returns: CurrentValueSubject containing the optional QuarantineActionResponse or an PCError indicating the failure.
-    static func handleQuarantine(for device: DeviceID, in product: ProductID, action: PCQuarantine.QuarantineAction, token: PCAccessToken) -> CurrentValueSubject<PCQuarantine.QuarantineActionResponse?, PCError> {
-                
-        switch action {
-        case .approve:
-            
-            return PCNetwork.shared.cloudRequest(.approveQuarantinedDevice(deviceID: device, productIDorSlug: product, token: token), type: PCQuarantine.QuarantineActionResponse.self)
-            
-        case .deny:
-            
-            return PCNetwork.shared.cloudRequest(.denyQuarantinedDevice(deviceID: device, productIDorSlug: product, token: token), type: PCQuarantine.QuarantineActionResponse.self)
-        }
-    }
-
-    
-    ///Approve or deny a quarantined device.
-    ///
-    ///Approval will immediately release the device from quarantine and allow it to publish events, receive firmware updates, etc.
-    ///
-    /// - calls: POST /v1/products/:productIdOrSlug/devices
-    ///
-    ///
-    /// - Requires: Scope of devices:import for approval and devices:remove for denial.
     /// - throws: PCError indicating the failure.
     /// - Parameter action: The action to take on the quarantined device.
     /// - Returns: PCQuarantine.QuarantineActionResponse
     func handleQuarantine(action: PCQuarantine.QuarantineAction) async throws -> PCQuarantine.QuarantineActionResponse {
         
-        guard let token = self.token
-        else {
-            throw PCError.unauthenticated
-        }
-        
+        guard let token = self.token else { throw PCError.unauthenticated }
+        guard let id = self.id,
+              let productID = self.productID
+        else { throw PCError.apiChange }
+
         switch action {
         case .approve:
             
-            return try await PCNetwork.shared.cloudRequest(.approveQuarantinedDevice(deviceID: self.id, productIDorSlug: self.productID, token: token), type: PCQuarantine.QuarantineActionResponse.self)
+            return try await PCNetwork.shared.cloudRequest(.approveQuarantinedDevice(deviceID: id, productIDorSlug: productID, token: token), type: PCQuarantine.QuarantineActionResponse.self)
             
         case .deny:
             
-            return try await PCNetwork.shared.cloudRequest(.denyQuarantinedDevice(deviceID: self.id, productIDorSlug: self.productID, token: token), type: PCQuarantine.QuarantineActionResponse.self)
+            return try await PCNetwork.shared.cloudRequest(.denyQuarantinedDevice(deviceID: id, productIDorSlug: productID, token: token), type: PCQuarantine.QuarantineActionResponse.self)
         }
     }
     
@@ -3651,20 +3131,20 @@ public extension PCDevice {
     /// - Parameter completion: Closure containing the QuarantineActionResponse or an PCError indicating the failure.
     func handleQuarantine(action: PCQuarantine.QuarantineAction, completion: @escaping (Result<PCQuarantine.QuarantineActionResponse, PCError>) -> Void) {
         
-        guard let token = self.token
-        else {
-            completion(.failure(PCError.unauthenticated)); return
-        }
-        
+        guard let token = self.token else { completion(.failure(.unauthenticated)); return }
+        guard let id = self.id,
+              let productID = self.productID
+        else { completion(.failure(.apiChange)); return  }
+
         switch action {
             
         case .approve:
             
-            PCNetwork.shared.cloudRequest(.approveQuarantinedDevice(deviceID: self.id, productIDorSlug: self.productID, token: token), type: PCQuarantine.QuarantineActionResponse.self, completion: completion)
+            PCNetwork.shared.cloudRequest(.approveQuarantinedDevice(deviceID: id, productIDorSlug: productID, token: token), type: PCQuarantine.QuarantineActionResponse.self, completion: completion)
             
         case .deny:
             
-            PCNetwork.shared.cloudRequest(.denyQuarantinedDevice(deviceID: self.id, productIDorSlug: self.productID, token: token), type: PCQuarantine.QuarantineActionResponse.self, completion: completion)
+            PCNetwork.shared.cloudRequest(.denyQuarantinedDevice(deviceID: id, productIDorSlug: productID, token: token), type: PCQuarantine.QuarantineActionResponse.self, completion: completion)
         }
     }
     

@@ -554,7 +554,7 @@ ReportCreationArguments: {
                 
                 public init(from decoder: Decoder) throws {
                     let container = try decoder.container(keyedBy: CodingKeys.self)
-                    self.devices  = (try container.decodeIfPresent([String].self, forKey: .devices))?.map({DeviceID($0)})
+                    self.devices  = (try container.decodeIfPresent([String].self, forKey: .devices))?.compactMap({DeviceID($0)})
                     self.products = (try container.decodeIfPresent([String].self, forKey: .products))?.map({ProductID($0)})
                     self.recipientList = try container.decodeIfPresent([String].self, forKey: .recipientList)
                 }

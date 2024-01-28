@@ -15,7 +15,7 @@ extension ProductID {
 }
 
 extension DeviceID {
-    static let testCase = DeviceID("")
+    static let testCase = DeviceID("")!
 }
 
 extension EventName {

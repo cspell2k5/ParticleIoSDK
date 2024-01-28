@@ -128,7 +128,8 @@ public struct DeviceID: Hashable {
     public let rawValue: String
     
     ///Creates a new DeviceID.
-    public init(_ rawValue: String) {
+    public init?(_ rawValue: String?) {
+        guard let rawValue else {return nil}
         self.rawValue = rawValue
     }
     
@@ -147,7 +148,8 @@ public struct DeviceName: Hashable {
     public let rawValue: String
     
     ///Creates a new DeviceName.
-    public init(_ rawValue: String) {
+    public init?(_ rawValue: String?) {
+        guard let rawValue else {return nil}
         self.rawValue = rawValue
     }
 }
@@ -159,7 +161,8 @@ public struct FunctionName: Hashable {
     public let rawValue: String
     
     ///Creates a new FunctionName.
-    public init(_ rawValue: String) {
+    public init?(_ rawValue: String?) {
+        guard let rawValue else {return nil}
         self.rawValue = rawValue
     }
 }
@@ -171,7 +174,8 @@ public struct FunctionArgument: Hashable {
     public let rawValue: String
     
     ///Creates a new FunctionArgument.
-    public init(_ rawValue: String) {
+    public init?(_ rawValue: String?) {
+        guard let rawValue else {return nil}
         self.rawValue = rawValue
     }
 }
