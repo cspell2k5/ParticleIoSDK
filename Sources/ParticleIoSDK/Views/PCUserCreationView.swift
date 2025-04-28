@@ -65,8 +65,8 @@ public struct PCUserCreationView: View {
                     Task {
                         do {
                             
-                            let token = try await PCAccessToken.generateAccessToken(client: client, credentials: credentials)
-                            
+                            let token = try await PCAccessToken.generateAccessToken(credentials: credentials, scopedTo: client)
+
                             let existing =  try await PCCustomer.listCustomers(for: productID, token: token)
                             
                             print("existing:\n\(existing.debugDescription)\nfunction: \(#function) in \(#file)")

@@ -125,13 +125,16 @@ extension CloudResource.RequestHelper {
             
         case .generateAccessToken(let client, let credentials, let grantType, let expire_in, let expire_at):
             
-            payload = ["grant_type=\(grantType.rawValue)",
-                       "username=\(credentials.username)",
-                       "password=\(credentials.password)"]
-            
-            if client != nil {
-                payload!.append("client_id=\(client!.id)")
-                payload!.append("client_secret=\(client!.id)")
+            payload = ["grant_type=\(grantType.rawValue)"]
+
+            if let credentials {
+                payload?.append("username=\(credentials.username)")
+                payload?.append("password=\(credentials.password)")
+            }
+
+            if let client {
+                payload!.append("client_id=\(client.id)")
+                payload!.append("client_secret=\(client.secret)")
             } else {
                 payload!.append("client_id=particle")
                 payload!.append("client_secret=particle")

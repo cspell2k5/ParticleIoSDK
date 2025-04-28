@@ -23,8 +23,8 @@ public class PCContainer: ObservableObject {
     
     
     ///Initializes the container for immediate use.
-    public init(credentials: PCCredentials, client: PCClient? = nil) async throws {
-        
+    public init(credentials: PCCredentials, scopedTo client: PCClient) async throws {
+
         self.authenticationManager = PCAuthenticationManager.shared
         
         NotificationCenter.default.addObserver(self,
@@ -37,8 +37,8 @@ public class PCContainer: ObservableObject {
                                                name: .pc_token_unavailable,
                                                object: nil)
         
-        try await self.authenticationManager.login(credentials: credentials, client: client)
-        
+        try await self.authenticationManager.login(credentials: credentials, scopedTo: client)
+
     }
     
     ///Initializes the container for immediate use.
@@ -88,11 +88,23 @@ public extension PCContainer {
     
     
     //MARK: Credentials
-    ///Short cut to PCAuthenticationManager to login with an PCCredentials and optionally scope to a client.
-    func login(credentials: PCCredentials, client: PCClient? = nil) async throws {
-        try await self.authenticationManager.login(credentials: credentials, client: client)
+
+    ///Short cut to PCAuthenticationManager to login with an PCCredentials and scope to a client.
+    func login(credentials: PCCredentials, scopedTo client: PCClient) async throws -> Bool {
+        try await self.authenticationManager.login(credentials: credentials, scopedTo: client)
     }
-    
+
+    ///Short cut to PCAuthenticationManager to login with an PCCredentials and optionally scope to a client.
+    func login(credentials: PCCredentials) async throws {
+        try await self.authenticationManager.login(credentials: credentials)
+    }
+
+    ///Short cut to PCAuthenticationManager to login with an PCCredentials and scope to a client.
+    func login(client: PCClient) async throws -> PCAccessToken {
+        try await self.authenticationManager.login(client: client)
+    }
+
+
     
     //MARK: - Logout
     ///Short cut to PCAuthenticationManager to logout.

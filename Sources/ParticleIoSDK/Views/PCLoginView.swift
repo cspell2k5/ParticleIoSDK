@@ -43,7 +43,7 @@ class LoginViewModel: ObservableObject {
                 case .success: break //AuthMan & @main take it from here.
                 case .failure(let error):
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.37) {
-                        self?.alertMessage = error.description
+                        self?.alertMessage = error.localizedDescription
                     }
             }
             self?.decrementProgress()

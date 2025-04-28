@@ -36,18 +36,21 @@ public struct PCAccessToken : Codable, Hashable, CustomStringConvertible, Custom
     public enum GrantType: String, CustomStringConvertible, CustomDebugStringConvertible {
         ///oAuth grant type password
         case password
-        
+        case clientCredentials
+
         //Human readable description.
         public var description: String {
             switch self {
-            case .password: return "GrantType: password\n"
+            case .password: "GrantType: password\n"
+            case .clientCredentials: "GrantType: Client Credentials\n"
             }
         }
         
         //Human readable debug description.
         public var debugDescription: String {
             switch self {
-            case .password: return "grant_type=password"
+            case .password: "grant_type=password"
+                case .clientCredentials: "grant_type=client_credentials"
             }
         }
     }
@@ -420,16 +423,23 @@ extension PCAccessToken {
     ///                     }
     ///                 }
     ///
-    static public func generateAccessToken(client: PCClient? = nil,
-                                           credentials: PCCredentials,
-                                           grantType: PCAccessToken.GrantType = .password,
+    static public func generateAccessToken(credentials: PCCredentials,
                                            expiresIn: Int? = nil,
                                            expireAt: String? = nil,
                                            completion: @escaping (Result<PCAccessToken,PCError>) -> Void) {
         
-        PCNetwork.shared.cloudRequest(.generateAccessToken(client: client, credentials: credentials, expiresIn: expiresIn, expireAt: expireAt), type: PCAccessToken.self, completion: completion)
+        PCNetwork.shared.cloudRequest(.generateAccessToken(client: nil, credentials: credentials, grantType: .password, expiresIn: expiresIn, expireAt: expireAt), type: PCAccessToken.self, completion: completion)
     }
-    
+
+
+    static public func generateAccessToken(client: PCClient,
+                                           expiresIn: Int? = nil,
+                                           expireAt: String? = nil,
+                                           completion: @escaping (Result<PCAccessToken,PCError>) -> Void) {
+
+        PCNetwork.shared.cloudRequest(.generateAccessToken(client: client, credentials: nil, grantType: .clientCredentials, expiresIn: expiresIn, expireAt: expireAt), type: PCAccessToken.self, completion: completion)
+    }
+
     /// List access tokens issued to your account.
     /// - Parameter credentials: Your Particle account username and password.
     /// - Parameter otp: One time password for multifactor authentication.
@@ -654,15 +664,28 @@ extension PCAccessToken {
     /// - Parameter expireAt: An ISO8601 formatted date string indicatiing when the token will expire. Defaults to nil.
     /// - Returns: A `PCAccessToken`  representing the servers response of an access token.
     /// - Throws: PCError
-    static public func generateAccessToken(client: PCClient? = nil,
-                                           credentials: PCCredentials,
-                                           grantType: PCAccessToken.GrantType = .password,
+    static public func generateAccessToken(credentials: PCCredentials,
+                                           scopedTo client: PCClient,
                                            expiresIn: Int? = nil,
                                            expireAt: String? = nil) async throws -> PCAccessToken {
-        
-        try await PCNetwork.shared.cloudRequest(.generateAccessToken(client: client, credentials: credentials, grantType: grantType, expiresIn: expiresIn, expireAt: expireAt), type: PCAccessToken.self)
+
+        try await PCNetwork.shared.cloudRequest(.generateAccessToken(client: client, credentials: credentials, grantType: .password, expiresIn: expiresIn, expireAt: expireAt), type: PCAccessToken.self)
     }
-    
+
+    static public func generateAccessToken(credentials: PCCredentials,
+                                           expiresIn: Int? = nil,
+                                           expireAt: String? = nil) async throws -> PCAccessToken {
+
+        try await PCNetwork.shared.cloudRequest(.generateAccessToken(client: nil, credentials: credentials, grantType: .password, expiresIn: expiresIn, expireAt: expireAt), type: PCAccessToken.self)
+    }
+
+    static public func generateAccessToken(client: PCClient,
+                                           expiresIn: Int? = nil,
+                                           expireAt: String? = nil) async throws -> PCAccessToken {
+
+        try await PCNetwork.shared.cloudRequest(.generateAccessToken(client: client, credentials: nil, grantType: .clientCredentials, expiresIn: expiresIn, expireAt: expireAt), type: PCAccessToken.self)
+    }
+
     /// List access tokens issued to your account.
     ///
     ///

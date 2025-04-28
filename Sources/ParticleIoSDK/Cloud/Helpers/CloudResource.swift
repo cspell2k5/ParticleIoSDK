@@ -101,7 +101,7 @@ internal enum CloudResource {
     }
 
     
-        //MARK: - Tokens - Done
+        //MARK: - Tokens 
 
         /// Delivers an PCAccessToken
         ///
@@ -159,8 +159,9 @@ internal enum CloudResource {
         /// - Parameter expiresIn: Number of seconds the token remain valid. 0 means forever. Short lived tokens are prefered for better security.
         /// - Parameter expireAt: An ISO8601 formatted date string indicatiing when the token will expire.
         /// - Returns: An PCAccessToken json carrying the new token information.
-    case generateAccessToken(client: PCClient?, credentials: PCCredentials, grantType: PCAccessToken.GrantType = .password, expiresIn: Int?, expireAt: String?)
-//FIXME: - Definitely need to get ahold of particle on this one.
+    case generateAccessToken(client: PCClient?, credentials: PCCredentials?, grantType: PCAccessToken.GrantType, expiresIn: Int?, expireAt: String?)
+
+    //FIXME: - Definitely need to get ahold of particle on this one.
 #warning("otp parameter missing from call. Documentation is unclear of how to use it. Call Particle.")
         /// List access tokens issued to your account.
         ///

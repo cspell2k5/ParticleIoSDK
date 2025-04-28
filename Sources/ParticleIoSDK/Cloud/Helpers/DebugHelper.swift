@@ -18,7 +18,7 @@ extension CloudResource {
                 return "getvariable:\nParticleVariable \nname:\(name)\ndevice:\(String(describing: deviceID))\n"
                 
             case .generateAccessToken(client: let client, credentials: let credentials, grantType: let grantType, expiresIn: let expiresIn, expireAt: let expireAt):
-                return "generateAccessToken \ncllient:\(String(describing: client))\ncredentials:\(credentials)\ngrantType:\(grantType)\nexpiresIn:\(String(describing: expiresIn))\nexpiresAt:\(String(describing: expireAt))\n"
+                return "generateAccessToken \ncllient:\(String(describing: client))\ncredentials:\(String(describing: credentials))\ngrantType:\(grantType)\nexpiresIn:\(String(describing: expiresIn))\nexpiresAt:\(String(describing: expireAt))\n"
                 
             case .listAccessTokens(credentials: let credentials, otp: let otp):
                 return "listAccessTokens:\ncredentials:\(credentials)\notp:\(String(describing: otp))\n"
