@@ -106,6 +106,7 @@ fileprivate struct PrivateKeyStore {
         
             // Add the key data.
         let status = SecItemAdd(query as CFDictionary, nil)
+        if status == -25299 {return} //already stored
         guard status == errSecSuccess else {
             throw KeyStoreError("Unable to store item: \(status.message)")
         }
